@@ -1,22 +1,29 @@
-import Cookies from 'js-cookie';
 import { request } from 'umi';
 
 const API_BASE = '/api/v1/admin';
 
+// Auth endpoints
 export async function login(data: { username: string; password: string }) {
-  return request(`${API_BASE}/login`, {
+  return request<API.ApiResponse<API.LoginResponse>>(`${API_BASE}/login`, {
     method: 'POST',
     data,
   });
 }
 
 export async function logout() {
-  return request(`${API_BASE}/logout`, {
+  // No need for manual Authorization header - interceptor handles it
+  return request<API.ApiResponse<[]>>(`${API_BASE}/logout`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${Cookies.get('token')}` },
   });
 }
 
+export async function getProfile() {
+  return request<API.ApiResponse<API.UserInfo>>(`${API_BASE}/profile`, {
+    method: 'GET',
+  });
+}
+
+// User management endpoints
 export async function getUsers(params?: any) {
   return request(`${API_BASE}/users`, {
     method: 'GET',
@@ -47,15 +54,14 @@ export async function updateUser(
     avatar?: string | null;
   },
 ) {
+  // No need for manual Authorization header - interceptor handles it
   return request(`${API_BASE}/users/${id}`, {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${Cookies.get('token')}`,
-    },
     data,
   });
 }
 
+// Slider endpoints
 export async function getSliders(params?: any) {
   return request(`${API_BASE}/sliders`, {
     method: 'GET',
@@ -77,6 +83,7 @@ export async function updateSlider(id: string, data: FormData) {
   });
 }
 
+// Social Networks endpoints
 export async function getSocialNetworks(params?: any) {
   return request(`${API_BASE}/social-networks`, {
     method: 'GET',
@@ -98,6 +105,7 @@ export async function updateSocialNetwork(id: string, data: FormData) {
   });
 }
 
+// News endpoints
 export async function getNewsList(params?: any) {
   return request(`${API_BASE}/news`, {
     method: 'GET',

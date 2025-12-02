@@ -1,52 +1,42 @@
-import { getNewsList } from '@/services/news';
+import { getAdvertisings } from '@/services/advertising';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { PageContainer, ProTable } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Button, Image, message, Space, Tag } from 'antd';
-import moment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
-// Helper function to convert Gregorian date to Jalali (Persian) format
-const toJalali = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD HH:mm');
-  } catch {
-    return dateString;
-  }
+// Human-readable labels for section values (Persian)
+const sectionLabels: Record<string, string> = {
+  main_page_first_section: 'بخش اول صفحه اصلی',
+  main_page_second_section: 'بخش دوم صفحه اصلی',
+  main_page_third_section: 'بخش سوم صفحه اصلی',
 };
 
-// Helper function to convert Gregorian date to Jalali (Persian) format - date only
-const toJalaliDate = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD');
-  } catch {
-    return dateString;
-  }
-};
-
-const NewsPage: React.FC = () => {
+const AdvertisingPage: React.FC = () => {
+  // Reference to ProTable for manual refresh after create/update
   const actionRef = useRef<ActionType>();
 
+  // Modal visibility states
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
-  const [currentRecord, setCurrentRecord] = useState<API.NewsItem>();
 
-  const columns: ProColumns<API.NewsItem>[] = [
+  // Currently selected record for update
+  const [currentRecord, setCurrentRecord] = useState<API.AdvertisingItem>();
+
+  // Define table columns
+  const columns: ProColumns<API.AdvertisingItem>[] = [
     {
       title: 'کد',
       dataIndex: 'code',
-      width: 70,
+      width: 80,
       search: false,
     },
     {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
-      width: 200,
     },
     {
       title: 'تصویر',
@@ -60,34 +50,31 @@ const NewsPage: React.FC = () => {
               src={record.image}
               width={60}
               height={40}
-              style={{ objectFit: 'cover', borderRadius: 4 }}
+              style={{ objectFit: 'cover' }}
             />
           );
         }
-        return <span>-</span>;
+        return '-';
       },
     },
     {
-      title: 'خلاصه',
-      dataIndex: 'summary',
-      ellipsis: true,
-      width: 200,
-      search: false,
-    },
-    {
-      title: 'زمان مطالعه (دقیقه)',
-      dataIndex: 'study_time',
-      width: 120,
-      search: false,
-    },
-    {
-      title: 'تاریخ انتشار',
-      dataIndex: 'publish_at',
-      width: 130,
-      search: false,
+      title: 'بخش',
+      dataIndex: 'section',
+      valueType: 'select',
+      valueEnum: {
+        main_page_first_section: { text: 'بخش اول صفحه اصلی' },
+        main_page_second_section: { text: 'بخش دوم صفحه اصلی' },
+        main_page_third_section: { text: 'بخش سوم صفحه اصلی' },
+      },
       render: (_, record) => {
-        return <span>{toJalaliDate(record.publish_at)}</span>;
+        return sectionLabels[record.section] || record.section;
       },
+    },
+    {
+      title: 'اولویت',
+      dataIndex: 'priority',
+      width: 80,
+      search: false,
     },
     {
       title: 'وضعیت',
@@ -107,18 +94,16 @@ const NewsPage: React.FC = () => {
       },
     },
     {
-      title: 'بازدید',
-      dataIndex: 'views_count',
-      width: 80,
-      search: false,
-    },
-    {
-      title: 'تاریخ ایجاد',
-      dataIndex: 'created_at',
-      width: 150,
+      title: 'لینک',
+      dataIndex: 'link',
+      ellipsis: true,
       search: false,
       render: (_, record) => {
-        return <span>{toJalali(record.created_at)}</span>;
+        return (
+          <a href={record.link} target="_blank" rel="noopener noreferrer">
+            {record.link}
+          </a>
+        );
       },
     },
     {
@@ -143,19 +128,17 @@ const NewsPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: 'مدیریت اخبار' }}>
-      <ProTable<API.NewsItem>
-        headerTitle="لیست اخبار"
+    <React.Fragment>
+      <ProTable<API.AdvertisingItem>
+        headerTitle="مدیریت تبلیغات"
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
-        search={{
-          labelWidth: 'auto',
-        }}
         request={async (params) => {
           try {
-            const response = await getNewsList({
+            const response = await getAdvertisings({
               title: params.title,
+              section: params.section,
               status: params.status,
               page: params.current,
               page_size: params.pageSize,
@@ -167,6 +150,7 @@ const NewsPage: React.FC = () => {
               success: response.success,
             };
           } catch (error) {
+            // Debug log - see any errors
             message.error('خطا در دریافت اطلاعات');
             return {
               data: [],
@@ -186,7 +170,7 @@ const NewsPage: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
           >
-            افزودن خبر
+            افزودن تبلیغ
           </Button>,
         ]}
       />
@@ -210,8 +194,8 @@ const NewsPage: React.FC = () => {
           actionRef.current?.reload();
         }}
       />
-    </PageContainer>
+    </React.Fragment>
   );
 };
 
-export default NewsPage;
+export default AdvertisingPage;

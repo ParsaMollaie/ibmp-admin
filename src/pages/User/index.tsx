@@ -13,10 +13,19 @@ import UpdateForm, { FormValueType } from './components/UpdateForm';
 
 const handleAdd = async (fields: API.UserInfo) => {
   const hide = message.loading('در حال افزودن');
+
+  // Validate password exists before proceeding
+  const password = fields.password;
+  if (!password) {
+    hide();
+    message.error('رمز عبور الزامی است');
+    return false;
+  }
+
   try {
     await addUser({
       username: fields.username,
-      password: fields.password,
+      password: password, // Now TypeScript knows this is definitely a string
       user_type: fields.user_type,
       email: fields.email || '',
       first_name: fields.first_name || '',
@@ -33,20 +42,26 @@ const handleAdd = async (fields: API.UserInfo) => {
     return false;
   }
 };
-
 const handleUpdate = async (fields: FormValueType) => {
   const hide = message.loading('در حال به روز رسانی');
-  try {
-    if (!fields.id) throw new Error('شناسه کاربر نامعتبر است');
 
-    await updateUser(fields.id, {
+  // Store id in a const - this helps TypeScript narrow the type
+  const id = fields.id;
+
+  if (!id) {
+    hide();
+    message.error('شناسه کاربر نامعتبر است');
+    return false;
+  }
+
+  try {
+    await updateUser(id, {
       first_name: fields.first_name,
       last_name: fields.last_name,
     });
 
     hide();
     message.success('به روز رسانی موفقیت آمیز بود');
-
     return true;
   } catch (error) {
     hide();

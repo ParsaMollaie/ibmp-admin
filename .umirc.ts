@@ -10,7 +10,7 @@ export default defineConfig({
   },
   proxy: {
     '/api': {
-      target: 'http://37.32.23.16:9800',
+      target: 'http://185.204.169.74:9800',
       changeOrigin: true,
       pathRewrite: { '^/api': '/api' },
     },
@@ -21,12 +21,31 @@ export default defineConfig({
   routes: [
     { path: '/', redirect: '/home' },
     { name: 'خانه', path: '/home', component: './Home', icon: 'HomeOutlined' },
+
+    // Categories
     {
-      name: 'شرکت ها ',
-      path: '/company',
-      component: './Company',
+      name: 'دسته‌بندی',
+      path: '/category',
+      component: './Category',
+      icon: 'AppstoreOutlined',
+    },
+
+    // Advertising - now a standalone route
+    {
+      name: 'تبلیغات',
+      path: '/advertising',
+      component: './Advertising',
       icon: 'FileTextOutlined',
     },
+
+    // Business Partners - now a standalone route
+    {
+      name: 'شرکای تجاری',
+      path: '/business-partners',
+      component: './BusinessPartners',
+      icon: 'TeamOutlined',
+    },
+
     {
       name: 'کاربران',
       path: '/user',
@@ -46,7 +65,7 @@ export default defineConfig({
       icon: 'TeamOutlined',
     },
     {
-      name: 'اخبار  ',
+      name: 'اخبار',
       path: '/News',
       component: './News',
       icon: 'ReadOutlined',

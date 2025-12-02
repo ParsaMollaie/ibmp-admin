@@ -17,6 +17,7 @@
     "@umijs/max": "^4.4.11",
     "antd": "^5.4.0",
     "dayjs": "^1.11.13",
+    "jalali-moment": "^3.3.11",
     "js-cookie": "^3.0.5",
     "styled-components": "^6.1.18",
     "stylis": "^4.3.6",

@@ -1,52 +1,35 @@
-import { getNewsList } from '@/services/news';
+import { getBusinessPartners } from '@/services/business-partners';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, Image, message, Space, Tag } from 'antd';
-import moment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
-// Helper function to convert Gregorian date to Jalali (Persian) format
-const toJalali = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD HH:mm');
-  } catch {
-    return dateString;
-  }
-};
-
-// Helper function to convert Gregorian date to Jalali (Persian) format - date only
-const toJalaliDate = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD');
-  } catch {
-    return dateString;
-  }
-};
-
-const NewsPage: React.FC = () => {
+const BusinessPartnersPage: React.FC = () => {
+  // Reference to ProTable for manual refresh after create/update
   const actionRef = useRef<ActionType>();
 
+  // Modal visibility states
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
-  const [currentRecord, setCurrentRecord] = useState<API.NewsItem>();
 
-  const columns: ProColumns<API.NewsItem>[] = [
+  // Currently selected record for update
+  const [currentRecord, setCurrentRecord] = useState<API.BusinessPartnerItem>();
+
+  // Define table columns
+  const columns: ProColumns<API.BusinessPartnerItem>[] = [
     {
       title: 'کد',
       dataIndex: 'code',
-      width: 70,
+      width: 80,
       search: false,
     },
     {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
-      width: 200,
     },
     {
       title: 'تصویر',
@@ -68,26 +51,10 @@ const NewsPage: React.FC = () => {
       },
     },
     {
-      title: 'خلاصه',
-      dataIndex: 'summary',
-      ellipsis: true,
-      width: 200,
+      title: 'اولویت',
+      dataIndex: 'priority',
+      width: 80,
       search: false,
-    },
-    {
-      title: 'زمان مطالعه (دقیقه)',
-      dataIndex: 'study_time',
-      width: 120,
-      search: false,
-    },
-    {
-      title: 'تاریخ انتشار',
-      dataIndex: 'publish_at',
-      width: 130,
-      search: false,
-      render: (_, record) => {
-        return <span>{toJalaliDate(record.publish_at)}</span>;
-      },
     },
     {
       title: 'وضعیت',
@@ -107,19 +74,24 @@ const NewsPage: React.FC = () => {
       },
     },
     {
-      title: 'بازدید',
-      dataIndex: 'views_count',
-      width: 80,
+      title: 'لینک',
+      dataIndex: 'link',
+      ellipsis: true,
       search: false,
+      render: (_, record) => {
+        return (
+          <a href={record.link} target="_blank" rel="noopener noreferrer">
+            {record.link}
+          </a>
+        );
+      },
     },
     {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
+      valueType: 'dateTime',
       width: 150,
       search: false,
-      render: (_, record) => {
-        return <span>{toJalali(record.created_at)}</span>;
-      },
     },
     {
       title: 'عملیات',
@@ -143,9 +115,9 @@ const NewsPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: 'مدیریت اخبار' }}>
-      <ProTable<API.NewsItem>
-        headerTitle="لیست اخبار"
+    <PageContainer header={{ title: 'مدیریت شرکای تجاری' }}>
+      <ProTable<API.BusinessPartnerItem>
+        headerTitle="لیست شرکای تجاری"
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
@@ -154,7 +126,7 @@ const NewsPage: React.FC = () => {
         }}
         request={async (params) => {
           try {
-            const response = await getNewsList({
+            const response = await getBusinessPartners({
               title: params.title,
               status: params.status,
               page: params.current,
@@ -186,7 +158,7 @@ const NewsPage: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
           >
-            افزودن خبر
+            افزودن شریک تجاری
           </Button>,
         ]}
       />
@@ -214,4 +186,4 @@ const NewsPage: React.FC = () => {
   );
 };
 
-export default NewsPage;
+export default BusinessPartnersPage;
