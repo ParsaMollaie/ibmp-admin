@@ -8,6 +8,7 @@ import { StyleSheetManager } from 'styled-components';
 import rtlPlugin from 'stylis-plugin-rtl';
 import type { RuntimeConfig } from 'umi';
 import { history } from 'umi';
+import logo from './assets/images/logo.svg';
 import UserAvatar from './components/UserAvatar';
 import './global.less';
 
@@ -90,12 +91,12 @@ export const request: RequestConfig = {
 
 export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
-    logo: 'https://img.alicdn.com/tfs/TB1YHEpwUT1gK0jSZFhXXaAtVXa-28-27.svg',
+    logo: logo,
     menu: {
       locale: false,
     },
     layout: 'mix',
-    navTheme: 'realDark',
+    navTheme: 'light',
     onPageChange: () => {
       const currentPath = history.location.pathname;
 
@@ -118,7 +119,7 @@ export const rootContainer: RuntimeConfig['rootContainer'] = (
         direction="rtl"
         locale={faIR}
         theme={{
-          algorithm: antdTheme.darkAlgorithm,
+          algorithm: antdTheme.defaultAlgorithm,
         }}
       >
         {container}

@@ -1,6 +1,7 @@
 import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
+  links: [{ rel: 'icon', href: '/favicon.ico' }],
   antd: {},
   access: {},
   model: {},
@@ -10,7 +11,7 @@ export default defineConfig({
   },
   proxy: {
     '/api': {
-      target: 'http://185.204.169.74:9800',
+      target: 'http://91.99.187.224:9800',
       changeOrigin: true,
       pathRewrite: { '^/api': '/api' },
     },
