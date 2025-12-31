@@ -1,7 +1,7 @@
-import { updateCategory } from '@/services/category';
+import { getCategoriesForSelect, updateCategory } from '@/services/category';
 import { PlusOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd';
 import { Form, Input, InputNumber, Modal, Select, Upload, message } from 'antd';
+import type { UploadFile } from 'antd/es/upload/interface';
 import React, { useEffect, useState } from 'react';
 
 interface UpdateFormProps {
@@ -9,48 +9,44 @@ interface UpdateFormProps {
   onCancel: () => void;
   onSuccess: () => void;
   record: API.CategoryItem | null;
-  categories: API.CategoryItem[];
 }
+
+// Status options for the dropdown
+const statusOptions = [
+  { label: 'فعال', value: 'active' },
+  { label: 'غیرفعال', value: 'inactive' },
+];
 
 const UpdateForm: React.FC<UpdateFormProps> = ({
   visible,
   onCancel,
   onSuccess,
   record,
-  categories,
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  // State for parent category dropdown options
+  const [parentOptions, setParentOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [parentLoading, setParentLoading] = useState(false);
+
+  // State for image upload
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-  // Populate form when record changes
-  useEffect(() => {
-    if (record && visible) {
-      form.setFieldsValue({
-        title: record.title,
-        parent_id: record.parent?.id || undefined,
-        priority: record.priority,
-        status: record.status,
-        alt_image: record.alt_image,
-      });
+  // Track if user uploaded a new image (to determine if we send base64 or keep existing)
+  const [imageChanged, setImageChanged] = useState(false);
 
-      // Set existing image in fileList if exists
-      if (record.image) {
-        setFileList([
-          {
-            uid: '-1',
-            name: 'current-image',
-            status: 'done',
-            url: record.image,
-          },
-        ]);
-      } else {
-        setFileList([]);
-      }
-    }
-  }, [record, visible, form]);
+  // ============================================
+  // HELPER FUNCTIONS
+  // These are defined first since they're used by other functions below
+  // ============================================
 
-  // Convert file to base64
+  /**
+   * Convert uploaded file to base64 string
+   * Used when submitting new images to the API
+   */
   const getBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -60,7 +56,105 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     });
   };
 
-  // Handle form submission
+  /**
+   * Reset form state to initial values
+   * Called when closing modal or after successful submission
+   */
+  const handleReset = () => {
+    form.resetFields();
+    setFileList([]);
+    setImageChanged(false);
+  };
+
+  // ============================================
+  // DATA FETCHING FUNCTIONS
+  // Defined before useEffect since they're called inside the effect
+  // ============================================
+
+  /**
+   * Fetch categories for parent dropdown
+   * Filters out the current category to prevent circular references
+   */
+  const fetchParentCategories = async () => {
+    setParentLoading(true);
+    try {
+      const response = await getCategoriesForSelect();
+      if (response.success && response.data?.list) {
+        // Filter out the current category (can't be its own parent)
+        // Also filter out children of current category to prevent circular references
+        const filteredCategories = response.data.list.filter(
+          (cat) => cat.id !== record?.id,
+        );
+
+        const options = filteredCategories.map((cat) => ({
+          label: cat.parent ? `${cat.parent.title} > ${cat.title}` : cat.title,
+          value: cat.id,
+        }));
+        setParentOptions(options);
+      }
+    } catch (error) {
+      console.error('Failed to fetch parent categories:', error);
+      message.error('خطا در دریافت لیست دسته‌بندی‌ها');
+    } finally {
+      setParentLoading(false);
+    }
+  };
+
+  /**
+   * Populate form fields with existing record data
+   * Sets form values and configures the image preview
+   */
+  const populateForm = () => {
+    if (!record) return;
+
+    form.setFieldsValue({
+      title: record.title,
+      parent_id: record.parent?.id || undefined,
+      priority: record.priority,
+      status: record.status,
+      alt_image: record.alt_image,
+    });
+
+    // If record has an existing image, show it in the upload component
+    if (record.image) {
+      setFileList([
+        {
+          uid: '-1',
+          name: 'current-image',
+          status: 'done',
+          url: record.image,
+        },
+      ]);
+    } else {
+      setFileList([]);
+    }
+
+    setImageChanged(false);
+  };
+
+  // ============================================
+  // EFFECTS
+  // Now that functions are defined above, we can safely reference them
+  // ============================================
+
+  /**
+   * Fetch parent categories and populate form when modal opens with a record
+   */
+  useEffect(() => {
+    if (visible && record) {
+      fetchParentCategories();
+      populateForm();
+    }
+  }, [visible, record]);
+
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Handle form submission
+   * Validates form, processes image, and sends update request
+   */
   const handleSubmit = async () => {
     if (!record) return;
 
@@ -68,24 +162,30 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      // Determine the image value
+      // Determine image value:
+      // - If user uploaded new image: convert to base64
+      // - If user removed image: null
+      // - If unchanged: send existing URL or null
       let imageValue: string | null = null;
 
-      if (fileList.length > 0) {
-        const file = fileList[0];
-        if (file.originFileObj) {
-          // New file uploaded - convert to base64
-          imageValue = await getBase64(file.originFileObj);
-        } else if (file.url) {
-          // Existing image - keep the URL (or send null to keep it unchanged)
-          // Depending on your API, you might need to handle this differently
-          imageValue = file.url;
+      if (imageChanged) {
+        // User made changes to the image
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+          // New image uploaded - convert to base64
+          imageValue = await getBase64(fileList[0].originFileObj);
+        } else {
+          // Image was removed
+          imageValue = null;
         }
+      } else {
+        // No changes to image - keep existing
+        imageValue = record.image;
       }
 
+      // Build the API payload
       const payload: API.CategoryPayload = {
         title: values.title,
-        parent_id: values.parent_id || '',
+        parent_id: values.parent_id || '', // Empty string for root category
         priority: values.priority,
         status: values.status,
         image: imageValue,
@@ -95,11 +195,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const response = await updateCategory(record.id, payload);
 
       if (response.success) {
-        form.resetFields();
-        setFileList([]);
+        message.success('دسته‌بندی با موفقیت بروزرسانی شد');
+        handleReset();
         onSuccess();
       } else {
-        message.error(response.message || 'خطا در ویرایش دسته‌بندی');
+        message.error(response.message || 'خطا در بروزرسانی دسته‌بندی');
       }
     } catch (error) {
       console.error('Update category error:', error);
@@ -109,43 +209,32 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     }
   };
 
-  // Handle modal cancel
+  /**
+   * Handle modal cancel
+   * Resets form and calls parent's onCancel callback
+   */
   const handleCancel = () => {
-    form.resetFields();
-    setFileList([]);
+    handleReset();
     onCancel();
   };
 
-  // Upload props configuration
-  const uploadProps: UploadProps = {
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('فقط فایل‌های تصویری مجاز هستند');
-        return Upload.LIST_IGNORE;
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error('حجم تصویر باید کمتر از 2 مگابایت باشد');
-        return Upload.LIST_IGNORE;
-      }
-      return false; // Prevent auto upload
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setFileList(newFileList);
-    },
-    fileList,
-    listType: 'picture-card',
-    maxCount: 1,
+  /**
+   * Handle upload changes
+   * Track that user has modified the image
+   */
+  const handleUploadChange = ({ fileList: newFileList }: any) => {
+    setFileList(newFileList.slice(-1));
+    setImageChanged(true);
   };
 
-  // Filter parent options - exclude current record to prevent circular reference
-  const parentOptions = categories
-    .filter((cat) => cat.id !== record?.id)
-    .map((cat) => ({
-      label: cat.title,
-      value: cat.id,
-    }));
+  /**
+   * Handle image removal
+   * Marks image as changed so we know to send null on submit
+   */
+  const handleRemove = () => {
+    setImageChanged(true);
+    return true;
+  };
 
   return (
     <Modal
@@ -156,61 +245,111 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       confirmLoading={loading}
       okText="ذخیره تغییرات"
       cancelText="انصراف"
-      width={600}
+      width={500}
+      destroyOnClose
     >
+      {/* Display current category info header */}
+      {record && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: 12,
+            background: '#f5f5f5',
+            borderRadius: 8,
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>{record.title}</div>
+          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+            کد: {record.code}
+            {record.parent && ` | والد: ${record.parent.title}`}
+          </div>
+        </div>
+      )}
+
       <Form form={form} layout="vertical">
+        {/* Category Title - Required */}
         <Form.Item
           name="title"
-          label="عنوان"
-          rules={[{ required: true, message: 'لطفاً عنوان را وارد کنید' }]}
+          label="عنوان دسته‌بندی"
+          rules={[
+            { required: true, message: 'لطفاً عنوان دسته‌بندی را وارد کنید' },
+            { max: 100, message: 'عنوان نباید بیشتر از 100 کاراکتر باشد' },
+          ]}
         >
           <Input placeholder="عنوان دسته‌بندی" />
         </Form.Item>
 
-        <Form.Item name="parent_id" label="دسته والد">
+        {/* Parent Category - Optional */}
+        <Form.Item
+          name="parent_id"
+          label="دسته‌بندی والد"
+          tooltip="برای تبدیل به دسته‌بندی اصلی، این فیلد را خالی بگذارید"
+        >
           <Select
-            placeholder="انتخاب دسته والد (اختیاری)"
             allowClear
             showSearch
-            optionFilterProp="label"
+            placeholder="انتخاب دسته‌بندی والد (اختیاری)"
+            loading={parentLoading}
             options={parentOptions}
+            filterOption={(input, option) =>
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
           />
         </Form.Item>
 
+        {/* Priority - Required */}
         <Form.Item
           name="priority"
-          label="اولویت"
+          label="اولویت نمایش"
           rules={[{ required: true, message: 'لطفاً اولویت را وارد کنید' }]}
+          tooltip="عدد کمتر = اولویت بالاتر در نمایش"
         >
-          <InputNumber min={1} style={{ width: '100%' }} />
+          <InputNumber
+            min={1}
+            max={10000}
+            style={{ width: '100%' }}
+            placeholder="اولویت نمایش"
+          />
         </Form.Item>
 
+        {/* Status - Required */}
         <Form.Item
           name="status"
           label="وضعیت"
           rules={[{ required: true, message: 'لطفاً وضعیت را انتخاب کنید' }]}
         >
-          <Select
-            options={[
-              { label: 'فعال', value: 'active' },
-              { label: 'غیرفعال', value: 'inactive' },
-            ]}
-          />
+          <Select options={statusOptions} placeholder="انتخاب وضعیت" />
         </Form.Item>
 
-        <Form.Item label="تصویر">
-          <Upload {...uploadProps}>
+        {/* Image Upload - Optional */}
+        <Form.Item name="image" label="تصویر دسته‌بندی">
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            onRemove={handleRemove}
+            beforeUpload={() => false} // Prevent auto upload
+            maxCount={1}
+            accept="image/*"
+          >
             {fileList.length === 0 && (
               <div>
                 <PlusOutlined />
-                <div style={{ marginTop: 8 }}>آپلود</div>
+                <div style={{ marginTop: 8 }}>آپلود تصویر</div>
               </div>
             )}
           </Upload>
         </Form.Item>
 
-        <Form.Item name="alt_image" label="متن جایگزین تصویر">
-          <Input placeholder="توضیح تصویر برای SEO" />
+        {/* Image Alt Text - Optional */}
+        <Form.Item
+          name="alt_image"
+          label="متن جایگزین تصویر"
+          tooltip="این متن برای SEO و دسترسی‌پذیری استفاده می‌شود"
+        >
+          <Input placeholder="توضیح کوتاه تصویر" />
         </Form.Item>
       </Form>
     </Modal>

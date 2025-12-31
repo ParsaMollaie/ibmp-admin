@@ -23,7 +23,6 @@ export default defineConfig({
     { path: '/', redirect: '/home' },
     { name: 'خانه', path: '/home', component: './Home', icon: 'HomeOutlined' },
 
-    // Categories
     {
       name: 'دسته‌بندی',
       path: '/category',
@@ -31,7 +30,6 @@ export default defineConfig({
       icon: 'AppstoreOutlined',
     },
 
-    // Advertising - now a standalone route
     {
       name: 'تبلیغات',
       path: '/advertising',
@@ -39,7 +37,6 @@ export default defineConfig({
       icon: 'FileTextOutlined',
     },
 
-    // Business Partners - now a standalone route
     {
       name: 'شرکای تجاری',
       path: '/business-partners',
@@ -52,6 +49,18 @@ export default defineConfig({
       path: '/user',
       component: './User',
       icon: 'UserOutlined',
+    },
+    {
+      name: 'شرکت‌ها',
+      path: '/company',
+      component: './Company',
+      icon: 'BankOutlined',
+    },
+    {
+      name: 'سرویس‌های شرکت',
+      path: '/company-services',
+      component: './CompanyService',
+      icon: 'ShopOutlined',
     },
     {
       name: 'بنر',
@@ -70,6 +79,31 @@ export default defineConfig({
       path: '/News',
       component: './News',
       icon: 'ReadOutlined',
+    },
+    {
+      name: 'پلن‌ها',
+      path: '/plan',
+      component: './Plan',
+      icon: 'CreditCardOutlined',
+    },
+    {
+      name: 'سفارشات',
+      path: '/order',
+      component: './Order',
+      icon: 'ShoppingCartOutlined',
+    },
+    {
+      name: 'تماس با ما',
+      path: '/contact-us',
+      component: './ContactUs',
+      icon: 'MessageOutlined',
+    },
+
+    {
+      name: 'اطلاعات تماس سایت',
+      path: '/website-contact',
+      component: './WebsiteContact',
+      icon: 'GlobalOutlined',
     },
 
     { path: '/auth', component: './Auth', layout: false },

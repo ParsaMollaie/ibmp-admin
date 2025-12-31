@@ -1,27 +1,47 @@
-import { createCategory } from '@/services/category';
+import { createCategory, getCategoriesForSelect } from '@/services/category';
 import { PlusOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd';
 import { Form, Input, InputNumber, Modal, Select, Upload, message } from 'antd';
-import React, { useState } from 'react';
+import type { UploadFile } from 'antd/es/upload/interface';
+import React, { useEffect, useState } from 'react';
 
 interface CreateFormProps {
   visible: boolean;
   onCancel: () => void;
   onSuccess: () => void;
-  categories: API.CategoryItem[];
 }
+
+// Status options for the dropdown
+const statusOptions = [
+  { label: 'فعال', value: 'active' },
+  { label: 'غیرفعال', value: 'inactive' },
+];
 
 const CreateForm: React.FC<CreateFormProps> = ({
   visible,
   onCancel,
   onSuccess,
-  categories,
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  // State for parent category dropdown options
+  const [parentOptions, setParentOptions] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [parentLoading, setParentLoading] = useState(false);
+
+  // State for image upload
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
-  // Convert file to base64
+  // ============================================
+  // HELPER FUNCTIONS
+  // These are defined first since they're used by other functions below
+  // ============================================
+
+  /**
+   * Convert uploaded file to base64 string
+   * This is required because the API expects base64 encoded images
+   */
   const getBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -31,21 +51,82 @@ const CreateForm: React.FC<CreateFormProps> = ({
     });
   };
 
-  // Handle form submission
+  /**
+   * Reset form state when closing modal
+   * Called after successful submission or when cancelling
+   */
+  const handleReset = () => {
+    form.resetFields();
+    setFileList([]);
+  };
+
+  // ============================================
+  // DATA FETCHING FUNCTIONS
+  // Defined before useEffect since they're called inside the effect
+  // ============================================
+
+  /**
+   * Fetch categories for parent dropdown
+   * We exclude categories that shouldn't be parents (optional business logic)
+   */
+  const fetchParentCategories = async () => {
+    setParentLoading(true);
+    try {
+      const response = await getCategoriesForSelect();
+      if (response.success && response.data?.list) {
+        // Transform categories to dropdown options
+        // Format: "Parent Title > Child Title" for nested display
+        const options = response.data.list.map((cat) => ({
+          label: cat.parent ? `${cat.parent.title} > ${cat.title}` : cat.title,
+          value: cat.id,
+        }));
+        setParentOptions(options);
+      }
+    } catch (error) {
+      console.error('Failed to fetch parent categories:', error);
+      message.error('خطا در دریافت لیست دسته‌بندی‌ها');
+    } finally {
+      setParentLoading(false);
+    }
+  };
+
+  // ============================================
+  // EFFECTS
+  // Now that functions are defined above, we can safely reference them
+  // ============================================
+
+  /**
+   * Fetch categories for parent dropdown when modal opens
+   */
+  useEffect(() => {
+    if (visible) {
+      fetchParentCategories();
+    }
+  }, [visible]);
+
+  // ============================================
+  // EVENT HANDLERS
+  // ============================================
+
+  /**
+   * Handle form submission
+   * Transforms form values to API payload format and sends request
+   */
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
 
-      // Convert image to base64 if exists
+      // Prepare image as base64 if uploaded
       let imageBase64: string | null = null;
       if (fileList.length > 0 && fileList[0].originFileObj) {
         imageBase64 = await getBase64(fileList[0].originFileObj);
       }
 
+      // Build the API payload
       const payload: API.CategoryPayload = {
         title: values.title,
-        parent_id: values.parent_id || '',
+        parent_id: values.parent_id || '', // Empty string for root category
         priority: values.priority,
         status: values.status,
         image: imageBase64,
@@ -55,8 +136,8 @@ const CreateForm: React.FC<CreateFormProps> = ({
       const response = await createCategory(payload);
 
       if (response.success) {
-        form.resetFields();
-        setFileList([]);
+        message.success('دسته‌بندی با موفقیت ایجاد شد');
+        handleReset();
         onSuccess();
       } else {
         message.error(response.message || 'خطا در ایجاد دسته‌بندی');
@@ -69,42 +150,23 @@ const CreateForm: React.FC<CreateFormProps> = ({
     }
   };
 
-  // Handle modal cancel
+  /**
+   * Handle modal cancel
+   * Resets form and calls parent's onCancel callback
+   */
   const handleCancel = () => {
-    form.resetFields();
-    setFileList([]);
+    handleReset();
     onCancel();
   };
 
-  // Upload props configuration
-  const uploadProps: UploadProps = {
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('فقط فایل‌های تصویری مجاز هستند');
-        return Upload.LIST_IGNORE;
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error('حجم تصویر باید کمتر از 2 مگابایت باشد');
-        return Upload.LIST_IGNORE;
-      }
-      return false; // Prevent auto upload
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setFileList(newFileList);
-    },
-    fileList,
-    listType: 'picture-card',
-    maxCount: 1,
+  /**
+   * Custom upload handler - prevents actual upload
+   * We just store the file locally and convert to base64 on submit
+   */
+  const handleUploadChange = ({ fileList: newFileList }: any) => {
+    // Only keep the latest file
+    setFileList(newFileList.slice(-1));
   };
-
-  // Filter out current categories that could cause circular references
-  // Only show categories that don't have a parent (root categories) as potential parents
-  const parentOptions = categories.map((cat) => ({
-    label: cat.title,
-    value: cat.id,
-  }));
 
   return (
     <Modal
@@ -115,7 +177,8 @@ const CreateForm: React.FC<CreateFormProps> = ({
       confirmLoading={loading}
       okText="ذخیره"
       cancelText="انصراف"
-      width={600}
+      width={500}
+      destroyOnClose
     >
       <Form
         form={form}
@@ -125,58 +188,88 @@ const CreateForm: React.FC<CreateFormProps> = ({
           priority: 1,
         }}
       >
+        {/* Category Title - Required */}
         <Form.Item
           name="title"
-          label="عنوان"
-          rules={[{ required: true, message: 'لطفاً عنوان را وارد کنید' }]}
+          label="عنوان دسته‌بندی"
+          rules={[
+            { required: true, message: 'لطفاً عنوان دسته‌بندی را وارد کنید' },
+            { max: 100, message: 'عنوان نباید بیشتر از 100 کاراکتر باشد' },
+          ]}
         >
           <Input placeholder="عنوان دسته‌بندی" />
         </Form.Item>
 
-        <Form.Item name="parent_id" label="دسته والد">
+        {/* Parent Category - Optional */}
+        <Form.Item
+          name="parent_id"
+          label="دسته‌بندی والد"
+          tooltip="برای ایجاد دسته‌بندی اصلی، این فیلد را خالی بگذارید"
+        >
           <Select
-            placeholder="انتخاب دسته والد (اختیاری)"
             allowClear
             showSearch
-            optionFilterProp="label"
+            placeholder="انتخاب دسته‌بندی والد (اختیاری)"
+            loading={parentLoading}
             options={parentOptions}
+            filterOption={(input, option) =>
+              (option?.label as string)
+                ?.toLowerCase()
+                .includes(input.toLowerCase())
+            }
           />
         </Form.Item>
 
+        {/* Priority - Required */}
         <Form.Item
           name="priority"
-          label="اولویت"
+          label="اولویت نمایش"
           rules={[{ required: true, message: 'لطفاً اولویت را وارد کنید' }]}
+          tooltip="عدد کمتر = اولویت بالاتر در نمایش"
         >
-          <InputNumber min={1} style={{ width: '100%' }} />
+          <InputNumber
+            min={1}
+            max={10000}
+            style={{ width: '100%' }}
+            placeholder="اولویت نمایش"
+          />
         </Form.Item>
 
+        {/* Status - Required */}
         <Form.Item
           name="status"
           label="وضعیت"
           rules={[{ required: true, message: 'لطفاً وضعیت را انتخاب کنید' }]}
         >
-          <Select
-            options={[
-              { label: 'فعال', value: 'active' },
-              { label: 'غیرفعال', value: 'inactive' },
-            ]}
-          />
+          <Select options={statusOptions} placeholder="انتخاب وضعیت" />
         </Form.Item>
 
-        <Form.Item label="تصویر">
-          <Upload {...uploadProps}>
+        {/* Image Upload - Optional */}
+        <Form.Item name="image" label="تصویر دسته‌بندی">
+          <Upload
+            listType="picture-card"
+            fileList={fileList}
+            onChange={handleUploadChange}
+            beforeUpload={() => false} // Prevent auto upload
+            maxCount={1}
+            accept="image/*"
+          >
             {fileList.length === 0 && (
               <div>
                 <PlusOutlined />
-                <div style={{ marginTop: 8 }}>آپلود</div>
+                <div style={{ marginTop: 8 }}>آپلود تصویر</div>
               </div>
             )}
           </Upload>
         </Form.Item>
 
-        <Form.Item name="alt_image" label="متن جایگزین تصویر">
-          <Input placeholder="توضیح تصویر برای SEO" />
+        {/* Image Alt Text - Optional */}
+        <Form.Item
+          name="alt_image"
+          label="متن جایگزین تصویر"
+          tooltip="این متن برای SEO و دسترسی‌پذیری استفاده می‌شود"
+        >
+          <Input placeholder="توضیح کوتاه تصویر" />
         </Form.Item>
       </Form>
     </Modal>
