@@ -1,5 +1,11 @@
-import { getCompanyServices } from '@/services/company-service';
 import {
+  approveCompanyService,
+  getCompanyServices,
+  rejectCompanyService,
+} from '@/services/company-service';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
   EditOutlined,
   EyeOutlined,
   LinkOutlined,
@@ -13,10 +19,12 @@ import {
   Descriptions,
   Divider,
   Image,
+  message,
   Modal,
   Space,
   Table,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd';
 import React, { useRef, useState } from 'react';
@@ -166,6 +174,7 @@ const CompanyServicePage: React.FC = () => {
   // Modal visibility states
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Currently selected record
   const [currentRecord, setCurrentRecord] =
@@ -192,6 +201,59 @@ const CompanyServicePage: React.FC = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  const handleApprove = (record: API.CompanyServiceItem) => {
+    Modal.confirm({
+      title: 'تایید سرویس',
+      content: `آیا از تایید سرویس "${record.title}" اطمینان دارید؟`,
+      okText: 'بله، تایید شود',
+      cancelText: 'انصراف',
+      okType: 'primary',
+      onOk: async () => {
+        setActionLoading(record.id);
+        try {
+          const response = await approveCompanyService(record.id);
+          if (response.success) {
+            message.success('سرویس با موفقیت تایید شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در تایید سرویس');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
+  // Handle reject action with confirmation
+  const handleReject = (record: API.CompanyServiceItem) => {
+    Modal.confirm({
+      title: 'رد سرویس',
+      content: `آیا از رد سرویس "${record.title}" اطمینان دارید؟`,
+      okText: 'بله، رد شود',
+      cancelText: 'انصراف',
+      okType: 'danger',
+      onOk: async () => {
+        setActionLoading(record.id);
+        try {
+          const response = await rejectCompanyService(record.id);
+          if (response.success) {
+            message.success('سرویس با موفقیت رد شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در رد سرویس');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
   };
 
   // ============================================
@@ -310,21 +372,52 @@ const CompanyServicePage: React.FC = () => {
     {
       title: 'عملیات',
       key: 'actions',
-      width: 100,
+      width: 150, // Increased width to accommodate new buttons
       hideInSearch: true,
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetail(record)}
-          />
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          />
+          {/* Approve Button - only shown when can_approve is true */}
+          {record.can_approve && (
+            <Tooltip title="تایید سرویس">
+              <Button
+                type="text"
+                icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                onClick={() => handleApprove(record)}
+                loading={actionLoading === record.id}
+              />
+            </Tooltip>
+          )}
+
+          {/* Reject Button - only shown when can_reject is true */}
+          {record.can_reject && (
+            <Tooltip title="رد سرویس">
+              <Button
+                type="text"
+                icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+                onClick={() => handleReject(record)}
+                loading={actionLoading === record.id}
+              />
+            </Tooltip>
+          )}
+
+          {/* View Detail Button - always visible */}
+          <Tooltip title="مشاهده جزئیات">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetail(record)}
+            />
+          </Tooltip>
+
+          {/* Edit Button - always visible */}
+          <Tooltip title="ویرایش">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
         </Space>
       ),
     },

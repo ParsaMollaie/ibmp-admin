@@ -1,5 +1,11 @@
-import { getCompanies } from '@/services/company';
-import { EditOutlined, EyeOutlined, LinkOutlined } from '@ant-design/icons';
+import { getCompanies, updateCompanyTag } from '@/services/company';
+import {
+  EditOutlined,
+  EyeOutlined,
+  LinkOutlined,
+  StarOutlined,
+  TagOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import {
@@ -10,7 +16,9 @@ import {
   Modal,
   Space,
   Tag,
+  Tooltip,
   Typography,
+  message,
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm from './components/UpdateForm';
@@ -29,7 +37,7 @@ const { Title, Text, Paragraph } = Typography;
  */
 const tagEnum: Record<string, { text: string; status: string }> = {
   regular: { text: 'عادی', status: 'Default' },
-  'most-view': { text: 'پربازدید', status: 'Processing' },
+  most_view: { text: 'پربازدید', status: 'Processing' },
   promoted: { text: 'ویژه', status: 'Success' },
 };
 
@@ -43,14 +51,13 @@ const tagEnum: Record<string, { text: string; status: string }> = {
 const getTagConfig = (
   tag: API.CompanyTag | undefined | null,
 ): { color: string; label: string } => {
-  // Default to 'regular' style when no tag is provided
   if (!tag) {
     return { color: 'default', label: 'عادی' };
   }
 
   const tagMap: Record<string, { color: string; label: string }> = {
     regular: { color: 'default', label: 'عادی' },
-    'most-view': { color: 'blue', label: 'پربازدید' },
+    most_view: { color: 'blue', label: 'پربازدید' },
     promoted: { color: 'green', label: 'ویژه' },
   };
 
@@ -122,6 +129,43 @@ const CompanyPage: React.FC = () => {
     setCurrentRecord(null);
     // Use actionRef to reload the table data
     actionRef.current?.reload();
+  };
+
+  // Handle flag actions
+  const handleSetRegular = async (record: API.CompanyItem) => {
+    try {
+      const response = await updateCompanyTag(record.id, 'regular');
+      if (response.success) {
+        message.success('شرکت با موفقیت به حالت عادی تغییر یافت');
+        actionRef.current?.reload();
+      }
+    } catch (error) {
+      message.error('خطا در تغییر وضعیت شرکت');
+    }
+  };
+
+  const handleSetMostView = async (record: API.CompanyItem) => {
+    try {
+      const response = await updateCompanyTag(record.id, 'most_view');
+      if (response.success) {
+        message.success('شرکت با موفقیت به حالت پربازدید تغییر یافت');
+        actionRef.current?.reload();
+      }
+    } catch (error) {
+      message.error('خطا در تغییر وضعیت شرکت');
+    }
+  };
+
+  const handleSetPromote = async (record: API.CompanyItem) => {
+    try {
+      const response = await updateCompanyTag(record.id, 'promoted');
+      if (response.success) {
+        message.success('شرکت با موفقیت به حالت ویژه تغییر یافت');
+        actionRef.current?.reload();
+      }
+    } catch (error) {
+      message.error('خطا در تغییر وضعیت شرکت');
+    }
   };
 
   // ============================================
@@ -233,7 +277,7 @@ const CompanyPage: React.FC = () => {
     {
       title: 'عملیات',
       key: 'actions',
-      width: 100,
+      width: 150,
       // Actions column shouldn't be in search form
       hideInSearch: true,
       // Fixed position keeps actions visible when scrolling horizontally
@@ -252,6 +296,40 @@ const CompanyPage: React.FC = () => {
             onClick={() => handleEdit(record)}
             title="ویرایش شرکت"
           />
+
+          {/* Show icon for can_set_regular */}
+          {record.can_set_regular && (
+            <Tooltip title="تنظیم به عادی">
+              <Button
+                type="text"
+                icon={<TagOutlined />}
+                onClick={() => handleSetRegular(record)}
+                style={{ color: '#8c8c8c' }}
+              />
+            </Tooltip>
+          )}
+
+          {/* Show icon for can_set_mot_view */}
+          {record.can_set_most_view && (
+            <Tooltip title="تنظیم به پربازدید">
+              <Button
+                type="text"
+                icon={<EyeOutlined style={{ color: '#1890ff' }} />}
+                onClick={() => handleSetMostView(record)}
+              />
+            </Tooltip>
+          )}
+
+          {/* Show icon for can_set_promote */}
+          {record.can_set_promote && (
+            <Tooltip title="تنظیم به ویژه">
+              <Button
+                type="text"
+                icon={<StarOutlined style={{ color: '#52c41a' }} />}
+                onClick={() => handleSetPromote(record)}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },

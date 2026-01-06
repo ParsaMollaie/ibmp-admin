@@ -72,3 +72,37 @@ export async function updateCompanyService(
     data,
   });
 }
+
+/**
+ * Approve a company service
+ *
+ * Changes the service status to 'approved'.
+ * This action is only available when can_approve is true on the service item.
+ *
+ * @param id - The company service's unique identifier (UUID)
+ */
+export async function approveCompanyService(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/company-services/${id}/approve`,
+    {
+      method: 'PUT',
+    },
+  );
+}
+
+/**
+ * Reject a company service
+ *
+ * Changes the service status to 'rejected'.
+ * This action is only available when can_reject is true on the service item.
+ *
+ * @param id - The company service's unique identifier (UUID)
+ */
+export async function rejectCompanyService(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/company-services/${id}/reject`,
+    {
+      method: 'PUT',
+    },
+  );
+}

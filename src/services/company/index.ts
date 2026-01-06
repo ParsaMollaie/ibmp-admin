@@ -64,16 +64,22 @@ export async function updateCompany(id: string, data: API.CompanyPayload) {
 }
 
 /**
- * Update company tag (regular, most-view, or promoted)
+ * Update company tag (regular, most_view, or promoted)
  * The tag is part of the URL path, not the body
  *
+ * Note: API returns 'most_view' (underscore) but the endpoint URL uses 'most-view' (hyphen)
+ * This function handles the mapping automatically
+ *
  * @param id - Company UUID
- * @param tag - New tag value
+ * @param tag - New tag value ('regular' | 'most_view' | 'promoted')
  */
 export async function updateCompanyTag(id: string, tag: API.CompanyTag) {
-  return request<API.ApiResponse<[]>>(`${API_BASE}/companies/${id}/${tag}`, {
+  // Map the tag to URL-friendly format (API endpoint uses hyphen, not underscore)
+  const urlTag = tag === 'most_view' ? 'most-view' : tag;
+
+  return request<API.ApiResponse<[]>>(`${API_BASE}/companies/${id}/${urlTag}`, {
     method: 'PUT',
-    data: {}, // API expects a body even though it's not used
+    data: {},
   });
 }
 

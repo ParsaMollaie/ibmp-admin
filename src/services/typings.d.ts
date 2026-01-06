@@ -333,7 +333,7 @@ declare namespace API {
     phones: string[];
   }
 
-  type CompanyTag = 'regular' | 'most-view' | 'promoted';
+  type CompanyTag = 'regular' | 'most_view' | 'promoted';
 
   // ============================================
   // NESTED OBJECTS IN COMPANY RESPONSE
@@ -394,17 +394,20 @@ declare namespace API {
     id: string;
     code: number;
     name: string;
-    tag?: CompanyTag; // Made optional since API doesn't always return it
+    tag?: CompanyTag;
     summary: string;
-    description?: string; // May not be in list response
-    email?: string; // May not be in list response
-    address?: string; // May not be in list response
+    description?: string;
+    email?: string;
+    address?: string;
     logo: string | null;
     catalog: string | null;
     province: CompanyProvince;
     city: CompanyCity;
     contact_numbers: CompanyContactNumber[];
     social_media: CompanySocialMedia[];
+    can_set_regular?: boolean;
+    can_set_most_view?: boolean;
+    can_set_promote?: boolean;
   }
 
   // ============================================
@@ -578,6 +581,8 @@ declare namespace API {
     contact_numbers: CompanyServiceContactNumber[];
     social_media: CompanyServiceSocialMedia[];
     products: CompanyServiceProduct[];
+    can_approve?: boolean;
+    can_reject?: boolean;
   }
 
   // ===========================================

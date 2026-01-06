@@ -60,7 +60,7 @@ const UserAvatar: React.FC = () => {
         </Avatar>
         {/* Display the user's full name next to the avatar */}
         {currentUser && (
-          <span style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+          <span style={{ color: '#000' }}>
             {currentUser.first_name} {currentUser.last_name}
           </span>
         )}
