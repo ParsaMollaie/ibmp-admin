@@ -2,9 +2,10 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import { Button, Card, Form, Input, Typography, message } from 'antd';
 import React, { useEffect } from 'react';
+import logo from '../../assets/images/logo.svg';
 import styles from './index.less';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface LoginValues {
   username: string;
@@ -52,13 +53,12 @@ const LoginPage: React.FC = () => {
     <div className={styles.container}>
       <Card className={styles.loginCard}>
         <div className={styles.logoContainer}>
-          <Title level={3} className={styles.logoText}>
-            Ibmp
-          </Title>
+          <img src={logo} alt="IBMP Logo" className={styles.logo} />
           <Text type="secondary" className={styles.subText}>
-            پنل ادمین Ibmp
+            پنل ادمین IBMP
           </Text>
         </div>
+
         <Form
           form={form}
           name="login"

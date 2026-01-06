@@ -63,7 +63,7 @@ export default defineConfig({
       icon: 'ShopOutlined',
     },
     {
-      name: 'بنر',
+      name: 'اسلایدر',
       path: '/slider',
       component: './Slider',
       icon: 'SlidersOutlined',

@@ -1,66 +1,30 @@
 import { getPlans } from '@/services/plan';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
-import { useRequest } from '@umijs/max';
-import {
-  Button,
-  Card,
-  Input,
-  message,
-  Space,
-  Table,
-  Tag,
-  Typography,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import React, { useState } from 'react';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, Card, message, Tag } from 'antd';
+import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
-
-const { Title } = Typography;
-const { Search } = Input;
 
 const PlanPage: React.FC = () => {
   // ============================================
   // STATE MANAGEMENT
   // ============================================
 
-  // Modal visibility states - control when create/update modals are shown
+  // Modal visibility states
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
 
-  // Currently selected record for editing - null when not editing
+  // Currently selected record for editing
   const [currentRecord, setCurrentRecord] = useState<API.PlanItem | null>(null);
 
-  // Search term state - updates trigger data refetch via refreshDeps
-  const [searchName, setSearchName] = useState<string>('');
-
-  // ============================================
-  // DATA FETCHING
-  // ============================================
-
-  // useRequest hook provides automatic loading state management
-  // and a refresh() function to manually refetch data
-  // refreshDeps ensures data is refetched when search term changes
-  const {
-    data: plansData,
-    loading,
-    refresh,
-  } = useRequest(() => getPlans({ name: searchName || undefined }), {
-    refreshDeps: [searchName],
-  });
-
-  // Safely extract the list from nested API response structure
-  // Falls back to empty array if data is not yet loaded
-  const plans = plansData?.data?.list || [];
+  // ProTable action ref - allows programmatic control of table (refresh, etc.)
+  const actionRef = useRef<ActionType>();
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
-
-  // Search handler - updates state which triggers useRequest refresh
-  const handleSearch = (value: string) => {
-    setSearchName(value);
-  };
 
   // Open create modal
   const handleCreate = () => {
@@ -74,55 +38,54 @@ const PlanPage: React.FC = () => {
   };
 
   // Success callback for create operation
-  // Closes modal, shows success message, and refreshes data
   const handleCreateSuccess = () => {
     setCreateModalVisible(false);
     message.success('پلن با موفقیت ایجاد شد');
-    refresh();
+    actionRef.current?.reload();
   };
 
   // Success callback for update operation
-  // Clears current record, closes modal, shows message, refreshes data
   const handleUpdateSuccess = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
     message.success('پلن با موفقیت ویرایش شد');
-    refresh();
+    actionRef.current?.reload();
   };
 
   // ============================================
-  // TABLE COLUMN DEFINITIONS
+  // PROTABLE COLUMN DEFINITIONS
   // ============================================
 
-  // Define table columns with proper typing for API.PlanItem
-  const columns: ColumnsType<API.PlanItem> = [
+  const columns: ProColumns<API.PlanItem>[] = [
     {
       title: 'کد',
       dataIndex: 'code',
       key: 'code',
       width: 80,
+      search: false, // Not searchable
     },
     {
       title: 'نام پلن',
       dataIndex: 'name',
       key: 'name',
+      // ProTable automatically adds search for this field
     },
     {
       title: 'مدت (ماه)',
       dataIndex: 'month',
       key: 'month',
       width: 100,
-      // Render month count with Persian label
-      render: (month: number) => `${month} ماه`,
+      search: false,
+      render: (_, record) => `${record.month} ماه`,
     },
     {
       title: 'قیمت (تومان)',
       dataIndex: 'price',
       key: 'price',
       width: 150,
-      // Format price with thousand separators for readability
-      render: (price: string) => {
-        const numericPrice = parseFloat(price);
+      search: false,
+      render: (_, record) => {
+        const numericPrice = parseFloat(record.price);
         return numericPrice.toLocaleString('fa-IR');
       },
     },
@@ -131,10 +94,10 @@ const PlanPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      // Render status as colored tag
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'error'}>
-          {status === 'active' ? 'فعال' : 'غیرفعال'}
+      search: false,
+      render: (_, record) => (
+        <Tag color={record.status === 'active' ? 'success' : 'error'}>
+          {record.status === 'active' ? 'فعال' : 'غیرفعال'}
         </Tag>
       ),
     },
@@ -142,17 +105,18 @@ const PlanPage: React.FC = () => {
       title: 'ویژگی‌ها',
       dataIndex: 'attributes',
       key: 'attributes',
-      ellipsis: true, // Truncate long text with ellipsis
+      ellipsis: true,
       width: 200,
-      // Show dash if no attributes
-      render: (attributes: string) =>
-        attributes || <span style={{ color: '#999' }}>—</span>,
+      search: false,
+      render: (_, record) =>
+        record.attributes || <span style={{ color: '#999' }}>—</span>,
     },
     {
       title: 'عملیات',
       key: 'actions',
       width: 80,
-      // Render edit button that opens update modal
+      search: false,
+      fixed: 'right',
       render: (_, record) => (
         <Button
           type="text"
@@ -169,56 +133,65 @@ const PlanPage: React.FC = () => {
 
   return (
     <Card>
-      {/* Header section with title and action buttons */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>
-          مدیریت پلن‌ها
-        </Title>
-        <Space>
-          {/* Search input - triggers data refresh on search */}
-          <Search
-            placeholder="جستجو بر اساس نام..."
-            allowClear
-            onSearch={handleSearch}
-            style={{ width: 250 }}
-          />
-          {/* Create button - opens create modal */}
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            افزودن پلن
-          </Button>
-        </Space>
-      </div>
-
-      {/* Main data table */}
-      <Table
+      <ProTable<API.PlanItem>
         columns={columns}
-        dataSource={plans}
+        actionRef={actionRef}
+        // ProTable request function - handles params automatically
+        request={async (params) => {
+          const { name, current, pageSize } = params;
+
+          const response = await getPlans({
+            name: name || undefined,
+            page: current,
+            page_size: pageSize,
+          });
+
+          return {
+            data: response?.data?.list || [],
+            success: true,
+            total: response?.data?.pagination?.total || 0,
+          };
+        }}
         rowKey="id"
-        loading={loading}
+        // Toolbar configuration
+        toolbar={{
+          title: 'مدیریت پلن‌ها',
+          actions: [
+            <Button
+              key="create"
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreate}
+            >
+              افزودن پلن
+            </Button>,
+          ],
+        }}
+        // Search form configuration
+        search={{
+          labelWidth: 'auto',
+          searchText: 'جستجو',
+          resetText: 'بازنشانی',
+        }}
+        // Pagination configuration
         pagination={{
-          // Pagination config from API response
-          total: plansData?.data?.pagination?.total || 0,
-          pageSize: plansData?.data?.pagination?.page_size || 10,
           showSizeChanger: true,
           showTotal: (total) => `مجموع: ${total} پلن`,
         }}
+        // Date formatting
+        dateFormatter="string"
+        // Header title (optional, since we use toolbar.title)
+        headerTitle={false}
       />
 
-      {/* Create Modal - mounted always but visibility controlled */}
+      {/* Create Modal */}
       <CreateForm
         visible={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         onSuccess={handleCreateSuccess}
       />
 
-      {/* Update Modal - receives current record for editing */}
+      {/* Update Modal */}
       <UpdateForm
         visible={updateModalVisible}
         onCancel={() => {

@@ -1,23 +1,11 @@
 import { getContactUs } from '@/services/contact-us';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { useRequest } from '@umijs/max';
-import {
-  Button,
-  Card,
-  Descriptions,
-  Modal,
-  Select,
-  Space,
-  Table,
-  Tag,
-  Typography,
-} from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, Card, Descriptions, Modal, Space, Tag } from 'antd';
 import jalaliMoment from 'jalali-moment';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import UpdateStatusForm from './components/UpdateForm';
-
-const { Title } = Typography;
 
 // Helper function to format dates to Jalali (Persian) calendar
 const formatJalaliDate = (dateString: string): string => {
@@ -53,35 +41,12 @@ const ContactUsPage: React.FC = () => {
     null,
   );
 
-  // Filter state for status dropdown
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(
-    undefined,
-  );
-
-  // ============================================
-  // DATA FETCHING
-  // ============================================
-
-  // useRequest hook for fetching contact us submissions
-  const {
-    data: contactUsData,
-    loading,
-    refresh,
-  } = useRequest(() => getContactUs({ status: statusFilter }), {
-    refreshDeps: [statusFilter],
-  });
-
-  // Safely extract the list from nested API response
-  const contactUsList = contactUsData?.data?.list || [];
+  // ProTable action ref
+  const actionRef = useRef<ActionType>();
 
   // ============================================
   // EVENT HANDLERS
   // ============================================
-
-  // Handle status filter change
-  const handleStatusChange = (value: string | undefined) => {
-    setStatusFilter(value);
-  };
 
   // Open status update modal
   const handleEdit = (record: API.ContactUsItem) => {
@@ -99,40 +64,43 @@ const ContactUsPage: React.FC = () => {
   const handleUpdateSuccess = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
-    refresh();
+    actionRef.current?.reload();
   };
 
   // ============================================
-  // TABLE COLUMN DEFINITIONS
+  // PROTABLE COLUMN DEFINITIONS
   // ============================================
 
-  const columns: ColumnsType<API.ContactUsItem> = [
+  const columns: ProColumns<API.ContactUsItem>[] = [
     {
       title: 'کد',
       dataIndex: 'code',
       key: 'code',
       width: 70,
+      search: false,
     },
     {
       title: 'نام',
       dataIndex: 'full_name',
       key: 'full_name',
       width: 150,
+      search: false,
     },
     {
       title: 'موبایل',
       dataIndex: 'mobile',
       key: 'mobile',
       width: 130,
+      search: false,
     },
     {
       title: 'ایمیل',
       dataIndex: 'email',
       key: 'email',
       width: 180,
-      // Show dash if email is null
-      render: (email: string | null) =>
-        email || <span style={{ color: '#999' }}>—</span>,
+      search: false,
+      render: (_, record) =>
+        record.email || <span style={{ color: '#999' }}>—</span>,
     },
     {
       title: 'عنوان',
@@ -140,15 +108,21 @@ const ContactUsPage: React.FC = () => {
       key: 'title',
       width: 150,
       ellipsis: true,
+      search: false,
     },
     {
       title: 'وضعیت',
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      // Render status as colored tag
-      render: (status: API.ContactUsStatus) => {
-        const config = getStatusConfig(status);
+      // Make status searchable with select dropdown
+      valueType: 'select',
+      valueEnum: {
+        pending: { text: 'در انتظار پیگیری', status: 'Warning' },
+        followed_up: { text: 'پیگیری شده', status: 'Success' },
+      },
+      render: (_, record) => {
+        const config = getStatusConfig(record.status);
         return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
@@ -157,14 +131,15 @@ const ContactUsPage: React.FC = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
-      // Format to Jalali calendar
-      render: (date: string) => formatJalaliDate(date),
+      search: false,
+      render: (_, record) => formatJalaliDate(record.created_at),
     },
     {
       title: 'عملیات',
       key: 'actions',
       width: 100,
-      // Render action buttons
+      search: false,
+      fixed: 'right',
       render: (_, record) => (
         <Space>
           {/* View detail button */}
@@ -190,46 +165,48 @@ const ContactUsPage: React.FC = () => {
 
   return (
     <Card>
-      {/* Header section with title and filters */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>
-          مدیریت پیام‌های تماس با ما
-        </Title>
-        <Space>
-          {/* Status filter dropdown */}
-          <Select
-            placeholder="فیلتر وضعیت"
-            allowClear
-            style={{ width: 180 }}
-            onChange={handleStatusChange}
-            options={[
-              { label: 'در انتظار پیگیری', value: 'pending' },
-              { label: 'پیگیری شده', value: 'followed_up' },
-            ]}
-          />
-        </Space>
-      </div>
-
-      {/* Main data table */}
-      <Table
+      <ProTable<API.ContactUsItem>
         columns={columns}
-        dataSource={contactUsList}
+        actionRef={actionRef}
+        // ProTable request function
+        request={async (params) => {
+          const { status, current, pageSize } = params;
+
+          const response = await getContactUs({
+            status: status || undefined,
+            page: current,
+            page_size: pageSize,
+          });
+
+          return {
+            data: response?.data?.list || [],
+            success: true,
+            total: response?.data?.pagination?.total || 0,
+          };
+        }}
         rowKey="id"
-        loading={loading}
-        scroll={{ x: 1100 }}
+        // Toolbar configuration
+        toolbar={{
+          title: 'مدیریت پیام‌های تماس با ما',
+        }}
+        // Search form configuration
+        search={{
+          labelWidth: 'auto',
+          searchText: 'جستجو',
+          resetText: 'بازنشانی',
+          collapsed: false,
+        }}
+        // Pagination configuration
         pagination={{
-          total: contactUsData?.data?.pagination?.total || 0,
-          pageSize: contactUsData?.data?.pagination?.page_size || 10,
           showSizeChanger: true,
           showTotal: (total) => `مجموع: ${total} پیام`,
         }}
+        // Horizontal scroll for responsiveness
+        scroll={{ x: 1100 }}
+        // Date formatting
+        dateFormatter="string"
+        // Header title
+        headerTitle={false}
       />
 
       {/* Update Status Modal */}

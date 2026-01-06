@@ -3,50 +3,64 @@ import {
   login as loginAPI,
   logout as logoutAPI,
 } from '@/services/auth';
-import { history } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { message } from 'antd';
 import Cookies from 'js-cookie';
 import { useCallback, useState } from 'react';
 
-export default function useUserModel() {
-  // State to hold the current user's profile information
+/* ---------- Types ---------- */
+
+interface LoginPayload {
+  username: string;
+  password: string;
+}
+
+interface UseUserModelReturn {
+  currentUser: API.UserInfo | null;
+  loading: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  fetchUserProfile: () => Promise<API.UserInfo | null>;
+}
+
+/* ---------- Hook ---------- */
+
+export default function useUserModel(): UseUserModelReturn {
   const [currentUser, setCurrentUser] = useState<API.UserInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch the current user's profile from the server
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const response = await getProfile();
-      if (response.success) {
-        setCurrentUser(response.data);
-        return response.data;
+  // ✅ Explicitly type refresh
+  const { refresh }: { refresh: () => Promise<void> } =
+    useModel('@@initialState');
+
+  const fetchUserProfile =
+    useCallback(async (): Promise<API.UserInfo | null> => {
+      try {
+        const response = await getProfile();
+        if (response.success) {
+          setCurrentUser(response.data);
+          return response.data;
+        }
+        return null;
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        return null;
       }
-      return null;
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      return null;
-    }
-  }, []);
+    }, []);
 
-  // Handle user login: authenticate, store token, fetch profile, redirect
   const login = useCallback(
-    async (payload: { username: string; password: string }) => {
+    async (payload: LoginPayload): Promise<void> => {
       setLoading(true);
       try {
         const response = await loginAPI(payload);
 
-        if (response.success) {
-          // Store the access token in a cookie (expires in 30 days)
-          Cookies.set('token', response.data.access_token, { expires: 30 });
-
-          // Fetch the user's profile immediately after login
-          await fetchUserProfile();
-
-          // Redirect to home page
-          history.push('/');
-        } else {
+        if (!response.success) {
           throw new Error(response.message || 'Login failed');
         }
+
+        Cookies.set('token', response.data.access_token, { expires: 30 });
+        await fetchUserProfile();
+        history.push('/');
       } finally {
         setLoading(false);
       }
@@ -54,21 +68,19 @@ export default function useUserModel() {
     [fetchUserProfile],
   );
 
-  // Handle user logout: call API, clear token, reset state, redirect
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       await logoutAPI();
       message.success('خروج با موفقیت انجام شد');
-    } catch (error) {
-      // Even if the API call fails, we still want to clear local state
+    } catch {
       message.error('خطا در ارتباط با سرور');
     } finally {
-      // Always clear the token and redirect, regardless of API success
       Cookies.remove('token');
       setCurrentUser(null);
-      history.push('/auth');
+      await refresh();
+      history.replace('/auth');
     }
-  }, []);
+  }, [refresh]);
 
   return {
     currentUser,

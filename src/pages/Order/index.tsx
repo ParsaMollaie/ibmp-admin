@@ -1,11 +1,9 @@
 import { getOrders } from '@/services/order';
-import { useRequest } from '@umijs/max';
-import { Card, Select, Space, Table, Tag, Typography } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Card, Tag } from 'antd';
 import jalaliMoment from 'jalali-moment';
-import React, { useState } from 'react';
-
-const { Title } = Typography;
+import React, { useRef } from 'react';
 
 // Helper function to format dates to Jalali (Persian) calendar
 const formatJalaliDate = (dateString: string): string => {
@@ -31,52 +29,26 @@ const OrderPage: React.FC = () => {
   // STATE MANAGEMENT
   // ============================================
 
-  // Filter state for status dropdown
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(
-    undefined,
-  );
+  // ProTable action ref - allows programmatic control of table
+  const actionRef = useRef<ActionType>();
 
   // ============================================
-  // DATA FETCHING
+  // PROTABLE COLUMN DEFINITIONS
   // ============================================
 
-  // useRequest hook provides automatic loading state management
-  // refreshDeps ensures data is refetched when filters change
-  const { data: ordersData, loading } = useRequest(
-    () => getOrders({ status: statusFilter }),
-    {
-      refreshDeps: [statusFilter],
-    },
-  );
-
-  // Safely extract the list from nested API response structure
-  const orders = ordersData?.data?.list || [];
-
-  // ============================================
-  // EVENT HANDLERS
-  // ============================================
-
-  // Handle status filter change
-  const handleStatusChange = (value: string | undefined) => {
-    setStatusFilter(value);
-  };
-
-  // ============================================
-  // TABLE COLUMN DEFINITIONS
-  // ============================================
-
-  const columns: ColumnsType<API.OrderItem> = [
+  const columns: ProColumns<API.OrderItem>[] = [
     {
       title: 'کد',
       dataIndex: 'code',
       key: 'code',
       width: 70,
+      search: false,
     },
     {
       title: 'کاربر',
       key: 'user',
       width: 180,
-      // Render user's full name and username
+      search: false,
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
@@ -92,14 +64,14 @@ const OrderPage: React.FC = () => {
       title: 'سرویس',
       key: 'company_service',
       width: 150,
-      // Render company service title
+      search: false,
       render: (_, record) => <span>{record.company_service.title}</span>,
     },
     {
       title: 'پلن',
       key: 'plan',
       width: 120,
-      // Render plan name with duration
+      search: false,
       render: (_, record) => (
         <div>
           <div>{record.plan.name}</div>
@@ -114,9 +86,9 @@ const OrderPage: React.FC = () => {
       dataIndex: 'price',
       key: 'price',
       width: 120,
-      // Format price with Persian locale thousand separators
-      render: (price: string) => {
-        const numericPrice = parseFloat(price);
+      search: false,
+      render: (_, record) => {
+        const numericPrice = parseFloat(record.price);
         return numericPrice.toLocaleString('fa-IR');
       },
     },
@@ -125,9 +97,16 @@ const OrderPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      // Render status as colored tag with Persian label
-      render: (status: API.OrderStatus) => {
-        const config = getStatusConfig(status);
+      // Make status searchable with select dropdown
+      valueType: 'select',
+      valueEnum: {
+        paid: { text: 'پرداخت شده', status: 'Success' },
+        pending: { text: 'در انتظار پرداخت', status: 'Warning' },
+        cancelled: { text: 'لغو شده', status: 'Error' },
+        expired: { text: 'منقضی شده', status: 'Default' },
+      },
+      render: (_, record) => {
+        const config = getStatusConfig(record.status);
         return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
@@ -136,16 +115,16 @@ const OrderPage: React.FC = () => {
       dataIndex: 'expires_at',
       key: 'expires_at',
       width: 120,
-      // Format expiry date to Jalali calendar
-      render: (date: string) => formatJalaliDate(date),
+      search: false,
+      render: (_, record) => formatJalaliDate(record.expires_at),
     },
     {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
       key: 'created_at',
       width: 120,
-      // Format creation date to Jalali calendar
-      render: (date: string) => formatJalaliDate(date),
+      search: false,
+      render: (_, record) => formatJalaliDate(record.created_at),
     },
   ];
 
@@ -155,49 +134,48 @@ const OrderPage: React.FC = () => {
 
   return (
     <Card>
-      {/* Header section with title and filters */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
-        <Title level={4} style={{ margin: 0 }}>
-          مدیریت سفارشات
-        </Title>
-        <Space>
-          {/* Status filter dropdown */}
-          <Select
-            placeholder="فیلتر وضعیت"
-            allowClear
-            style={{ width: 180 }}
-            onChange={handleStatusChange}
-            options={[
-              { label: 'پرداخت شده', value: 'paid' },
-              { label: 'در انتظار پرداخت', value: 'pending' },
-              { label: 'لغو شده', value: 'cancelled' },
-              { label: 'منقضی شده', value: 'expired' },
-            ]}
-          />
-        </Space>
-      </div>
-
-      {/* Main data table */}
-      <Table
+      <ProTable<API.OrderItem>
         columns={columns}
-        dataSource={orders}
+        actionRef={actionRef}
+        // ProTable request function - handles params automatically
+        request={async (params) => {
+          const { status, current, pageSize } = params;
+
+          const response = await getOrders({
+            status: status || undefined,
+            page: current,
+            page_size: pageSize,
+          });
+
+          return {
+            data: response?.data?.list || [],
+            success: true,
+            total: response?.data?.pagination?.total || 0,
+          };
+        }}
         rowKey="id"
-        loading={loading}
-        // Horizontal scroll for better responsiveness with many columns
-        scroll={{ x: 1100 }}
+        // Toolbar configuration
+        toolbar={{
+          title: 'مدیریت سفارشات',
+        }}
+        // Search form configuration
+        search={{
+          labelWidth: 'auto',
+          searchText: 'جستجو',
+          resetText: 'بازنشانی',
+          collapsed: false, // Keep search form expanded by default
+        }}
+        // Pagination configuration
         pagination={{
-          total: ordersData?.data?.pagination?.total || 0,
-          pageSize: ordersData?.data?.pagination?.page_size || 10,
           showSizeChanger: true,
           showTotal: (total) => `مجموع: ${total} سفارش`,
         }}
+        // Horizontal scroll for better responsiveness
+        scroll={{ x: 1100 }}
+        // Date formatting
+        dateFormatter="string"
+        // Header title
+        headerTitle={false}
       />
     </Card>
   );

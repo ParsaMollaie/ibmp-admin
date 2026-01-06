@@ -120,16 +120,21 @@ const UserTable: React.FC = () => {
     {
       title: 'نوع کاربر',
       dataIndex: 'user_type',
-      render: (_, record) => (
-        <Tag color={record.user_type === 'admin' ? 'red' : 'green'}>
-          {record.user_type}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const isAdmin = record.user_type === 'admin';
+
+        return (
+          <Tag color={isAdmin ? 'red' : 'green'}>
+            {isAdmin ? 'ادمین' : 'کاربر'}
+          </Tag>
+        );
+      },
       valueEnum: {
-        admin: { text: 'مدیر' },
-        user: { text: 'کاربر' },
+        admin: { text: 'ادمین' },
+        client: { text: 'کاربر' },
       },
     },
+
     {
       title: 'عملیات',
       dataIndex: 'option',

@@ -3,18 +3,19 @@
   flex-direction: column;
   height: 100vh;
   overflow: auto;
-  background: #f0f2f5;
   justify-content: center;
   align-items: center;
-  background-image: url('../../assets/images/login-background.jfif');
-  background-size: cover;
+
+  /* Smooth white → orange gradient */
+  background: linear-gradient(135deg, #fff 0%, #fff2e0 45%, #ffb366 100%);
 }
 
 .loginCard {
   width: 400px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 15%);
   padding: 24px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 10%);
 }
 
 .logoContainer {
@@ -22,22 +23,24 @@
   margin-bottom: 24px;
 }
 
-.logoText {
-  color: #1890ff;
+.logo {
+  height: 56px;
   margin-bottom: 8px;
 }
 
 .subText {
   display: block;
   margin-bottom: 24px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 45%);
 }
 
 .loginForm {
   .inputIcon {
-    color: #e1e1e1;
+    color: rgba(0, 0, 0, 45%);
     margin-right: 8px;
 
-    // For RTL support
+    /* RTL support */
     html[dir='rtl'] & {
       margin-right: 0;
       margin-left: 8px;
@@ -47,6 +50,8 @@
 
 .loginButton {
   margin-top: 24px;
+  height: 44px;
+  font-size: 16px;
 }
 
 .footer {
