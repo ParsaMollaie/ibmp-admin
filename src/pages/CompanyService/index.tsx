@@ -1,11 +1,14 @@
 import {
   approveCompanyService,
   getCompanyServices,
+  getCompanyServicesForExport,
   rejectCompanyService,
 } from '@/services/company-service';
+import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
   EditOutlined,
   EyeOutlined,
   LinkOutlined,
@@ -164,6 +167,38 @@ const formatPrice = (price: number): string => {
   return `${price.toLocaleString('fa-IR')} تومان`;
 };
 
+// Export column definitions with Persian headers
+const exportColumns: ExportColumn[] = [
+  { title: 'کد', dataIndex: 'code' },
+  { title: 'عنوان', dataIndex: 'title' },
+  { title: 'نام شرکت', dataIndex: ['company', 'name'] },
+  { title: 'دسته‌بندی', dataIndex: ['category', 'title'] },
+  {
+    title: 'وضعیت',
+    dataIndex: 'status',
+    render: (value) => {
+      const statusMap: Record<string, string> = {
+        pending: 'در انتظار تایید',
+        approved: 'تایید شده',
+        rejected: 'رد شده',
+      };
+      return statusMap[value] || value;
+    },
+  },
+  {
+    title: 'نوع',
+    dataIndex: 'type',
+    render: (value) => {
+      const typeMap: Record<string, string> = {
+        regular: 'عادی',
+        promoted: 'ویژه',
+      };
+      return typeMap[value] || value;
+    },
+  },
+  { title: 'اولویت', dataIndex: 'priority' },
+];
+
 const CompanyServicePage: React.FC = () => {
   // ============================================
   // REFS & STATE
@@ -180,9 +215,57 @@ const CompanyServicePage: React.FC = () => {
   const [currentRecord, setCurrentRecord] =
     useState<API.CompanyServiceItem | null>(null);
 
+  // Export states
+  const [filterParams, setFilterParams] = useState<Record<string, any>>({});
+  const [exporting, setExporting] = useState(false);
+
   // ============================================
   // EVENT HANDLERS
   // ============================================
+
+  // Handle export to Excel with batch fetching (uses lightweight export endpoint)
+  const handleExport = async () => {
+    setExporting(true);
+    const messageKey = 'export-progress';
+    message.loading({
+      content: 'در حال دانلود...',
+      key: messageKey,
+      duration: 0,
+    });
+
+    try {
+      const result = await exportAllToExcel(
+        getCompanyServicesForExport,
+        filterParams,
+        exportColumns,
+        'company-services',
+        500, // Batch size
+        (loaded, total) => {
+          message.loading({
+            content: `در حال دانلود... ${loaded} از ${total}`,
+            key: messageKey,
+            duration: 0,
+          });
+        },
+      );
+
+      if (result.success) {
+        message.success({
+          content: `${result.count} رکورد با موفقیت دانلود شد`,
+          key: messageKey,
+        });
+      } else {
+        message.warning({
+          content: 'داده‌ای برای دانلود وجود ندارد',
+          key: messageKey,
+        });
+      }
+    } catch (error) {
+      message.error({ content: 'خطا در دانلود فایل اکسل', key: messageKey });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Open update modal
   const handleEdit = (record: API.CompanyServiceItem) => {
@@ -476,7 +559,25 @@ const CompanyServicePage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
+        toolBarRender={() => [
+          <Button
+            key="export"
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exporting}
+          >
+            دانلود اکسل
+          </Button>,
+        ]}
         request={async (params) => {
+          // Store filter params for export (excluding pagination params)
+          const filters = Object.fromEntries(
+            Object.entries(params).filter(
+              ([key]) => !['current', 'pageSize'].includes(key),
+            ),
+          );
+          setFilterParams(filters);
+
           const response = await getCompanyServices({
             title: params.title,
             status: params.status,

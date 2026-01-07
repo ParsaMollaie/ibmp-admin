@@ -1,11 +1,13 @@
 import { getUsers, updateUser } from '@/services/auth';
+import { ExportColumn, exportToExcel } from '@/utils/exportExcel';
+import { DownloadOutlined } from '@ant-design/icons';
 import {
   ActionType,
   PageContainer,
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { message, Tag } from 'antd';
+import { Button, message, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 
@@ -37,11 +39,49 @@ const handleUpdate = async (fields: FormValueType) => {
   }
 };
 
+// Export column definitions with Persian headers
+const exportColumns: ExportColumn[] = [
+  { title: 'نام کاربری', dataIndex: 'username' },
+  { title: 'نام', dataIndex: 'first_name' },
+  { title: 'نام خانوادگی', dataIndex: 'last_name' },
+  { title: 'ایمیل', dataIndex: 'email' },
+  {
+    title: 'نوع کاربر',
+    dataIndex: 'user_type',
+    render: (value) => (value === 'admin' ? 'ادمین' : 'کاربر'),
+  },
+];
+
 const UserTable: React.FC = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
+  const [filterParams, setFilterParams] = useState<Record<string, any>>({});
+  const [exporting, setExporting] = useState(false);
   const actionRef = useRef<ActionType>();
+
+  // Handle export to Excel
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const response = await getUsers({
+        ...filterParams,
+        page: 1,
+        page_size: 99999, // Fetch all filtered data
+      });
+
+      if (response.success && response.data.list.length > 0) {
+        exportToExcel(response.data.list, exportColumns, 'users');
+        message.success('فایل اکسل با موفقیت دانلود شد');
+      } else {
+        message.warning('داده‌ای برای دانلود وجود ندارد');
+      }
+    } catch (error) {
+      message.error('خطا در دانلود فایل اکسل');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const columns: ProColumns<API.UserInfo>[] = [
     {
@@ -120,7 +160,25 @@ const UserTable: React.FC = () => {
         search={{
           labelWidth: 'auto',
         }}
+        toolBarRender={() => [
+          <Button
+            key="export"
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exporting}
+          >
+            دانلود اکسل
+          </Button>,
+        ]}
         request={async (params = {}) => {
+          // Store filter params for export (excluding pagination params)
+          const filters = Object.fromEntries(
+            Object.entries(params).filter(
+              ([key]) => !['current', 'pageSize'].includes(key),
+            ),
+          );
+          setFilterParams(filters);
+
           try {
             const response = await getUsers({
               ...params,

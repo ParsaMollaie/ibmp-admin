@@ -115,4 +115,5 @@ export default defineConfig({
   },
   mfsu: false,
   npmClient: 'npm',
+  esbuildMinifyIIFE: true,
 });

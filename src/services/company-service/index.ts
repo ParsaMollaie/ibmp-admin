@@ -106,3 +106,25 @@ export async function rejectCompanyService(id: string) {
     },
   );
 }
+
+/**
+ * Get company services for export with minimal data (faster response)
+ * Uses lightweight export endpoint that returns only essential fields
+ *
+ * @param params - Same filter params as getCompanyServices
+ */
+export async function getCompanyServicesForExport(params?: {
+  title?: string;
+  status?: API.CompanyServiceStatus;
+  type?: API.CompanyServiceType;
+  company_name?: string;
+  page?: number;
+  page_size?: number;
+}) {
+  return request<
+    API.ApiResponse<API.PaginatedResponse<API.CompanyServiceItem>>
+  >(`${API_BASE}/company-services/export`, {
+    method: 'GET',
+    params,
+  });
+}

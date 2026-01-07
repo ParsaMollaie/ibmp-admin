@@ -1,5 +1,11 @@
-import { getCompanies, updateCompanyTag } from '@/services/company';
 import {
+  getCompanies,
+  getCompaniesForExport,
+  updateCompanyTag,
+} from '@/services/company';
+import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
+import {
+  DownloadOutlined,
   EditOutlined,
   EyeOutlined,
   LinkOutlined,
@@ -13,12 +19,12 @@ import {
   Descriptions,
   Divider,
   Image,
+  message,
   Modal,
   Space,
   Tag,
   Tooltip,
   Typography,
-  message,
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm from './components/UpdateForm';
@@ -86,6 +92,28 @@ const getSocialTypeLabel = (type: string): string => {
   return typeMap[type] || type;
 };
 
+// Export column definitions with Persian headers
+const exportColumns: ExportColumn[] = [
+  { title: 'کد', dataIndex: 'code' },
+  { title: 'نام شرکت', dataIndex: 'name' },
+  { title: 'استان', dataIndex: ['province', 'name'] },
+  { title: 'شهر', dataIndex: ['city', 'name'] },
+  { title: 'ایمیل', dataIndex: 'email' },
+  { title: 'خلاصه', dataIndex: 'summary' },
+  {
+    title: 'وضعیت',
+    dataIndex: 'tag',
+    render: (value) => {
+      const tagMap: Record<string, string> = {
+        regular: 'عادی',
+        most_view: 'پربازدید',
+        promoted: 'ویژه',
+      };
+      return tagMap[value] || 'عادی';
+    },
+  },
+];
+
 const CompanyPage: React.FC = () => {
   // ============================================
   // STATE & REFS
@@ -107,9 +135,57 @@ const CompanyPage: React.FC = () => {
     null,
   );
 
+  // Export states
+  const [filterParams, setFilterParams] = useState<Record<string, any>>({});
+  const [exporting, setExporting] = useState(false);
+
   // ============================================
   // EVENT HANDLERS
   // ============================================
+
+  // Handle export to Excel with batch fetching (uses lightweight export endpoint)
+  const handleExport = async () => {
+    setExporting(true);
+    const messageKey = 'export-progress';
+    message.loading({
+      content: 'در حال دانلود...',
+      key: messageKey,
+      duration: 0,
+    });
+
+    try {
+      const result = await exportAllToExcel(
+        getCompaniesForExport,
+        filterParams,
+        exportColumns,
+        'companies',
+        500, // Batch size
+        (loaded, total) => {
+          message.loading({
+            content: `در حال دانلود... ${loaded} از ${total}`,
+            key: messageKey,
+            duration: 0,
+          });
+        },
+      );
+
+      if (result.success) {
+        message.success({
+          content: `${result.count} رکورد با موفقیت دانلود شد`,
+          key: messageKey,
+        });
+      } else {
+        message.warning({
+          content: 'داده‌ای برای دانلود وجود ندارد',
+          key: messageKey,
+        });
+      }
+    } catch (error) {
+      message.error({ content: 'خطا در دانلود فایل اکسل', key: messageKey });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Open company edit modal (full edit)
   const handleEdit = (record: API.CompanyItem) => {
@@ -366,7 +442,25 @@ const CompanyPage: React.FC = () => {
          *
          * Must return { data, success, total } format
          */
+        toolBarRender={() => [
+          <Button
+            key="export"
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exporting}
+          >
+            دانلود اکسل
+          </Button>,
+        ]}
         request={async (params) => {
+          // Store filter params for export (excluding pagination params)
+          const filters = Object.fromEntries(
+            Object.entries(params).filter(
+              ([key]) => !['current', 'pageSize'].includes(key),
+            ),
+          );
+          setFilterParams(filters);
+
           // Map ProTable params to our API params
           const response = await getCompanies({
             name: params.name,
