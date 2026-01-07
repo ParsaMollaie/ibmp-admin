@@ -20,6 +20,7 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
+  Sector,
   Tooltip,
   XAxis,
   YAxis,
@@ -49,9 +50,92 @@ const CHART_COLORS = {
   category: '#eb2f96',
 };
 
+// Custom active shape for pie charts with better text display
+const renderActiveShape = (props: any) => {
+  const {
+    cx,
+    cy,
+    innerRadius,
+    outerRadius,
+    startAngle,
+    endAngle,
+    fill,
+    payload,
+    value,
+    percent,
+  } = props;
+
+  return (
+    <g>
+      <text
+        x={cx}
+        y={cy - 10}
+        textAnchor="middle"
+        fill="#333"
+        fontSize={14}
+        fontWeight="bold"
+      >
+        {payload.label}
+      </text>
+      <text x={cx} y={cy + 10} textAnchor="middle" fill="#666" fontSize={12}>
+        {`${value.toLocaleString('fa-IR')} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={outerRadius + 10}
+        outerRadius={outerRadius + 14}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
+// Custom legend with click functionality
+const renderLegend = (props: any, onClick?: (entry: any) => void) => {
+  const { payload } = props;
+  return (
+    <div className={styles.legendContainer}>
+      {payload.map((entry: any, index: number) => (
+        <div
+          key={`legend-${index}`}
+          className={styles.legendItem}
+          onClick={() => onClick?.(entry)}
+          style={{ cursor: onClick ? 'pointer' : 'default' }}
+        >
+          <span
+            className={styles.legendDot}
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className={styles.legendLabel}>{entry.value}</span>
+          {entry.payload?.count !== undefined && (
+            <span className={styles.legendValue}>
+              ({entry.payload.count.toLocaleString('fa-IR')})
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activeOrderIndex, setActiveOrderIndex] = useState(0);
+  const [activeTagIndex, setActiveTagIndex] = useState(0);
+  const [activeStatusIndex, setActiveStatusIndex] = useState(0);
 
   const fetchStats = async () => {
     try {
@@ -115,9 +199,64 @@ const HomePage: React.FC = () => {
   // Format currency
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)} میلیون`;
+      return `${(amount / 1000000).toFixed(1)} م`;
+    }
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(0)} ه`;
     }
     return formatNumber(amount);
+  };
+
+  // Click handlers for charts
+  const handleOrderStatusClick = (data: any) => {
+    if (data?.status) {
+      history.push(`/order?status=${data.status}`);
+    }
+  };
+
+  const handleCompanyTagClick = (data: any) => {
+    if (data?.tag) {
+      history.push(`/company?tag=${data.tag}`);
+    }
+  };
+
+  const handleServiceStatusClick = (data: any) => {
+    if (data?.status) {
+      history.push(`/company-services?status=${data.status}`);
+    }
+  };
+
+  const handleBarClick = (data: any, path: string, param: string) => {
+    if (data) {
+      history.push(
+        `${path}?${param}=${encodeURIComponent(data[param] || data.name)}`,
+      );
+    }
+  };
+
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label, suffix = '' }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className={styles.customTooltip}>
+          {label && <div className={styles.tooltipLabel}>{label}</div>}
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className={styles.tooltipItem}>
+              <span
+                className={styles.tooltipDot}
+                style={{ backgroundColor: entry.color }}
+              />
+              <span>{entry.name}: </span>
+              <strong>
+                {formatNumber(entry.value)}
+                {suffix}
+              </strong>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -182,21 +321,38 @@ const HomePage: React.FC = () => {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={stats?.charts.registrations_by_month || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value: number) => formatNumber(value)}
-                      labelFormatter={(label) => `ماه: ${label}`}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
                     />
-                    <Legend />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{ paddingTop: 20 }}
+                      formatter={(value) => (
+                        <span style={{ color: '#666', fontSize: 12 }}>
+                          {value}
+                        </span>
+                      )}
+                    />
                     <Line
                       type="monotone"
                       dataKey="users"
                       name="کاربران"
                       stroke={CHART_COLORS.users}
                       strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.users }}
+                      dot={{ fill: CHART_COLORS.users, r: 4 }}
+                      activeDot={{
+                        r: 6,
+                        cursor: 'pointer',
+                        onClick: () => history.push('/user'),
+                      }}
                     />
                     <Line
                       type="monotone"
@@ -204,7 +360,12 @@ const HomePage: React.FC = () => {
                       name="شرکت‌ها"
                       stroke={CHART_COLORS.companies}
                       strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.companies }}
+                      dot={{ fill: CHART_COLORS.companies, r: 4 }}
+                      activeDot={{
+                        r: 6,
+                        cursor: 'pointer',
+                        onClick: () => history.push('/company'),
+                      }}
                     />
                     <Line
                       type="monotone"
@@ -212,7 +373,12 @@ const HomePage: React.FC = () => {
                       name="خدمات"
                       stroke={CHART_COLORS.services}
                       strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.services }}
+                      dot={{ fill: CHART_COLORS.services, r: 4 }}
+                      activeDot={{
+                        r: 6,
+                        cursor: 'pointer',
+                        onClick: () => history.push('/company-services'),
+                      }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -229,20 +395,22 @@ const HomePage: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
+                      activeIndex={activeOrderIndex}
+                      activeShape={renderActiveShape}
                       data={stats?.charts.orders_by_status || []}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ label, count, percent }) =>
-                        `${label}: ${count} (${(percent * 100).toFixed(0)}%)`
-                      }
-                      outerRadius={100}
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="label"
+                      onMouseEnter={(_, index) => setActiveOrderIndex(index)}
+                      onClick={(data) => handleOrderStatusClick(data)}
+                      style={{ cursor: 'pointer' }}
                     >
                       {(stats?.charts.orders_by_status || []).map(
-                        (entry, index) => (
+                        (_, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
@@ -250,13 +418,14 @@ const HomePage: React.FC = () => {
                         ),
                       )}
                     </Pie>
-                    <Tooltip
-                      formatter={(value: number, name: string) => [
-                        formatNumber(value),
-                        name,
-                      ]}
+                    <Legend
+                      content={(props) =>
+                        renderLegend(props, (entry) =>
+                          handleOrderStatusClick(entry.payload),
+                        )
+                      }
+                      verticalAlign="bottom"
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -271,22 +440,37 @@ const HomePage: React.FC = () => {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={stats?.charts.revenue_by_month || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                    <Tooltip
-                      formatter={(value: number) => [
-                        `${formatNumber(value)} تومان`,
-                        'درآمد',
-                      ]}
-                      labelFormatter={(label) => `ماه: ${label}`}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
                     />
-                    <Legend />
+                    <YAxis
+                      tickFormatter={(value) => formatCurrency(value)}
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip suffix=" تومان" />}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                    />
+                    <Legend
+                      wrapperStyle={{ paddingTop: 20 }}
+                      formatter={(value) => (
+                        <span style={{ color: '#666', fontSize: 12 }}>
+                          {value}
+                        </span>
+                      )}
+                    />
                     <Bar
                       dataKey="amount"
                       name="درآمد"
                       fill={CHART_COLORS.revenue}
                       radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                      onClick={() => history.push('/order')}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -307,21 +491,35 @@ const HomePage: React.FC = () => {
                   <BarChart
                     data={stats?.charts.companies_by_province || []}
                     layout="vertical"
+                    margin={{ left: 20 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="province" type="category" width={100} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      dataKey="province"
+                      type="category"
+                      width={80}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <Tooltip
-                      formatter={(value: number) => [
-                        formatNumber(value),
-                        'تعداد',
-                      ]}
+                      content={<CustomTooltip />}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                     />
                     <Bar
                       dataKey="count"
                       name="تعداد شرکت"
                       fill={CHART_COLORS.province}
                       radius={[0, 4, 4, 0]}
+                      cursor="pointer"
+                      onClick={(data) =>
+                        handleBarClick(data, '/company', 'province')
+                      }
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -338,20 +536,22 @@ const HomePage: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
+                      activeIndex={activeTagIndex}
+                      activeShape={renderActiveShape}
                       data={stats?.charts.companies_by_tag || []}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ label, count, percent }) =>
-                        `${label}: ${count} (${(percent * 100).toFixed(0)}%)`
-                      }
-                      outerRadius={100}
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="label"
+                      onMouseEnter={(_, index) => setActiveTagIndex(index)}
+                      onClick={(data) => handleCompanyTagClick(data)}
+                      style={{ cursor: 'pointer' }}
                     >
                       {(stats?.charts.companies_by_tag || []).map(
-                        (entry, index) => (
+                        (_, index) => (
                           <Cell
                             key={`cell-tag-${index}`}
                             fill={TAG_COLORS[index % TAG_COLORS.length]}
@@ -359,13 +559,14 @@ const HomePage: React.FC = () => {
                         ),
                       )}
                     </Pie>
-                    <Tooltip
-                      formatter={(value: number, name: string) => [
-                        formatNumber(value),
-                        name,
-                      ]}
+                    <Legend
+                      content={(props) =>
+                        renderLegend(props, (entry) =>
+                          handleCompanyTagClick(entry.payload),
+                        )
+                      }
+                      verticalAlign="bottom"
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -381,20 +582,22 @@ const HomePage: React.FC = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
+                      activeIndex={activeStatusIndex}
+                      activeShape={renderActiveShape}
                       data={stats?.charts.services_by_status || []}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ label, count, percent }) =>
-                        `${label}: ${count} (${(percent * 100).toFixed(0)}%)`
-                      }
-                      outerRadius={100}
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="label"
+                      onMouseEnter={(_, index) => setActiveStatusIndex(index)}
+                      onClick={(data) => handleServiceStatusClick(data)}
+                      style={{ cursor: 'pointer' }}
                     >
                       {(stats?.charts.services_by_status || []).map(
-                        (entry, index) => (
+                        (_, index) => (
                           <Cell
                             key={`cell-status-${index}`}
                             fill={STATUS_COLORS[index % STATUS_COLORS.length]}
@@ -402,13 +605,14 @@ const HomePage: React.FC = () => {
                         ),
                       )}
                     </Pie>
-                    <Tooltip
-                      formatter={(value: number, name: string) => [
-                        formatNumber(value),
-                        name,
-                      ]}
+                    <Legend
+                      content={(props) =>
+                        renderLegend(props, (entry) =>
+                          handleServiceStatusClick(entry.payload),
+                        )
+                      }
+                      verticalAlign="bottom"
                     />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -428,21 +632,35 @@ const HomePage: React.FC = () => {
                   <BarChart
                     data={stats?.charts.top_categories || []}
                     layout="vertical"
+                    margin={{ left: 20 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="category" type="category" width={120} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      dataKey="category"
+                      type="category"
+                      width={100}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <Tooltip
-                      formatter={(value: number) => [
-                        formatNumber(value),
-                        'تعداد خدمت',
-                      ]}
+                      content={<CustomTooltip />}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
                     />
                     <Bar
                       dataKey="count"
                       name="تعداد خدمت"
                       fill={CHART_COLORS.category}
                       radius={[0, 4, 4, 0]}
+                      cursor="pointer"
+                      onClick={(data) =>
+                        handleBarClick(data, '/company-services', 'category')
+                      }
                     />
                   </BarChart>
                 </ResponsiveContainer>
