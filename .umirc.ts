@@ -11,7 +11,7 @@ export default defineConfig({
   },
   proxy: {
     '/api': {
-      target: 'http://91.99.187.224:9800',
+      target: 'http://admin.ibmp.ir',
       changeOrigin: true,
       pathRewrite: { '^/api': '/api' },
     },
