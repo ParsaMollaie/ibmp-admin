@@ -83,6 +83,22 @@ export async function updateCompanyTag(id: string, tag: API.CompanyTag) {
   });
 }
 
+/**
+ * Update company status (pending, approved, rejected, disable)
+ *
+ * @param id - Company UUID
+ * @param status - New status value
+ */
+export async function updateCompanyStatus(
+  id: string,
+  status: API.CompanyStatus,
+) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/companies/${id}`, {
+    method: 'PUT',
+    data: { status },
+  });
+}
+
 // ============================================
 // PROVINCE & CITY API FUNCTIONS
 // These are used for the location dropdowns in company forms

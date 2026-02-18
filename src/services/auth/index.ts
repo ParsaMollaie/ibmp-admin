@@ -61,6 +61,16 @@ export async function updateUser(
   });
 }
 
+export async function changeUserPassword(
+  id: string | number,
+  data: API.ChangePasswordPayload,
+) {
+  return request(`${API_BASE}/users/${id}/password`, {
+    method: 'PUT',
+    data,
+  });
+}
+
 // Slider endpoints
 export async function getSliders(params?: any) {
   return request(`${API_BASE}/sliders`, {
