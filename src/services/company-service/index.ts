@@ -108,6 +108,25 @@ export async function rejectCompanyService(id: string) {
 }
 
 /**
+ * Update the category of a company service
+ *
+ * @param id - The company service's unique identifier (UUID)
+ * @param categoryId - The new category's unique identifier (UUID)
+ */
+export async function updateCompanyServiceCategory(
+  id: string,
+  categoryId: string,
+) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/company-services/${id}/update-category`,
+    {
+      method: 'PUT',
+      data: { category_id: categoryId },
+    },
+  );
+}
+
+/**
  * Get company services for export with minimal data (faster response)
  * Uses lightweight export endpoint that returns only essential fields
  *

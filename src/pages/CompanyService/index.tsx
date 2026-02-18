@@ -6,6 +6,7 @@ import {
 } from '@/services/company-service';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
+  AppstoreOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   DownloadOutlined,
@@ -31,6 +32,7 @@ import {
   Typography,
 } from 'antd';
 import React, { useRef, useState } from 'react';
+import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
 
 const { Title, Text, Paragraph } = Typography;
@@ -209,6 +211,8 @@ const CompanyServicePage: React.FC = () => {
   // Modal visibility states
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [updateCategoryModalVisible, setUpdateCategoryModalVisible] =
+    useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Currently selected record
@@ -282,6 +286,19 @@ const CompanyServicePage: React.FC = () => {
   // Handle successful update
   const handleUpdateSuccess = () => {
     setUpdateModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+  };
+
+  // Open update category modal
+  const handleUpdateCategory = (record: API.CompanyServiceItem) => {
+    setCurrentRecord(record);
+    setUpdateCategoryModalVisible(true);
+  };
+
+  // Handle successful category update
+  const handleUpdateCategorySuccess = () => {
+    setUpdateCategoryModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
   };
@@ -455,7 +472,7 @@ const CompanyServicePage: React.FC = () => {
     {
       title: 'عملیات',
       key: 'actions',
-      width: 150, // Increased width to accommodate new buttons
+      width: 180,
       hideInSearch: true,
       fixed: 'right',
       render: (_, record) => (
@@ -490,6 +507,15 @@ const CompanyServicePage: React.FC = () => {
               type="text"
               icon={<EyeOutlined />}
               onClick={() => handleViewDetail(record)}
+            />
+          </Tooltip>
+
+          {/* Update Category Button - always visible */}
+          <Tooltip title="تغییر دسته‌بندی">
+            <Button
+              type="text"
+              icon={<AppstoreOutlined />}
+              onClick={() => handleUpdateCategory(record)}
             />
           </Tooltip>
 
@@ -628,6 +654,17 @@ const CompanyServicePage: React.FC = () => {
           setCurrentRecord(null);
         }}
         onSuccess={handleUpdateSuccess}
+        record={currentRecord}
+      />
+
+      {/* Update Category Modal */}
+      <UpdateCategoryForm
+        visible={updateCategoryModalVisible}
+        onCancel={() => {
+          setUpdateCategoryModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleUpdateCategorySuccess}
         record={currentRecord}
       />
 
