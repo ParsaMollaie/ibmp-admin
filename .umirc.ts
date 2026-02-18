@@ -64,7 +64,7 @@ export default defineConfig({
       icon: 'BankOutlined',
     },
     {
-      name: 'خدمات شرکت',
+      name: 'مجریان و مهندسان',
       path: '/company-services',
       component: './CompanyService',
       icon: 'ShopOutlined',

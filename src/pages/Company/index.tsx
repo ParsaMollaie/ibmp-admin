@@ -1,6 +1,7 @@
 import {
   getCompanies,
   getCompaniesForExport,
+  getCompany,
   updateCompanyTag,
 } from '@/services/company';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
@@ -23,6 +24,7 @@ import {
   message,
   Modal,
   Space,
+  Spin,
   Tag,
   Tooltip,
   Typography,
@@ -143,6 +145,9 @@ const CompanyPage: React.FC = () => {
     null,
   );
 
+  // Detail modal loading state
+  const [detailLoading, setDetailLoading] = useState(false);
+
   // Export states
   const [filterParams, setFilterParams] = useState<Record<string, any>>({});
   const [exporting, setExporting] = useState(false);
@@ -201,10 +206,22 @@ const CompanyPage: React.FC = () => {
     setUpdateModalVisible(true);
   };
 
-  // Open detail view modal
-  const handleViewDetail = (record: API.CompanyItem) => {
-    setCurrentRecord(record);
+  // Open detail view modal - fetch full data from view endpoint
+  const handleViewDetail = async (record: API.CompanyItem) => {
     setDetailModalVisible(true);
+    setDetailLoading(true);
+    try {
+      const response = await getCompany(record.id);
+      if (response.success && response.data) {
+        setCurrentRecord(response.data);
+      } else {
+        setCurrentRecord(record);
+      }
+    } catch {
+      setCurrentRecord(record);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   // Handle successful update - reload table data
@@ -607,129 +624,137 @@ const CompanyPage: React.FC = () => {
         footer={null}
         width={800}
       >
-        {currentRecord && (
-          <div>
-            {/* Company Header with Logo */}
-            <div
-              style={{
-                display: 'flex',
-                gap: 16,
-                marginBottom: 24,
-                padding: 16,
-                background: '#fafafa',
-                borderRadius: 8,
-              }}
-            >
-              {currentRecord.logo && (
-                <Image
-                  src={currentRecord.logo}
-                  alt={currentRecord.name}
-                  width={80}
-                  height={80}
-                  style={{ objectFit: 'cover', borderRadius: 8 }}
-                />
-              )}
-              <div>
-                <Title level={4} style={{ margin: 0 }}>
-                  {currentRecord.name}
-                </Title>
-                <Space style={{ marginTop: 8 }}>
-                  <Tag color={getTagConfig(currentRecord.tag).color}>
-                    {getTagConfig(currentRecord.tag).label}
-                  </Tag>
-                  <Text type="secondary">کد: {currentRecord.code}</Text>
-                </Space>
+        <Spin spinning={detailLoading}>
+          {currentRecord && (
+            <div>
+              {/* Company Header with Logo */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 16,
+                  marginBottom: 24,
+                  padding: 16,
+                  background: '#fafafa',
+                  borderRadius: 8,
+                }}
+              >
+                {currentRecord.logo && (
+                  <Image
+                    src={currentRecord.logo}
+                    alt={currentRecord.name}
+                    width={80}
+                    height={80}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                )}
+                <div>
+                  <Title level={4} style={{ margin: 0 }}>
+                    {currentRecord.name}
+                  </Title>
+                  <Space style={{ marginTop: 8 }}>
+                    <Tag color={getTagConfig(currentRecord.tag).color}>
+                      {getTagConfig(currentRecord.tag).label}
+                    </Tag>
+                    <Text type="secondary">کد: {currentRecord.code}</Text>
+                  </Space>
+                </div>
               </div>
+
+              {/* Basic Information */}
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="استان">
+                  {currentRecord.province?.name || '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="شهر">
+                  {currentRecord.city?.name || '—'}
+                </Descriptions.Item>
+                <Descriptions.Item label="آدرس" span={2}>
+                  {currentRecord.address || '—'}
+                </Descriptions.Item>
+              </Descriptions>
+
+              {/* Summary */}
+              <Divider orientation="right">خلاصه</Divider>
+              <Paragraph>{currentRecord.summary || '—'}</Paragraph>
+
+              {/* Description */}
+              {currentRecord.description && (
+                <>
+                  <Divider orientation="right">توضیحات</Divider>
+                  <Paragraph>{currentRecord.description}</Paragraph>
+                </>
+              )}
+
+              {/* Contact Numbers */}
+              {currentRecord.contact_numbers &&
+                currentRecord.contact_numbers.length > 0 && (
+                  <>
+                    <Divider orientation="right">شماره‌های تماس</Divider>
+                    <Descriptions bordered column={2} size="small">
+                      {currentRecord.contact_numbers.map((contact, index) => (
+                        <Descriptions.Item
+                          key={index}
+                          label={getContactTypeLabel(contact.type)}
+                        >
+                          <span
+                            style={{
+                              direction: 'ltr',
+                              display: 'inline-block',
+                            }}
+                          >
+                            {contact.data}
+                          </span>
+                        </Descriptions.Item>
+                      ))}
+                    </Descriptions>
+                  </>
+                )}
+
+              {/* Social Media */}
+              {currentRecord.social_media &&
+                currentRecord.social_media.length > 0 && (
+                  <>
+                    <Divider orientation="right">شبکه‌های اجتماعی</Divider>
+                    <Descriptions bordered column={1} size="small">
+                      {currentRecord.social_media.map((social, index) => (
+                        <Descriptions.Item
+                          key={index}
+                          label={getSocialTypeLabel(social.type)}
+                        >
+                          <a
+                            href={social.data}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              direction: 'ltr',
+                              display: 'inline-block',
+                            }}
+                          >
+                            <LinkOutlined style={{ marginLeft: 4 }} />
+                            {social.data}
+                          </a>
+                        </Descriptions.Item>
+                      ))}
+                    </Descriptions>
+                  </>
+                )}
+
+              {/* Catalog Link */}
+              {currentRecord.catalog && (
+                <>
+                  <Divider orientation="right">کاتالوگ</Divider>
+                  <a
+                    href={currentRecord.catalog}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button icon={<LinkOutlined />}>دانلود کاتالوگ</Button>
+                  </a>
+                </>
+              )}
             </div>
-
-            {/* Basic Information */}
-            <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="استان">
-                {currentRecord.province?.name || '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="شهر">
-                {currentRecord.city?.name || '—'}
-              </Descriptions.Item>
-              <Descriptions.Item label="آدرس" span={2}>
-                {currentRecord.address || '—'}
-              </Descriptions.Item>
-            </Descriptions>
-
-            {/* Summary */}
-            <Divider orientation="right">خلاصه</Divider>
-            <Paragraph>{currentRecord.summary || '—'}</Paragraph>
-
-            {/* Description */}
-            {currentRecord.description && (
-              <>
-                <Divider orientation="right">توضیحات</Divider>
-                <Paragraph>{currentRecord.description}</Paragraph>
-              </>
-            )}
-
-            {/* Contact Numbers */}
-            {currentRecord.contact_numbers &&
-              currentRecord.contact_numbers.length > 0 && (
-                <>
-                  <Divider orientation="right">شماره‌های تماس</Divider>
-                  <Descriptions bordered column={2} size="small">
-                    {currentRecord.contact_numbers.map((contact, index) => (
-                      <Descriptions.Item
-                        key={index}
-                        label={getContactTypeLabel(contact.type)}
-                      >
-                        <span
-                          style={{ direction: 'ltr', display: 'inline-block' }}
-                        >
-                          {contact.data}
-                        </span>
-                      </Descriptions.Item>
-                    ))}
-                  </Descriptions>
-                </>
-              )}
-
-            {/* Social Media */}
-            {currentRecord.social_media &&
-              currentRecord.social_media.length > 0 && (
-                <>
-                  <Divider orientation="right">شبکه‌های اجتماعی</Divider>
-                  <Descriptions bordered column={1} size="small">
-                    {currentRecord.social_media.map((social, index) => (
-                      <Descriptions.Item
-                        key={index}
-                        label={getSocialTypeLabel(social.type)}
-                      >
-                        <a
-                          href={social.data}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{ direction: 'ltr', display: 'inline-block' }}
-                        >
-                          <LinkOutlined style={{ marginLeft: 4 }} />
-                          {social.data}
-                        </a>
-                      </Descriptions.Item>
-                    ))}
-                  </Descriptions>
-                </>
-              )}
-
-            {/* Catalog Link */}
-            {currentRecord.catalog && (
-              <>
-                <Divider orientation="right">کاتالوگ</Divider>
-                <a
-                  href={currentRecord.catalog}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button icon={<LinkOutlined />}>دانلود کاتالوگ</Button>
-                </a>
-              </>
-            )}
-          </div>
-        )}
+          )}
+        </Spin>
       </Modal>
     </>
   );

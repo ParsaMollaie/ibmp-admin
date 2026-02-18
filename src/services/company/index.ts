@@ -94,10 +94,13 @@ export async function updateCompanyStatus(
   id: string,
   status: API.CompanyStatus,
 ) {
-  return request<API.ApiResponse<[]>>(`${API_BASE}/companies/${id}`, {
-    method: 'PUT',
-    data: { status },
-  });
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/companies/${id}/update-status`,
+    {
+      method: 'PUT',
+      data: { status },
+    },
+  );
 }
 
 // ============================================
