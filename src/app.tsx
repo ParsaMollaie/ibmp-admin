@@ -3,6 +3,7 @@ import { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import faIR from 'antd/locale/fa_IR';
 import dayjs from 'dayjs';
+import jalaliday from 'jalaliday';
 import Cookies from 'js-cookie';
 import { StyleSheetManager } from 'styled-components';
 import rtlPlugin from 'stylis-plugin-rtl';
@@ -12,6 +13,7 @@ import logo from './assets/images/logo.svg';
 import UserAvatar from './components/UserAvatar';
 import './global.less';
 
+dayjs.extend(jalaliday);
 dayjs.locale('fa');
 (dayjs as any).calendar('jalali');
 
