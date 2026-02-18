@@ -3,14 +3,14 @@ import { createNews } from '@/services/news';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
-  ProFormDatePicker,
   ProFormDigit,
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, message, Upload } from 'antd';
-import moment from 'jalali-moment';
+import { DatePicker as DatePickerJalali } from 'antd-jalali';
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
 interface CreateFormProps {
@@ -79,10 +79,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
 
       // Convert Jalali date to Gregorian for API
       const publishDate = values.publish_at
-        ? moment
-            .from(values.publish_at, 'fa', 'jYYYY/jMM/jDD')
+        ? dayjs(values.publish_at)
+            .calendar('gregory')
             .format('YYYY-MM-DD HH:mm:ss')
-        : moment().format('YYYY-MM-DD HH:mm:ss');
+        : dayjs().calendar('gregory').format('YYYY-MM-DD HH:mm:ss');
 
       const payload: API.NewsPayload = {
         title: values.title,
@@ -157,16 +157,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
         <RichTextEditor placeholder="محتوای کامل خبر را وارد کنید" />
       </Form.Item>
 
-      <ProFormDatePicker
+      <Form.Item
         name="publish_at"
         label="تاریخ انتشار"
-        placeholder="تاریخ انتشار را انتخاب کنید"
         rules={[{ required: true, message: 'تاریخ انتشار الزامی است' }]}
-        fieldProps={{
-          format: 'jYYYY/jMM/jDD',
-          style: { width: '100%' },
-        }}
-      />
+      >
+        <DatePickerJalali
+          placeholder="تاریخ انتشار را انتخاب کنید"
+          style={{ width: '100%' }}
+        />
+      </Form.Item>
 
       <ProFormDigit
         name="study_time"

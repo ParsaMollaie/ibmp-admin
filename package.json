@@ -16,6 +16,7 @@
     "@types/js-cookie": "^3.0.6",
     "@umijs/max": "^4.4.11",
     "antd": "^5.4.0",
+    "antd-jalali": "^2.0.1",
     "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
     "jalali-moment": "^3.3.11",

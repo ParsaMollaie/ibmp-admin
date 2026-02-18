@@ -3,14 +3,14 @@ import { updateNews } from '@/services/news';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
-  ProFormDatePicker,
   ProFormDigit,
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, Image, message, Spin, Upload } from 'antd';
-import moment from 'jalali-moment';
+import { DatePicker as DatePickerJalali } from 'antd-jalali';
+import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 interface UpdateFormProps {
@@ -70,9 +70,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   // When record changes, populate the form
   useEffect(() => {
     if (record && open) {
-      // Convert Gregorian date to Jalali for display
+      // Pass dayjs object — JalaliLocaleListener ensures it renders as Jalali
       const jalaliDate = record.publish_at
-        ? moment(record.publish_at).locale('fa').format('jYYYY/jMM/jDD')
+        ? dayjs(record.publish_at)
         : undefined;
 
       form.setFieldsValue({
@@ -175,10 +175,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
       // Convert Jalali date to Gregorian for API
       const publishDate = values.publish_at
-        ? moment
-            .from(values.publish_at, 'fa', 'jYYYY/jMM/jDD')
+        ? dayjs(values.publish_at)
+            .calendar('gregory')
             .format('YYYY-MM-DD HH:mm:ss')
-        : moment().format('YYYY-MM-DD HH:mm:ss');
+        : dayjs().calendar('gregory').format('YYYY-MM-DD HH:mm:ss');
 
       const payload: API.NewsPayload = {
         title: values.title,
@@ -261,16 +261,16 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <RichTextEditor placeholder="محتوای کامل خبر را وارد کنید" />
         </Form.Item>
 
-        <ProFormDatePicker
+        <Form.Item
           name="publish_at"
           label="تاریخ انتشار"
-          placeholder="تاریخ انتشار را انتخاب کنید"
           rules={[{ required: true, message: 'تاریخ انتشار الزامی است' }]}
-          fieldProps={{
-            format: 'jYYYY/jMM/jDD',
-            style: { width: '100%' },
-          }}
-        />
+        >
+          <DatePickerJalali
+            placeholder="تاریخ انتشار را انتخاب کنید"
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
 
         <ProFormDigit
           name="study_time"
