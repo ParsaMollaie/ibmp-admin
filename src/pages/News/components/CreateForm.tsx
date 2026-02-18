@@ -1,3 +1,4 @@
+import RichTextEditor from '@/components/RichTextEditor';
 import { createNews } from '@/services/news';
 import { PlusOutlined } from '@ant-design/icons';
 import {
@@ -6,7 +7,6 @@ import {
   ProFormDigit,
   ProFormSelect,
   ProFormText,
-  ProFormTextArea,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, message, Upload } from 'antd';
@@ -141,25 +141,21 @@ const CreateForm: React.FC<CreateFormProps> = ({
         rules={[{ required: true, message: 'عنوان الزامی است' }]}
       />
 
-      <ProFormTextArea
+      <Form.Item
         name="summary"
         label="خلاصه"
-        placeholder="خلاصه خبر را وارد کنید"
         rules={[{ required: true, message: 'خلاصه الزامی است' }]}
-        fieldProps={{
-          rows: 3,
-        }}
-      />
+      >
+        <RichTextEditor placeholder="خلاصه خبر را وارد کنید" />
+      </Form.Item>
 
-      <ProFormTextArea
+      <Form.Item
         name="content"
         label="محتوا"
-        placeholder="محتوای کامل خبر را وارد کنید"
         rules={[{ required: true, message: 'محتوا الزامی است' }]}
-        fieldProps={{
-          rows: 6,
-        }}
-      />
+      >
+        <RichTextEditor placeholder="محتوای کامل خبر را وارد کنید" />
+      </Form.Item>
 
       <ProFormDatePicker
         name="publish_at"
