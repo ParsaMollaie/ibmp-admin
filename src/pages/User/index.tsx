@@ -92,6 +92,12 @@ const UserTable: React.FC = () => {
 
   const columns: ProColumns<API.UserInfo>[] = [
     {
+      title: 'کد',
+      dataIndex: 'code',
+      width: 70,
+      hideInSearch: true,
+    },
+    {
       title: 'نام کاربری',
       dataIndex: 'username',
     },

@@ -46,19 +46,21 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'کاربر',
-      key: 'user',
+      key: 'user_search',
       width: 180,
-      search: false,
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
             {record.user.first_name} {record.user.last_name}
           </div>
           <div style={{ fontSize: 12, color: '#666' }}>
-            {record.user.username}
+            {record.user.username} (کد: {record.user.code})
           </div>
         </div>
       ),
+      fieldProps: {
+        placeholder: 'کد، نام کاربری یا نام',
+      },
     },
     {
       title: 'سرویس',
@@ -139,10 +141,11 @@ const OrderPage: React.FC = () => {
         actionRef={actionRef}
         // ProTable request function - handles params automatically
         request={async (params) => {
-          const { status, current, pageSize } = params;
+          const { status, user_search, current, pageSize } = params;
 
           const response = await getOrders({
             status: status || undefined,
+            user_search: user_search || undefined,
             page: current,
             page_size: pageSize,
           });

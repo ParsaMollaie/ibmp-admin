@@ -7,6 +7,7 @@ export async function getOrders(params?: {
   page?: number;
   page_size?: number;
   status?: string;
+  user_search?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.OrderItem>>>(
     `${API_BASE}/orders`,

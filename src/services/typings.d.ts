@@ -420,6 +420,7 @@ declare namespace API {
     city: CompanyCity;
     contact_numbers: CompanyContactNumber[];
     social_media: CompanySocialMedia[];
+    user?: OrderUser;
     can_set_regular?: boolean;
     can_set_most_view?: boolean;
     can_set_promote?: boolean;
@@ -596,6 +597,7 @@ declare namespace API {
     contact_numbers: CompanyServiceContactNumber[];
     social_media: CompanyServiceSocialMedia[];
     products: CompanyServiceProduct[];
+    user?: OrderUser;
     can_approve?: boolean;
     can_reject?: boolean;
   }

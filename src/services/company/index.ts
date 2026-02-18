@@ -20,6 +20,7 @@ export async function getCompanies(params?: {
   page_size?: number;
   tag?: API.CompanyTag;
   name?: string;
+  user_search?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.CompanyItem>>>(
     `${API_BASE}/companies`,
@@ -153,6 +154,7 @@ export async function getCompaniesForExport(params?: {
   page_size?: number;
   tag?: API.CompanyTag;
   name?: string;
+  user_search?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.CompanyItem>>>(
     `${API_BASE}/companies/export`,

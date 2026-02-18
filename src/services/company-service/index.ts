@@ -21,6 +21,7 @@ export async function getCompanyServices(params?: {
   status?: API.CompanyServiceStatus;
   type?: API.CompanyServiceType;
   company_name?: string;
+  user_search?: string;
   page?: number;
   page_size?: number;
 }) {
@@ -156,6 +157,7 @@ export async function getCompanyServicesForExport(params?: {
   status?: API.CompanyServiceStatus;
   type?: API.CompanyServiceType;
   company_name?: string;
+  user_search?: string;
   page?: number;
   page_size?: number;
 }) {

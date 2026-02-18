@@ -437,6 +437,27 @@ const CompanyServicePage: React.FC = () => {
       ),
     },
     {
+      title: 'کاربر',
+      key: 'user_search',
+      width: 150,
+      render: (_, record) =>
+        record.user ? (
+          <div>
+            <div style={{ fontWeight: 500 }}>
+              {record.user.first_name} {record.user.last_name}
+            </div>
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {record.user.username}
+            </div>
+          </div>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
+      fieldProps: {
+        placeholder: 'کد، نام کاربری یا نام',
+      },
+    },
+    {
       title: 'محصولات',
       dataIndex: 'products',
       key: 'products',
@@ -635,6 +656,7 @@ const CompanyServicePage: React.FC = () => {
             status: params.status,
             type: params.type,
             company_name: params.company_name,
+            user_search: params.user_search,
             page: params.current,
             page_size: params.pageSize,
           });
