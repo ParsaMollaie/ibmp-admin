@@ -14,6 +14,7 @@ import {
   EyeOutlined,
   LinkOutlined,
   ShoppingOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -34,6 +35,7 @@ import {
 import React, { useRef, useState } from 'react';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
+import UpdateStatusForm from './components/UpdateStatusForm';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -213,6 +215,7 @@ const CompanyServicePage: React.FC = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [updateCategoryModalVisible, setUpdateCategoryModalVisible] =
     useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Currently selected record
@@ -303,6 +306,20 @@ const CompanyServicePage: React.FC = () => {
     actionRef.current?.reload();
   };
 
+  // Open status change modal
+  const handleChangeStatus = (record: API.CompanyServiceItem) => {
+    setCurrentRecord(record);
+    setStatusModalVisible(true);
+  };
+
+  // Handle successful status update
+  const handleStatusUpdateSuccess = () => {
+    setStatusModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+  };
+
+  // Handle approve action with confirmation
   const handleApprove = (record: API.CompanyServiceItem) => {
     Modal.confirm({
       title: 'تایید سرویس',
@@ -501,6 +518,15 @@ const CompanyServicePage: React.FC = () => {
             </Tooltip>
           )}
 
+          {/* Change Status Button */}
+          <Tooltip title="تغییر وضعیت">
+            <Button
+              type="text"
+              icon={<SwapOutlined />}
+              onClick={() => handleChangeStatus(record)}
+            />
+          </Tooltip>
+
           {/* View Detail Button - always visible */}
           <Tooltip title="مشاهده جزئیات">
             <Button
@@ -665,6 +691,17 @@ const CompanyServicePage: React.FC = () => {
           setCurrentRecord(null);
         }}
         onSuccess={handleUpdateCategorySuccess}
+        record={currentRecord}
+      />
+
+      {/* Update Status Modal */}
+      <UpdateStatusForm
+        visible={statusModalVisible}
+        onCancel={() => {
+          setStatusModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleStatusUpdateSuccess}
         record={currentRecord}
       />
 

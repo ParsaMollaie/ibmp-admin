@@ -127,6 +127,25 @@ export async function updateCompanyServiceCategory(
 }
 
 /**
+ * Update the status of a company service
+ *
+ * @param id - The company service's unique identifier (UUID)
+ * @param status - The new status value
+ */
+export async function updateCompanyServiceStatus(
+  id: string,
+  status: API.CompanyServiceStatus,
+) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/company-services/${id}/update-status`,
+    {
+      method: 'PUT',
+      data: { status },
+    },
+  );
+}
+
+/**
  * Get company services for export with minimal data (faster response)
  * Uses lightweight export endpoint that returns only essential fields
  *
