@@ -307,6 +307,12 @@ declare namespace API {
     updated_at: string;
   }
 
+  // Payload for admin changing a user's password
+  interface ChangePasswordPayload {
+    password: string;
+    repeat_password: string;
+  }
+
   // Payload for updating contact us status
   interface ContactUsPayload {
     status: ContactUsStatus;
@@ -334,6 +340,8 @@ declare namespace API {
   }
 
   type CompanyTag = 'regular' | 'most_view' | 'promoted';
+
+  type CompanyStatus = 'pending' | 'approved' | 'rejected' | 'disable';
 
   // ============================================
   // NESTED OBJECTS IN COMPANY RESPONSE
@@ -395,6 +403,7 @@ declare namespace API {
     code: number;
     name: string;
     tag?: CompanyTag;
+    status?: CompanyStatus;
     summary: string;
     description?: string;
     email?: string;

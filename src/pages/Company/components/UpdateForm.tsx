@@ -395,7 +395,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               <Form.Item
                 name="name"
                 label="نام شرکت"
-                rules={[{ type: 'email', message: 'فرمت ایمیل صحیح نیست' }]}
+                rules={[
+                  { required: true, message: 'لطفاً نام شرکت را وارد کنید' },
+                ]}
               >
                 <Input placeholder="نام شرکت" />
               </Form.Item>

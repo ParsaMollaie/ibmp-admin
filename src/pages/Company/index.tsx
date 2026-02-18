@@ -9,6 +9,7 @@ import {
   EditOutlined,
   EyeOutlined,
   LinkOutlined,
+  SafetyCertificateOutlined,
   StarOutlined,
   TagOutlined,
 } from '@ant-design/icons';
@@ -28,6 +29,7 @@ import {
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm from './components/UpdateForm';
+import UpdateStatusForm from './components/UpdateStatusForm';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -132,6 +134,12 @@ const CompanyPage: React.FC = () => {
 
   // Currently selected record for modals
   const [currentRecord, setCurrentRecord] = useState<API.CompanyItem | null>(
+    null,
+  );
+
+  // Status modal state
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [statusRecord, setStatusRecord] = useState<API.CompanyItem | null>(
     null,
   );
 
@@ -351,6 +359,24 @@ const CompanyPage: React.FC = () => {
       },
     },
     {
+      title: 'وضعیت تایید',
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) => {
+        const statusMap: Record<string, { color: string; label: string }> = {
+          pending: { color: 'orange', label: 'در انتظار تایید' },
+          approved: { color: 'green', label: 'تایید شده' },
+          rejected: { color: 'red', label: 'رد شده' },
+          disable: { color: 'default', label: 'غیرفعال' },
+        };
+        const config = record.status ? statusMap[record.status] : null;
+        if (!config) return <span style={{ color: '#999' }}>—</span>;
+        return <Tag color={config.color}>{config.label}</Tag>;
+      },
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       width: 150,
@@ -372,6 +398,16 @@ const CompanyPage: React.FC = () => {
             onClick={() => handleEdit(record)}
             title="ویرایش شرکت"
           />
+          <Tooltip title="تغییر وضعیت تایید">
+            <Button
+              type="text"
+              icon={<SafetyCertificateOutlined />}
+              onClick={() => {
+                setStatusRecord(record);
+                setStatusModalVisible(true);
+              }}
+            />
+          </Tooltip>
 
           {/* Show icon for can_set_regular */}
           {record.can_set_regular && (
@@ -539,6 +575,21 @@ const CompanyPage: React.FC = () => {
         }}
         onSuccess={handleUpdateSuccess}
         record={currentRecord}
+      />
+
+      {/* Status Change Modal */}
+      <UpdateStatusForm
+        visible={statusModalVisible}
+        onCancel={() => {
+          setStatusModalVisible(false);
+          setStatusRecord(null);
+        }}
+        onSuccess={() => {
+          setStatusModalVisible(false);
+          setStatusRecord(null);
+          actionRef.current?.reload();
+        }}
+        record={statusRecord}
       />
 
       {/* Detail View Modal */}

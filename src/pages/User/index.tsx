@@ -1,14 +1,15 @@
 import { getUsers, updateUser } from '@/services/auth';
 import { ExportColumn, exportToExcel } from '@/utils/exportExcel';
-import { DownloadOutlined } from '@ant-design/icons';
+import { DownloadOutlined, KeyOutlined } from '@ant-design/icons';
 import {
   ActionType,
   PageContainer,
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, message, Tag } from 'antd';
+import { Button, message, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
+import ChangePasswordForm from './components/ChangePasswordForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 
 const handleUpdate = async (fields: FormValueType) => {
@@ -58,6 +59,8 @@ const UserTable: React.FC = () => {
   const [stepFormValues, setStepFormValues] = useState({});
   const [filterParams, setFilterParams] = useState<Record<string, any>>({});
   const [exporting, setExporting] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
   const actionRef = useRef<ActionType>();
 
   // Handle export to Excel
@@ -129,7 +132,7 @@ const UserTable: React.FC = () => {
       dataIndex: 'option',
       valueType: 'option',
       render: (_, record) => (
-        <>
+        <Space>
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
@@ -142,7 +145,17 @@ const UserTable: React.FC = () => {
           >
             ویرایش
           </a>
-        </>
+          <Button
+            type="text"
+            icon={<KeyOutlined />}
+            onClick={() => {
+              setPasswordUserId(record.id);
+              setPasswordModalVisible(true);
+            }}
+          >
+            تغییر رمز
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -224,6 +237,20 @@ const UserTable: React.FC = () => {
           values={stepFormValues}
         />
       ) : null}
+
+      <ChangePasswordForm
+        visible={passwordModalVisible}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          setPasswordUserId(null);
+        }}
+        onSuccess={() => {
+          setPasswordModalVisible(false);
+          setPasswordUserId(null);
+          actionRef.current?.reload();
+        }}
+        userId={passwordUserId}
+      />
     </PageContainer>
   );
 };
