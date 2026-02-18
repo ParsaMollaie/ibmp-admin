@@ -232,7 +232,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
       <Form.Item
         label="تصویر پیش‌نمایش"
         required
-        tooltip="تصویر کوچک برای لیست اخبار"
+        tooltip="تصویر کوچک برای لیست مقالات"
       >
         <Upload
           listType="picture-card"

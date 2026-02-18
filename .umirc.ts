@@ -82,7 +82,7 @@ export default defineConfig({
       icon: 'TeamOutlined',
     },
     {
-      name: 'اخبار',
+      name: 'مقالات',
       path: '/News',
       component: './News',
       icon: 'ReadOutlined',

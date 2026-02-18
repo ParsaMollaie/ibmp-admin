@@ -155,9 +155,9 @@ const NewsPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: 'مدیریت اخبار' }}>
+    <PageContainer header={{ title: 'مدیریت مقالات' }}>
       <ProTable<API.NewsItem>
-        headerTitle="لیست اخبار"
+        headerTitle="لیست مقالات"
         actionRef={actionRef}
         rowKey="id"
         columns={columns}

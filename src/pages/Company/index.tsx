@@ -10,7 +10,6 @@ import {
   EditOutlined,
   EyeOutlined,
   LinkOutlined,
-  SafetyCertificateOutlined,
   StarOutlined,
   TagOutlined,
 } from '@ant-design/icons';
@@ -31,25 +30,12 @@ import {
 } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm from './components/UpdateForm';
-import UpdateStatusForm from './components/UpdateStatusForm';
 
 const { Title, Text, Paragraph } = Typography;
 
 // ============================================
 // CONFIGURATION OBJECTS
 // ============================================
-
-/**
- * Tag configuration with colors and labels
- * This object serves dual purposes:
- * 1. Maps API values to display labels (for rendering)
- * 2. Used as valueEnum in ProTable for automatic filter dropdown generation
- */
-const tagEnum: Record<string, { text: string; status: string }> = {
-  regular: { text: 'عادی', status: 'Default' },
-  most_view: { text: 'پربازدید', status: 'Processing' },
-  promoted: { text: 'ویژه', status: 'Success' },
-};
 
 /**
  * Helper function to get tag display configuration
@@ -136,12 +122,6 @@ const CompanyPage: React.FC = () => {
 
   // Currently selected record for modals
   const [currentRecord, setCurrentRecord] = useState<API.CompanyItem | null>(
-    null,
-  );
-
-  // Status modal state
-  const [statusModalVisible, setStatusModalVisible] = useState(false);
-  const [statusRecord, setStatusRecord] = useState<API.CompanyItem | null>(
     null,
   );
 
@@ -368,35 +348,6 @@ const CompanyPage: React.FC = () => {
       hideInSearch: true,
     },
     {
-      title: 'وضعیت',
-      dataIndex: 'tag',
-      key: 'tag',
-      width: 120,
-      /**
-       * valueType: 'select' tells ProTable to render a Select dropdown
-       * in the search form instead of a text input
-       */
-      valueType: 'select',
-      /**
-       * valueEnum automatically:
-       * 1. Generates filter dropdown options
-       * 2. Renders the cell value using the enum config
-       * We're using 'status' property for ProTable's built-in status styling
-       */
-      valueEnum: tagEnum,
-      /**
-       * Custom render to use our own Tag styling
-       * This overrides the default valueEnum rendering for the table cells
-       */
-      render: (_, record) => {
-        const config = getTagConfig(record.tag);
-        return <Tag color={config.color}>{config.label}</Tag>;
-      },
-      fieldProps: {
-        placeholder: 'انتخاب وضعیت',
-      },
-    },
-    {
       title: 'عملیات',
       key: 'actions',
       width: 150,
@@ -418,17 +369,6 @@ const CompanyPage: React.FC = () => {
             onClick={() => handleEdit(record)}
             title="ویرایش شرکت"
           />
-          <Tooltip title="تغییر وضعیت تایید">
-            <Button
-              type="text"
-              icon={<SafetyCertificateOutlined />}
-              onClick={() => {
-                setStatusRecord(record);
-                setStatusModalVisible(true);
-              }}
-            />
-          </Tooltip>
-
           {/* Show icon for can_set_regular */}
           {record.can_set_regular && (
             <Tooltip title="تنظیم به عادی">
@@ -596,21 +536,6 @@ const CompanyPage: React.FC = () => {
         }}
         onSuccess={handleUpdateSuccess}
         record={currentRecord}
-      />
-
-      {/* Status Change Modal */}
-      <UpdateStatusForm
-        visible={statusModalVisible}
-        onCancel={() => {
-          setStatusModalVisible(false);
-          setStatusRecord(null);
-        }}
-        onSuccess={() => {
-          setStatusModalVisible(false);
-          setStatusRecord(null);
-          actionRef.current?.reload();
-        }}
-        record={statusRecord}
       />
 
       {/* Detail View Modal */}
