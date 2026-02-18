@@ -13,6 +13,8 @@ import { DatePicker as DatePickerJalali } from 'antd-jalali';
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
 
+(dayjs as any).calendar('jalali');
+
 interface CreateFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
