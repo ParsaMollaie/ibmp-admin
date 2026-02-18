@@ -629,4 +629,37 @@ declare namespace API {
     social_medias: CompanyServiceSocialMedia[];
     products: CompanyServiceProductPayload[];
   }
+
+  // ===========================================
+  // SUGGEST CATEGORY
+  // ===========================================
+
+  /**
+   * Status of a suggest category
+   */
+  type SuggestCategoryStatus = 'pending' | 'approved' | 'rejected';
+
+  /**
+   * Suggest Category item returned from API
+   */
+  interface SuggestCategoryItem {
+    id: string;
+    code: number;
+    title: string;
+    description: string | null;
+    status: SuggestCategoryStatus;
+    can_approve?: boolean;
+    can_reject?: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+
+  /**
+   * Payload for creating/updating a suggest category
+   */
+  interface SuggestCategoryPayload {
+    title: string;
+    description?: string | null;
+    status?: SuggestCategoryStatus;
+  }
 }

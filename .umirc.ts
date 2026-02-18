@@ -31,6 +31,13 @@ export default defineConfig({
     },
 
     {
+      name: 'پیشنهاد دسته‌بندی',
+      path: '/suggest-category',
+      component: './SuggestCategory',
+      icon: 'BulbOutlined',
+    },
+
+    {
       name: 'تبلیغات',
       path: '/advertising',
       component: './Advertising',
