@@ -113,6 +113,7 @@ export default defineConfig({
     antd: true,
     baseNavigator: false,
   },
+  hash: true,
   mfsu: false,
   npmClient: 'npm',
   esbuildMinifyIIFE: true,
