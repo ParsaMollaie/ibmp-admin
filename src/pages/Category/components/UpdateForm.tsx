@@ -179,7 +179,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         }
       } else {
         // No changes to image - keep existing
-        imageValue = record.image;
+        imageValue = null;
       }
 
       // Build the API payload
