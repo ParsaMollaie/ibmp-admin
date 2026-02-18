@@ -380,24 +380,6 @@ const CompanyPage: React.FC = () => {
       },
     },
     {
-      title: 'وضعیت تایید',
-      dataIndex: 'status',
-      key: 'status',
-      width: 130,
-      hideInSearch: true,
-      render: (_, record) => {
-        const statusMap: Record<string, { color: string; label: string }> = {
-          pending: { color: 'orange', label: 'در انتظار تایید' },
-          approved: { color: 'green', label: 'تایید شده' },
-          rejected: { color: 'red', label: 'رد شده' },
-          disable: { color: 'default', label: 'غیرفعال' },
-        };
-        const config = record.status ? statusMap[record.status] : null;
-        if (!config) return <span style={{ color: '#999' }}>—</span>;
-        return <Tag color={config.color}>{config.label}</Tag>;
-      },
-    },
-    {
       title: 'عملیات',
       key: 'actions',
       width: 150,
