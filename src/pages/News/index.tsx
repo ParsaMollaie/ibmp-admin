@@ -3,7 +3,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, Image, message, Space, Tag } from 'antd';
-import dayjs from 'dayjs';
+import moment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -12,7 +12,7 @@ import UpdateForm from './components/UpdateForm';
 const toJalali = (dateString: string): string => {
   if (!dateString) return '-';
   try {
-    return dayjs(dateString).format('YYYY/MM/DD HH:mm');
+    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD HH:mm');
   } catch {
     return dateString;
   }
@@ -22,7 +22,7 @@ const toJalali = (dateString: string): string => {
 const toJalaliDate = (dateString: string): string => {
   if (!dateString) return '-';
   try {
-    return dayjs(dateString).format('YYYY/MM/DD');
+    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD');
   } catch {
     return dateString;
   }

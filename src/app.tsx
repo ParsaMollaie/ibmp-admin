@@ -115,6 +115,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 export const rootContainer: RuntimeConfig['rootContainer'] = (
   container: any,
 ) => {
+  // Ensure Jalali calendar is active before every render
+  (dayjs as any).calendar('jalali');
   return (
     <StyleSheetManager stylisPlugins={[rtlPlugin]}>
       <ConfigProvider
