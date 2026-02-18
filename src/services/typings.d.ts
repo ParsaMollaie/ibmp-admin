@@ -38,6 +38,7 @@ declare namespace API {
     first_name: string;
     last_name: string;
     gender?: string | null;
+    job_position?: string | null;
     avatar?: string | null;
     password?: string;
     updated_at?: string;

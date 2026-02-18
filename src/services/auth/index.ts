@@ -49,8 +49,12 @@ export async function addUser(data: {
 export async function updateUser(
   id: string | number,
   data: {
+    username?: string;
     first_name?: string;
     last_name?: string;
+    email?: string;
+    user_type?: string;
+    job_position?: string;
     avatar?: string | null;
   },
 ) {

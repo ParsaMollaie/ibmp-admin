@@ -26,8 +26,12 @@ const handleUpdate = async (fields: FormValueType) => {
 
   try {
     await updateUser(id, {
+      username: fields.username,
       first_name: fields.first_name,
       last_name: fields.last_name,
+      email: fields.email,
+      user_type: fields.user_type,
+      job_position: fields.job_position,
     });
 
     hide();
@@ -104,6 +108,13 @@ const UserTable: React.FC = () => {
       dataIndex: 'email',
     },
     {
+      title: 'سمت شغلی',
+      dataIndex: 'job_position',
+      hideInSearch: true,
+      render: (_, record) =>
+        record.job_position || <span style={{ color: '#999' }}>—</span>,
+    },
+    {
       title: 'تاریخ آخرین بروزرسانی',
       dataIndex: 'updated_at',
       valueType: 'dateTime',
@@ -136,11 +147,7 @@ const UserTable: React.FC = () => {
           <a
             onClick={() => {
               handleUpdateModalVisible(true);
-              setStepFormValues({
-                id: record.id,
-                first_name: record.first_name,
-                last_name: record.last_name,
-              });
+              setStepFormValues(record);
             }}
           >
             ویرایش
