@@ -86,6 +86,10 @@ const CreateForm: React.FC<{
 
       await createSlider(formData);
       message.success('اسلایدر با موفقیت ایجاد شد');
+
+      form.resetFields();
+      setImagePreview('');
+      setPortraitImagePreview('');
       onSuccess();
     } catch (error) {
       message.error('خطا در ایجاد اسلایدر');
@@ -97,6 +101,7 @@ const CreateForm: React.FC<{
       width={800}
       title="افزودن اسلایدر جدید"
       open={visible}
+      destroyOnHidden
       onCancel={onCancel}
       footer={null}
     >
