@@ -46,4 +46,14 @@ export const SOCIAL_NETWORKS: SocialNetworkOption[] = [
     label: 'لینکدین',
     icon: <LinkedinOutlined />,
   },
+  {
+    value: 'bale',
+    label: 'بله',
+    icon: ' BL ',
+  },
+  {
+    value: 'eitaa',
+    label: 'ایتا',
+    icon: ' ET ',
+  },
 ];
