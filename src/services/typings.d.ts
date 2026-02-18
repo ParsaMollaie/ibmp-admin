@@ -65,6 +65,11 @@ declare namespace API {
     parent: CategoryParent | null;
   }
 
+  // Category tree item (recursive children for tree view)
+  interface CategoryTreeItem extends CategoryItem {
+    children?: CategoryTreeItem[];
+  }
+
   // Payload for creating/updating a category
   interface CategoryPayload {
     title: string;

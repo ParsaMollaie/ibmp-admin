@@ -85,6 +85,19 @@ export async function deleteCategory(id: string) {
 }
 
 /**
+ * Get category tree (all categories as nested hierarchy)
+ * Used by the admin category page for tree table display
+ */
+export async function getCategoryTree() {
+  return request<API.ApiResponse<API.CategoryTreeItem[]>>(
+    `${API_BASE}/categories/tree`,
+    {
+      method: 'GET',
+    },
+  );
+}
+
+/**
  * Get all categories for parent selection dropdown
  * Fetches with a large page_size to get all categories at once
  * Only returns active categories suitable for being parents
