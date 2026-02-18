@@ -1,0 +1,30 @@
+/* Subtle background tinting per depth level */
+.category-depth-0 td {
+  background-color: #fafafa !important;
+}
+
+.category-depth-1 td {
+  background-color: #f5f5f5 !important;
+}
+
+.category-depth-2 td {
+  background-color: #f0f0f0 !important;
+}
+
+/* Right border color indicator per depth (RTL - border on right side) */
+.category-depth-0 td:last-child {
+  border-right: 3px solid #1890ff;
+}
+
+.category-depth-1 td:last-child {
+  border-right: 3px solid #52c41a;
+}
+
+.category-depth-2 td:last-child {
+  border-right: 3px solid #faad14;
+}
+
+/* Hover consistency */
+.ant-table-row:hover > td {
+  background-color: #e6f7ff !important;
+}

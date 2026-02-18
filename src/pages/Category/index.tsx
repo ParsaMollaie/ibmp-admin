@@ -3,7 +3,10 @@ import {
   DeleteOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
   PlusOutlined,
+  TagOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -11,6 +14,7 @@ import { Button, Image, Modal, Space, Tag, message } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
+import './index.less';
 
 const getStatusConfig = (
   status: 'active' | 'inactive' | undefined,
@@ -21,6 +25,18 @@ const getStatusConfig = (
   };
   return statusMap[status || 'active'] || { color: 'default', label: 'نامشخص' };
 };
+
+const addDepthToTree = (
+  nodes: API.CategoryTreeItem[],
+  depth = 0,
+): (API.CategoryTreeItem & { _depth: number })[] =>
+  nodes.map((node) => ({
+    ...node,
+    _depth: depth,
+    ...(node.children?.length
+      ? { children: addDepthToTree(node.children, depth + 1) }
+      : {}),
+  }));
 
 const CategoryPage: React.FC = () => {
   const [treeData, setTreeData] = useState<API.CategoryTreeItem[]>([]);
@@ -36,7 +52,7 @@ const CategoryPage: React.FC = () => {
     try {
       const response = await getCategoryTree();
       if (response.success) {
-        setTreeData(response.data || []);
+        setTreeData(addDepthToTree(response.data || []));
       }
     } catch (error) {
       console.error('Fetch category tree error:', error);
@@ -133,9 +149,27 @@ const CategoryPage: React.FC = () => {
       title: 'عنوان',
       dataIndex: 'title',
       key: 'title',
-      width: 200,
+      width: 250,
       ellipsis: true,
       hideInSearch: true,
+      render: (_, record: any) => {
+        const depth = record._depth ?? 0;
+        const hasChildren = record.children && record.children.length > 0;
+        const icon =
+          depth === 0 ? (
+            <FolderOpenOutlined style={{ color: '#1890ff', marginLeft: 8 }} />
+          ) : hasChildren ? (
+            <FolderOutlined style={{ color: '#52c41a', marginLeft: 8 }} />
+          ) : (
+            <TagOutlined style={{ color: '#999', marginLeft: 8 }} />
+          );
+        return (
+          <span style={{ fontWeight: depth === 0 ? 600 : 400 }}>
+            {icon}
+            {record.title}
+          </span>
+        );
+      },
     },
     {
       title: 'اولویت',
@@ -204,7 +238,8 @@ const CategoryPage: React.FC = () => {
         loading={loading}
         search={false}
         pagination={false}
-        expandable={{ defaultExpandAllRows: true }}
+        expandable={{ defaultExpandAllRows: true, indentSize: 28 }}
+        rowClassName={(record: any) => `category-depth-${record._depth ?? 0}`}
         toolBarRender={() => [
           <Button
             key="create"
