@@ -14,6 +14,7 @@ import UserAvatar from './components/UserAvatar';
 import './global.less';
 
 dayjs.locale('fa');
+(dayjs as any).calendar('jalali');
 
 // Define pages that don't require authentication
 const PUBLIC_PATHS = ['/auth'];
