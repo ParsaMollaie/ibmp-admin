@@ -256,32 +256,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      // Process logo
-      let logoValue: string | null = null;
-      if (logoChanged) {
-        if (logoFileList.length > 0 && logoFileList[0].originFileObj) {
-          logoValue = await getBase64(logoFileList[0].originFileObj);
-        }
-        // else logoValue stays null (image was removed)
-      } else {
-        // Keep existing logo URL if not changed
-        logoValue = record.logo;
-      }
-
-      // Process catalog
-      let catalogValue: string | null = null;
-      if (catalogChanged) {
-        if (catalogFileList.length > 0 && catalogFileList[0].originFileObj) {
-          catalogValue = await getBase64(catalogFileList[0].originFileObj);
-        }
-        // else catalogValue stays null (file was removed)
-      } else {
-        // Keep existing catalog URL if not changed
-        catalogValue = record.catalog;
-      }
-
-      // Build payload - note the field name difference: social_medias (with 's')
-      const payload: API.CompanyPayload = {
+      // Base payload (without logo & catalog)
+      const payload: any = {
         name: values.name,
         summary: values.summary,
         description: values.description || '',
@@ -289,8 +265,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         province_id: values.province_id,
         city_id: values.city_id,
         address: values.address || '',
-        logo: logoValue,
-        catalog: catalogValue,
         contact_numbers:
           values.contact_numbers?.filter((c: API.CompanyContactNumber) =>
             c.data?.trim(),
@@ -300,6 +274,26 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             s.data?.trim(),
           ) || [],
       };
+
+      // ===== LOGO =====
+      if (logoChanged) {
+        if (logoFileList.length > 0 && logoFileList[0].originFileObj) {
+          payload.logo = await getBase64(logoFileList[0].originFileObj);
+        } else {
+          // User removed logo
+          payload.logo = null;
+        }
+      }
+
+      // ===== CATALOG =====
+      if (catalogChanged) {
+        if (catalogFileList.length > 0 && catalogFileList[0].originFileObj) {
+          payload.catalog = await getBase64(catalogFileList[0].originFileObj);
+        } else {
+          // User removed catalog
+          payload.catalog = null;
+        }
+      }
 
       const response = await updateCompany(record.id, payload);
 

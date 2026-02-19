@@ -32,23 +32,6 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-// Helper function to fetch image from URL and convert to base64
-const urlToBase64 = async (url: string): Promise<string> => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error('Error converting URL to base64:', error);
-    throw error;
-  }
-};
-
 const UpdateForm: React.FC<UpdateFormProps> = ({
   open,
   onOpenChange,
@@ -66,7 +49,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [portraitImageChanged, setPortraitImageChanged] = useState(false);
   const [previewImageChanged, setPreviewImageChanged] = useState(false);
 
-  // Loading state for form submission (fetching images can take time)
+  // Loading state for form submission
   const [submitting, setSubmitting] = useState(false);
 
   // When record changes, populate the form
@@ -119,62 +102,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     const hide = message.loading('در حال بروزرسانی...');
 
     try {
-      // Prepare image data
-      let imageBase64: string;
-      let portraitImageBase64: string;
-      let previewImageBase64: string;
-
-      // For each image, either:
-      // 1. Use the new uploaded file (if changed)
-      // 2. Fetch the existing URL and convert to base64 (if not changed)
-
-      if (imageChanged && imageList.length > 0 && imageList[0].originFileObj) {
-        // User uploaded a new image
-        imageBase64 = await fileToBase64(imageList[0].originFileObj);
-      } else if (record.image) {
-        // User didn't change image - fetch existing and convert to base64
-        imageBase64 = await urlToBase64(record.image);
-      } else {
-        hide();
-        setSubmitting(false);
-        message.error('تصویر اصلی الزامی است');
-        return;
-      }
-
-      if (
-        portraitImageChanged &&
-        portraitImageList.length > 0 &&
-        portraitImageList[0].originFileObj
-      ) {
-        portraitImageBase64 = await fileToBase64(
-          portraitImageList[0].originFileObj,
-        );
-      } else if (record.portrait_image) {
-        portraitImageBase64 = await urlToBase64(record.portrait_image);
-      } else {
-        hide();
-        setSubmitting(false);
-        message.error('تصویر عمودی الزامی است');
-        return;
-      }
-
-      if (
-        previewImageChanged &&
-        previewImageList.length > 0 &&
-        previewImageList[0].originFileObj
-      ) {
-        previewImageBase64 = await fileToBase64(
-          previewImageList[0].originFileObj,
-        );
-      } else if (record.preview_image) {
-        previewImageBase64 = await urlToBase64(record.preview_image);
-      } else {
-        hide();
-        setSubmitting(false);
-        message.error('تصویر پیش‌نمایش الزامی است');
-        return;
-      }
-
       // Convert Jalali date to Gregorian for API
       const publishDate = values.publish_at
         ? dayjs(values.publish_at)
@@ -182,13 +109,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             .format('YYYY-MM-DD HH:mm:ss')
         : dayjs().calendar('gregory').format('YYYY-MM-DD HH:mm:ss');
 
-      const payload: API.NewsPayload = {
+      // Start with required fields
+      const payload: Partial<API.NewsPayload> = {
         title: values.title,
         content: values.content,
         summary: values.summary,
-        image: imageBase64,
-        portrait_image: portraitImageBase64,
-        preview_image: previewImageBase64,
         alt_image: values.alt_image || '',
         publish_at: publishDate,
         author_id: null,
@@ -196,7 +121,65 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         study_time: values.study_time,
       };
 
-      const res = await updateNews(record.id, payload);
+      // Handle main image
+      if (imageChanged) {
+        if (imageList.length > 0 && imageList[0].originFileObj) {
+          // User uploaded a new image
+          payload.image = await fileToBase64(imageList[0].originFileObj);
+        } else {
+          // User removed the image
+          payload.image = '';
+        }
+      } else if (record.image) {
+        // No changes - keep existing image
+        payload.image = record.image;
+      } else {
+        hide();
+        setSubmitting(false);
+        message.error('تصویر اصلی الزامی است');
+        return;
+      }
+
+      // Handle portrait image
+      if (portraitImageChanged) {
+        if (
+          portraitImageList.length > 0 &&
+          portraitImageList[0].originFileObj
+        ) {
+          payload.portrait_image = await fileToBase64(
+            portraitImageList[0].originFileObj,
+          );
+        } else {
+          payload.portrait_image = '';
+        }
+      } else if (record.portrait_image) {
+        payload.portrait_image = record.portrait_image;
+      } else {
+        hide();
+        setSubmitting(false);
+        message.error('تصویر عمودی الزامی است');
+        return;
+      }
+
+      // Handle preview image
+      if (previewImageChanged) {
+        if (previewImageList.length > 0 && previewImageList[0].originFileObj) {
+          payload.preview_image = await fileToBase64(
+            previewImageList[0].originFileObj,
+          );
+        } else {
+          payload.preview_image = '';
+        }
+      } else if (record.preview_image) {
+        payload.preview_image = record.preview_image;
+      } else {
+        hide();
+        setSubmitting(false);
+        message.error('تصویر پیش‌نمایش الزامی است');
+        return;
+      }
+
+      const res = await updateNews(record.id, payload as API.NewsPayload);
       hide();
       setSubmitting(false);
 
@@ -239,7 +222,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         width: 700,
       }}
     >
-      <Spin spinning={submitting} tip="در حال پردازش تصاویر...">
+      <Spin spinning={submitting} tip="در حال پردازش...">
         <ProFormText
           name="title"
           label="عنوان"
@@ -322,6 +305,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                 setImageList(fileList);
                 setImageChanged(true);
               }}
+              onRemove={() => {
+                setImageChanged(true);
+                return true;
+              }}
               beforeUpload={() => false}
               maxCount={1}
               accept="image/*"
@@ -354,6 +341,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                 setPortraitImageList(fileList);
                 setPortraitImageChanged(true);
               }}
+              onRemove={() => {
+                setPortraitImageChanged(true);
+                return true;
+              }}
               beforeUpload={() => false}
               maxCount={1}
               accept="image/*"
@@ -385,6 +376,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               onChange={({ fileList }) => {
                 setPreviewImageList(fileList);
                 setPreviewImageChanged(true);
+              }}
+              onRemove={() => {
+                setPreviewImageChanged(true);
+                return true;
               }}
               beforeUpload={() => false}
               maxCount={1}

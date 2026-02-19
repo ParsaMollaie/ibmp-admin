@@ -52,6 +52,7 @@ const NewsPage: React.FC = () => {
       dataIndex: 'code',
       width: 70,
       search: false,
+      fixed: 'left', // Fix code column for better mobile navigation
     },
     {
       title: 'عنوان',
@@ -135,8 +136,10 @@ const NewsPage: React.FC = () => {
     },
     {
       title: 'عملیات',
+      key: 'actions',
       valueType: 'option',
       width: 100,
+      fixed: 'right', // Fix actions column to right like Category table
       render: (_, record) => {
         return (
           <Space>
@@ -191,6 +194,21 @@ const NewsPage: React.FC = () => {
           defaultPageSize: 10,
           showSizeChanger: true,
         }}
+        // Add scroll configuration for horizontal scrolling on mobile
+        scroll={{ x: 1300 }}
+        // Add options similar to Category table for better UX
+        options={{
+          density: true,
+          fullScreen: true,
+          reload: () => {
+            actionRef.current?.reload();
+          },
+          setting: {
+            listsHeight: 400,
+          },
+        }}
+        // Add card bordered for consistent styling with Category table
+        cardBordered
         toolBarRender={() => [
           <Button
             type="primary"
