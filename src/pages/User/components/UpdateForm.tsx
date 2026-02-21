@@ -1,4 +1,5 @@
-import { ModalForm, ProFormText } from '@ant-design/pro-components';
+import { ModalForm, ProForm, ProFormText } from '@ant-design/pro-components';
+import { Divider } from 'antd';
 import React from 'react';
 
 export interface FormValueType extends Partial<API.UserInfo> {
@@ -17,11 +18,10 @@ export interface UpdateFormProps {
 const UpdateForm: React.FC<UpdateFormProps> = (props) => (
   <ModalForm
     title="ویرایش کاربر"
-    width={800}
+    width={600}
     open={props.updateModalVisible}
     modalProps={{
       destroyOnClose: true,
-      bodyStyle: { padding: '32px 40px 48px' },
       onCancel: () => props.onCancel(),
     }}
     initialValues={{
@@ -33,33 +33,58 @@ const UpdateForm: React.FC<UpdateFormProps> = (props) => (
       job_position: props.values.job_position,
     }}
     onFinish={props.onSubmit}
+    submitter={{
+      searchConfig: {
+        submitText: 'ذخیره',
+        resetText: 'انصراف',
+      },
+    }}
   >
     <ProFormText name="id" hidden />
+
+    <Divider orientation="right" plain>
+      اطلاعات حساب
+    </Divider>
     <ProFormText
       name="username"
       label="نام کاربری"
-      width="md"
+      width="xl"
       rules={[{ required: true, message: 'لطفاً نام کاربری را وارد کنید' }]}
-    />
-    <ProFormText
-      name="first_name"
-      label="نام"
-      width="md"
-      rules={[{ required: true, message: 'لطفاً نام را وارد کنید' }]}
-    />
-    <ProFormText
-      name="last_name"
-      label="نام خانوادگی"
-      width="md"
-      rules={[{ required: true, message: 'لطفاً نام خانوادگی را وارد کنید' }]}
+      placeholder="نام کاربری را وارد کنید"
     />
     <ProFormText
       name="email"
       label="ایمیل"
-      width="md"
+      width="xl"
       rules={[{ type: 'email', message: 'فرمت ایمیل صحیح نیست' }]}
+      placeholder="ایمیل را وارد کنید"
     />
-    <ProFormText name="job_position" label="سمت شغلی" width="md" />
+
+    <Divider orientation="right" plain>
+      اطلاعات شخصی
+    </Divider>
+    <ProForm.Group>
+      <ProFormText
+        name="first_name"
+        label="نام"
+        width="sm"
+        rules={[{ required: true, message: 'لطفاً نام را وارد کنید' }]}
+        placeholder="نام"
+      />
+      <ProFormText
+        name="last_name"
+        label="نام خانوادگی"
+        width="sm"
+        rules={[{ required: true, message: 'لطفاً نام خانوادگی را وارد کنید' }]}
+        placeholder="نام خانوادگی"
+      />
+    </ProForm.Group>
+    <ProFormText
+      name="job_position"
+      label="سمت شغلی"
+      width="xl"
+      placeholder="سمت شغلی را وارد کنید"
+    />
   </ModalForm>
 );
 
