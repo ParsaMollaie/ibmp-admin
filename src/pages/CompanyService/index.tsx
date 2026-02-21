@@ -573,14 +573,21 @@ const CompanyServicePage: React.FC = () => {
       sorter: true,
     },
     {
+      title: 'جستجو',
+      dataIndex: 'search',
+      key: 'search',
+      hideInTable: true,
+      fieldProps: {
+        placeholder: 'جستجو در عنوان، نام شرکت و دسته‌بندی',
+      },
+    },
+    {
       title: 'عنوان سرویس',
       dataIndex: 'title',
       key: 'title',
       width: 180,
       ellipsis: true,
-      fieldProps: {
-        placeholder: 'عنوان سرویس را وارد کنید',
-      },
+      hideInSearch: true,
     },
     {
       title: 'شرکت',
@@ -612,9 +619,7 @@ const CompanyServicePage: React.FC = () => {
           </a>
         </Space>
       ),
-      fieldProps: {
-        placeholder: 'نام شرکت را وارد کنید',
-      },
+      hideInSearch: true,
     },
     {
       title: 'دسته‌بندی',
@@ -947,14 +952,6 @@ const CompanyServicePage: React.FC = () => {
           </Button>,
         ]}
         request={async (params) => {
-          // Store filter params for export (excluding pagination params)
-          const filters = Object.fromEntries(
-            Object.entries(params).filter(
-              ([key]) => !['current', 'pageSize'].includes(key),
-            ),
-          );
-          setFilterParams(filters);
-
           // Extract last element from Cascader array for category_code
           const categoryCodeArr = params.category_code;
           const categoryCode =
@@ -962,13 +959,19 @@ const CompanyServicePage: React.FC = () => {
               ? categoryCodeArr[categoryCodeArr.length - 1]
               : undefined;
 
-          const response = await getCompanyServices({
-            title: params.title,
+          const apiParams = {
+            search: params.search,
             status: params.status,
             type: params.type,
-            company_name: params.company_name,
             user_search: params.user_search,
             category_code: categoryCode,
+          };
+
+          // Store filter params for export (excluding pagination params)
+          setFilterParams(apiParams);
+
+          const response = await getCompanyServices({
+            ...apiParams,
             page: params.current,
             page_size: params.pageSize,
           });

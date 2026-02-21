@@ -9,18 +9,16 @@ const API_BASE = '/api/v1/admin';
  * ProTable will pass filter values from the search form, and this function
  * maps them to the API's expected parameters.
  *
- * @param params.title - Filter by service title (text search)
+ * @param params.search - Full-text search across title, company name and category
  * @param params.status - Filter by status ('pending' | 'approved' | 'rejected')
  * @param params.type - Filter by type ('regular' | 'promoted')
- * @param params.company_name - Filter by company name
  * @param params.page - Page number for pagination
  * @param params.page_size - Number of items per page
  */
 export async function getCompanyServices(params?: {
-  title?: string;
+  search?: string;
   status?: API.CompanyServiceStatus;
   type?: API.CompanyServiceType;
-  company_name?: string;
   user_search?: string;
   category_code?: string;
   page?: number;
@@ -175,10 +173,9 @@ export async function bulkUpdateCompanyServiceCategories(
 }
 
 export async function getCompanyServicesForExport(params?: {
-  title?: string;
+  search?: string;
   status?: API.CompanyServiceStatus;
   type?: API.CompanyServiceType;
-  company_name?: string;
   user_search?: string;
   category_code?: string;
   page?: number;
