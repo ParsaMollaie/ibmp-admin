@@ -55,6 +55,7 @@ const WebsiteContactPage: React.FC = () => {
       form.setFieldsValue({
         email: contactInfo.email,
         address: contactInfo.address,
+        postal_code: contactInfo.postal_code,
         // Parse string coordinates to numbers for InputNumber
         latitude: parseFloat(contactInfo.latitude),
         longitude: parseFloat(contactInfo.longitude),
@@ -84,6 +85,7 @@ const WebsiteContactPage: React.FC = () => {
       const payload: API.WebsiteContactPayload = {
         email: values.email,
         address: values.address,
+        postal_code: values.postal_code,
         latitude: values.latitude,
         longitude: values.longitude,
         phones: phonesArray,
@@ -173,6 +175,22 @@ const WebsiteContactPage: React.FC = () => {
                 rules={[{ required: true, message: 'لطفاً آدرس را وارد کنید' }]}
               >
                 <Input.TextArea rows={3} placeholder="آدرس کامل دفتر یا شرکت" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="postal_code"
+                label="کد پستی"
+                rules={[
+                  {
+                    max: 20,
+                    message: 'کد پستی نمی‌تواند بیش از ۲۰ کاراکتر باشد',
+                  },
+                ]}
+              >
+                <Input placeholder="1234567890" style={{ direction: 'ltr' }} />
               </Form.Item>
             </Col>
           </Row>

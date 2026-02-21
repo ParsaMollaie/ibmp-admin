@@ -330,6 +330,7 @@ declare namespace API {
     id: string;
     email: string;
     address: string;
+    postal_code: string | null;
     latitude: string; // API returns as string
     longitude: string; // API returns as string
     phones: string[];
@@ -341,6 +342,7 @@ declare namespace API {
   interface WebsiteContactPayload {
     email: string;
     address: string;
+    postal_code?: string;
     latitude: number; // API expects number
     longitude: number; // API expects number
     phones: string[];
