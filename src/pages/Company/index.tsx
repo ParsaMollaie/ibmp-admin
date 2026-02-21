@@ -227,6 +227,16 @@ const CompanyPage: React.FC = () => {
   useEffect(() => {
     fetchTagStats();
     fetchCategoryTree();
+
+    // Read URL query params and apply as filters
+    const params = new URLSearchParams(history.location.search);
+    const name = params.get('name');
+    if (name) {
+      setTimeout(() => {
+        formRef.current?.setFieldsValue({ name });
+        formRef.current?.submit();
+      }, 0);
+    }
   }, []);
 
   const buildCascaderOptions = (
