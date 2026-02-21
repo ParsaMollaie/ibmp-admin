@@ -2,7 +2,14 @@ import {
   getWebsiteContact,
   saveWebsiteContact,
 } from '@/services/website-contact';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EnvironmentOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  PlusOutlined,
+  SaveOutlined,
+} from '@ant-design/icons';
 import { useRequest } from '@umijs/max';
 import {
   Button,
@@ -114,7 +121,7 @@ const WebsiteContactPage: React.FC = () => {
   }
 
   return (
-    <Card>
+    <div>
       {/* Page Header */}
       <div style={{ marginBottom: 24 }}>
         <Title level={4} style={{ margin: 0 }}>
@@ -130,69 +137,112 @@ const WebsiteContactPage: React.FC = () => {
         form={form}
         layout="vertical"
         initialValues={{
-          phones: [{ value: '' }], // Start with one empty phone field
+          phones: [{ value: '' }],
         }}
-        style={{ maxWidth: 800 }}
       >
-        {/* Email Field */}
-        <Form.Item
-          name="email"
-          label="ایمیل"
-          rules={[
-            { required: true, message: 'لطفاً ایمیل را وارد کنید' },
-            { type: 'email', message: 'فرمت ایمیل صحیح نیست' },
-          ]}
+        {/* Card 1 — Email & Address */}
+        <Card
+          title={
+            <Space>
+              <MailOutlined />
+              <span>اطلاعات تماس</span>
+            </Space>
+          }
+          style={{ marginBottom: 16 }}
         >
-          <Input placeholder="info@example.com" style={{ direction: 'ltr' }} />
-        </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="email"
+                label="ایمیل"
+                rules={[
+                  { required: true, message: 'لطفاً ایمیل را وارد کنید' },
+                  { type: 'email', message: 'فرمت ایمیل صحیح نیست' },
+                ]}
+              >
+                <Input
+                  placeholder="info@example.com"
+                  style={{ direction: 'ltr' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="address"
+                label="آدرس"
+                rules={[{ required: true, message: 'لطفاً آدرس را وارد کنید' }]}
+              >
+                <Input.TextArea rows={3} placeholder="آدرس کامل دفتر یا شرکت" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Card>
 
-        {/* Address Field */}
-        <Form.Item
-          name="address"
-          label="آدرس"
-          rules={[{ required: true, message: 'لطفاً آدرس را وارد کنید' }]}
+        {/* Card 2 — Location (Coordinates) */}
+        <Card
+          title={
+            <Space>
+              <EnvironmentOutlined />
+              <span>موقعیت جغرافیایی</span>
+            </Space>
+          }
+          style={{ marginBottom: 16 }}
         >
-          <Input.TextArea rows={3} placeholder="آدرس کامل دفتر یا شرکت" />
-        </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="latitude"
+                label="عرض جغرافیایی (Latitude)"
+                rules={[
+                  {
+                    required: true,
+                    message: 'لطفاً عرض جغرافیایی را وارد کنید',
+                  },
+                ]}
+              >
+                <InputNumber<number>
+                  style={{ width: '100%', direction: 'ltr' }}
+                  placeholder="35.123456"
+                  step={0.000001}
+                  precision={6}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="longitude"
+                label="طول جغرافیایی (Longitude)"
+                rules={[
+                  {
+                    required: true,
+                    message: 'لطفاً طول جغرافیایی را وارد کنید',
+                  },
+                ]}
+              >
+                <InputNumber<number>
+                  style={{ width: '100%', direction: 'ltr' }}
+                  placeholder="51.123456"
+                  step={0.000001}
+                  precision={6}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Text type="secondary">
+            مختصات جغرافیایی محل شرکت برای نمایش در نقشه
+          </Text>
+        </Card>
 
-        {/* Coordinates Row */}
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="latitude"
-              label="عرض جغرافیایی (Latitude)"
-              rules={[
-                { required: true, message: 'لطفاً عرض جغرافیایی را وارد کنید' },
-              ]}
-            >
-              <InputNumber<number>
-                style={{ width: '100%', direction: 'ltr' }}
-                placeholder="35.123456"
-                step={0.000001}
-                precision={6}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="longitude"
-              label="طول جغرافیایی (Longitude)"
-              rules={[
-                { required: true, message: 'لطفاً طول جغرافیایی را وارد کنید' },
-              ]}
-            >
-              <InputNumber<number>
-                style={{ width: '100%', direction: 'ltr' }}
-                placeholder="51.123456"
-                step={0.000001}
-                precision={6}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        {/* Dynamic Phone Numbers List */}
-        <Form.Item label="شماره‌های تماس">
+        {/* Card 3 — Phone Numbers */}
+        <Card
+          title={
+            <Space>
+              <PhoneOutlined />
+              <span>شماره‌های تماس</span>
+            </Space>
+          }
+          style={{ marginBottom: 16 }}
+        >
           <Form.List name="phones">
             {(fields, { add, remove }) => (
               <>
@@ -202,18 +252,20 @@ const WebsiteContactPage: React.FC = () => {
                     style={{ display: 'flex', marginBottom: 8 }}
                     align="baseline"
                   >
-                    {/* Phone Input */}
                     <Form.Item
                       {...restField}
                       name={[name, 'value']}
                       rules={[
-                        { required: true, message: 'شماره تماس را وارد کنید' },
+                        {
+                          required: true,
+                          message: 'شماره تماس را وارد کنید',
+                        },
                       ]}
-                      style={{ marginBottom: 0, width: 300 }}
+                      style={{ marginBottom: 0, flex: 1, minWidth: 300 }}
                     >
                       <Input
                         placeholder="021-12345678"
-                        style={{ direction: 'ltr' }}
+                        style={{ direction: 'ltr', width: '100%' }}
                       />
                     </Form.Item>
 
@@ -235,7 +287,6 @@ const WebsiteContactPage: React.FC = () => {
                     type="dashed"
                     onClick={() => add({ value: '' })}
                     icon={<PlusOutlined />}
-                    style={{ width: 300 }}
                   >
                     افزودن شماره تماس
                   </Button>
@@ -243,21 +294,22 @@ const WebsiteContactPage: React.FC = () => {
               </>
             )}
           </Form.List>
-        </Form.Item>
+        </Card>
 
         {/* Submit Button */}
-        <Form.Item style={{ marginTop: 24 }}>
+        <div style={{ textAlign: 'left' }}>
           <Button
             type="primary"
             onClick={handleSubmit}
             loading={saving}
             size="large"
+            icon={<SaveOutlined />}
           >
             ذخیره تغییرات
           </Button>
-        </Form.Item>
+        </div>
       </Form>
-    </Card>
+    </div>
   );
 };
 
