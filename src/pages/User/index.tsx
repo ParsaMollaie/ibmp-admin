@@ -30,7 +30,6 @@ const handleUpdate = async (fields: FormValueType) => {
       first_name: fields.first_name,
       last_name: fields.last_name,
       email: fields.email,
-      user_type: fields.user_type,
       job_position: fields.job_position,
     });
 
@@ -95,30 +94,46 @@ const UserTable: React.FC = () => {
       title: 'کد',
       dataIndex: 'code',
       width: 70,
-      hideInSearch: true,
+      fieldProps: {
+        placeholder: 'کد',
+      },
     },
     {
       title: 'نام کاربری',
       dataIndex: 'username',
+      fieldProps: {
+        placeholder: 'نام کاربری را وارد کنید',
+      },
     },
     {
       title: 'نام',
       dataIndex: 'first_name',
+      fieldProps: {
+        placeholder: 'نام را وارد کنید',
+      },
     },
     {
       title: 'نام خانوادگی',
       dataIndex: 'last_name',
+      fieldProps: {
+        placeholder: 'نام خانوادگی را وارد کنید',
+      },
     },
     {
       title: 'ایمیل',
       dataIndex: 'email',
+      fieldProps: {
+        placeholder: 'ایمیل را وارد کنید',
+      },
     },
     {
       title: 'سمت شغلی',
       dataIndex: 'job_position',
-      hideInSearch: true,
       render: (_, record) =>
         record.job_position || <span style={{ color: '#999' }}>—</span>,
+      fieldProps: {
+        placeholder: 'سمت شغلی را وارد کنید',
+      },
     },
     {
       title: 'تاریخ آخرین بروزرسانی',
