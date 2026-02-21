@@ -162,6 +162,18 @@ export async function getCompanyServiceStats() {
   );
 }
 
+export async function bulkUpdateCompanyServiceCategories(
+  items: { id: string; category_id: string }[],
+) {
+  return request<API.ApiResponse<{ updated_count: number }>>(
+    `${API_BASE}/company-services/bulk-update-categories`,
+    {
+      method: 'PUT',
+      data: { items },
+    },
+  );
+}
+
 export async function getCompanyServicesForExport(params?: {
   title?: string;
   status?: API.CompanyServiceStatus;

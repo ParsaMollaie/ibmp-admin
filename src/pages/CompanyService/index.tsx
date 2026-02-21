@@ -6,6 +6,7 @@ import {
   getCompanyServiceStats,
   rejectCompanyService,
 } from '@/services/company-service';
+import { collectLeafCategories } from '@/utils/categoryHelpers';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   AppstoreOutlined,
@@ -17,6 +18,7 @@ import {
   LinkOutlined,
   ShoppingOutlined,
   SwapOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -40,6 +42,7 @@ import {
 } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
+import BulkCategoryUpdateModal from './components/BulkCategoryUpdateModal';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
 import UpdateStatusForm from './components/UpdateStatusForm';
@@ -293,6 +296,11 @@ const CompanyServicePage: React.FC = () => {
   const [filterParams, setFilterParams] = useState<Record<string, any>>({});
   const [exporting, setExporting] = useState(false);
 
+  // Bulk category update states
+  const [categoryExporting, setCategoryExporting] = useState(false);
+  const [bulkCategoryModalVisible, setBulkCategoryModalVisible] =
+    useState(false);
+
   // ============================================
   // EVENT HANDLERS
   // ============================================
@@ -338,6 +346,116 @@ const CompanyServicePage: React.FC = () => {
       message.error({ content: 'خطا در دانلود فایل اکسل', key: messageKey });
     } finally {
       setExporting(false);
+    }
+  };
+
+  // Handle category export to Excel (2-sheet file)
+  const handleCategoryExport = async () => {
+    setCategoryExporting(true);
+    const messageKey = 'category-export-progress';
+    message.loading({
+      content: 'در حال دانلود...',
+      key: messageKey,
+      duration: 0,
+    });
+
+    try {
+      const allData: any[] = [];
+      let page = 1;
+      let total = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const response = await getCompanyServicesForExport({
+          ...filterParams,
+          page,
+          page_size: 500,
+        });
+
+        if (!response.success || !response.data?.list) {
+          if (allData.length === 0) {
+            message.warning({
+              content: 'داده‌ای برای دانلود وجود ندارد',
+              key: messageKey,
+            });
+            setCategoryExporting(false);
+            return;
+          }
+          break;
+        }
+
+        const { list, pagination } = response.data;
+        total = pagination.total;
+        allData.push(...list);
+
+        message.loading({
+          content: `در حال دانلود... ${allData.length} از ${total}`,
+          key: messageKey,
+          duration: 0,
+        });
+
+        hasMore = allData.length < total && list.length === 500;
+        page++;
+      }
+
+      // Import XLSX dynamically (already imported at top)
+      const XLSX = await import('xlsx');
+      const { saveAs } = await import('file-saver');
+
+      // Sheet 1: Services data
+      const sheet1Data = allData.map((record: any) => ({
+        شناسه: record.id,
+        کد: record.code,
+        عنوان: record.title,
+        'نام شرکت': record.company?.name || '',
+        'دسته‌بندی فعلی': record.category?.title || '',
+        'دسته‌بندی جدید': '',
+      }));
+
+      // Sheet 2: Leaf categories reference
+      const leaves = collectLeafCategories(categoryTree);
+      const sheet2Data = leaves.map((leaf) => ({
+        'نام دسته‌بندی': leaf.title,
+        'مسیر کامل': leaf.path,
+      }));
+
+      // Create workbook with 2 sheets
+      const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
+      ws1['!cols'] = [
+        { wch: 38 }, // شناسه (UUID)
+        { wch: 10 }, // کد
+        { wch: 30 }, // عنوان
+        { wch: 25 }, // نام شرکت
+        { wch: 25 }, // دسته‌بندی فعلی
+        { wch: 25 }, // دسته‌بندی جدید
+      ];
+
+      const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
+      ws2['!cols'] = [
+        { wch: 30 }, // نام دسته‌بندی
+        { wch: 50 }, // مسیر کامل
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, ws1, 'سرویس‌ها');
+      XLSX.utils.book_append_sheet(workbook, ws2, 'دسته‌بندی‌ها');
+
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, `company-services-categories_${timestamp}.xlsx`);
+
+      message.success({
+        content: `${allData.length} رکورد با موفقیت دانلود شد`,
+        key: messageKey,
+      });
+    } catch (error) {
+      message.error({
+        content: 'خطا در دانلود فایل اکسل',
+        key: messageKey,
+      });
+    } finally {
+      setCategoryExporting(false);
     }
   };
 
@@ -814,6 +932,21 @@ const CompanyServicePage: React.FC = () => {
           >
             دانلود اکسل
           </Button>,
+          <Button
+            key="category-export"
+            icon={<DownloadOutlined />}
+            onClick={handleCategoryExport}
+            loading={categoryExporting}
+          >
+            خروجی دسته‌بندی
+          </Button>,
+          <Button
+            key="category-upload"
+            icon={<UploadOutlined />}
+            onClick={() => setBulkCategoryModalVisible(true)}
+          >
+            بارگذاری دسته‌بندی
+          </Button>,
         ]}
         request={async (params) => {
           // Store filter params for export (excluding pagination params)
@@ -906,6 +1039,17 @@ const CompanyServicePage: React.FC = () => {
         }}
         onSuccess={handleStatusUpdateSuccess}
         record={currentRecord}
+      />
+
+      {/* Bulk Category Update Modal */}
+      <BulkCategoryUpdateModal
+        visible={bulkCategoryModalVisible}
+        onCancel={() => setBulkCategoryModalVisible(false)}
+        onSuccess={() => {
+          setBulkCategoryModalVisible(false);
+          actionRef.current?.reload();
+        }}
+        categoryTree={categoryTree}
       />
 
       {/* Detail View Modal */}

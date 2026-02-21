@@ -86,6 +86,44 @@ export function exportToExcel(
 }
 
 /**
+ * Parse an Excel file and return a workbook object
+ * @param file - File object from upload input
+ * @returns XLSX WorkBook
+ */
+export function parseExcelFile(file: File): Promise<XLSX.WorkBook> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        resolve(workbook);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/**
+ * Convert a specific sheet from a workbook to a JSON array
+ * @param workbook - XLSX WorkBook
+ * @param sheetIndex - Index of the sheet to convert (0-based)
+ * @returns Array of objects with keys from sheet headers
+ */
+export function sheetToJson<T = Record<string, any>>(
+  workbook: XLSX.WorkBook,
+  sheetIndex: number,
+): T[] {
+  const sheetName = workbook.SheetNames[sheetIndex];
+  if (!sheetName) return [];
+  const worksheet = workbook.Sheets[sheetName];
+  return XLSX.utils.sheet_to_json<T>(worksheet);
+}
+
+/**
  * Fetch all data in batches and export to Excel
  * @param fetchFn - Function to fetch data from API
  * @param filterParams - Current filter parameters
