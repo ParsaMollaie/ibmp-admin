@@ -499,11 +499,10 @@ const CompanyServicePage: React.FC = () => {
       width: 150,
       hideInSearch: true,
       ellipsis: true,
-      // Show full category path on hover
       render: (_, record) => (
-        <span title={buildCategoryPath(record.category)}>
-          {record.category?.title || '—'}
-        </span>
+        <Tooltip title={buildCategoryPath(record.category)}>
+          <span>{buildCategoryPath(record.category)}</span>
+        </Tooltip>
       ),
     },
     {
