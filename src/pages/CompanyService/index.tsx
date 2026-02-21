@@ -40,8 +40,10 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
+import { saveAs } from 'file-saver';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
+import * as XLSX from 'xlsx';
 import BulkCategoryUpdateModal from './components/BulkCategoryUpdateModal';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
@@ -397,10 +399,6 @@ const CompanyServicePage: React.FC = () => {
         hasMore = allData.length < total && list.length === 500;
         page++;
       }
-
-      // Import XLSX dynamically (already imported at top)
-      const XLSX = await import('xlsx');
-      const { saveAs } = await import('file-saver');
 
       // Sheet 1: Services data
       const sheet1Data = allData.map((record: any) => ({
