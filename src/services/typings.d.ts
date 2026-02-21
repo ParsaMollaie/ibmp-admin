@@ -255,6 +255,7 @@ declare namespace API {
     first_name: string;
     last_name: string;
     avatar: string | null;
+    job_position?: string;
   }
 
   // Nested company service info within an order

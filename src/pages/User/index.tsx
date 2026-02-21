@@ -200,6 +200,7 @@ const UserTable: React.FC = () => {
         rowKey="id"
         search={{
           labelWidth: 'auto',
+          syncToUrl: true,
         }}
         toolBarRender={() => [
           <Button

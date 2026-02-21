@@ -29,6 +29,7 @@ import {
   Typography,
 } from 'antd';
 import React, { useRef, useState } from 'react';
+import { history } from 'umi';
 import UpdateForm from './components/UpdateForm';
 
 const { Title, Text, Paragraph } = Typography;
@@ -308,13 +309,23 @@ const CompanyPage: React.FC = () => {
       width: 150,
       render: (_, record) =>
         record.user ? (
-          <div>
+          <div
+            style={{ cursor: 'pointer' }}
+            onClick={() =>
+              history.push(`/user?username=${record.user!.username}`)
+            }
+          >
             <div style={{ fontWeight: 500 }}>
               {record.user.first_name} {record.user.last_name}
             </div>
             <div style={{ fontSize: 12, color: '#666' }}>
               {record.user.username}
             </div>
+            {record.user.job_position && (
+              <div style={{ fontSize: 12, color: '#888' }}>
+                {record.user.job_position}
+              </div>
+            )}
           </div>
         ) : (
           <span style={{ color: '#999' }}>—</span>
