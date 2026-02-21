@@ -350,6 +350,12 @@ declare namespace API {
 
   type CompanyStatus = 'pending' | 'approved' | 'rejected' | 'disable';
 
+  interface CompanyStats {
+    regular: number;
+    most_view: number;
+    promoted: number;
+  }
+
   // ============================================
   // NESTED OBJECTS IN COMPANY RESPONSE
   // ============================================

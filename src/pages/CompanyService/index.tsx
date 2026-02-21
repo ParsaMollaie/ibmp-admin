@@ -485,7 +485,15 @@ const CompanyServicePage: React.FC = () => {
               preview={false}
             />
           )}
-          <span>{record.company.name}</span>
+          <a
+            onClick={() =>
+              history.push(
+                `/company?name=${encodeURIComponent(record.company.name)}`,
+              )
+            }
+          >
+            {record.company.name}
+          </a>
         </Space>
       ),
       fieldProps: {
@@ -501,7 +509,7 @@ const CompanyServicePage: React.FC = () => {
       ellipsis: true,
       render: (_, record) => (
         <Tooltip title={buildCategoryPath(record.category)}>
-          <span>{buildCategoryPath(record.category)}</span>
+          <span>{record.category?.title || '—'}</span>
         </Tooltip>
       ),
     },

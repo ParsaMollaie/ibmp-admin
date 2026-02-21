@@ -1,7 +1,9 @@
+import { getCategoryTree } from '@/services/category';
 import {
   getCompanies,
   getCompaniesForExport,
   getCompany,
+  getCompanyStats,
   updateCompanyTag,
 } from '@/services/company';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
@@ -11,26 +13,33 @@ import {
   EyeOutlined,
   LinkOutlined,
   StarOutlined,
+  SwapOutlined,
   TagOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import {
   Button,
+  Card,
+  Cascader,
+  Col,
   Descriptions,
   Divider,
   Image,
   message,
   Modal,
+  Row,
   Space,
   Spin,
+  Statistic,
   Tag,
   Tooltip,
   Typography,
 } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import UpdateForm from './components/UpdateForm';
+import UpdateStatusForm from './components/UpdateStatusForm';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -59,6 +68,33 @@ const getTagConfig = (
   };
 
   return tagMap[tag] || { color: 'default', label: tag };
+};
+
+const statusEnum: Record<string, { text: string; status: string }> = {
+  pending: { text: 'در انتظار تایید', status: 'Warning' },
+  approved: { text: 'تایید شده', status: 'Success' },
+  rejected: { text: 'رد شده', status: 'Error' },
+  disable: { text: 'غیرفعال', status: 'Default' },
+};
+
+const getStatusColor = (status: API.CompanyStatus): string => {
+  const colorMap: Record<string, string> = {
+    pending: 'warning',
+    approved: 'success',
+    rejected: 'error',
+    disable: 'default',
+  };
+  return colorMap[status] || 'default';
+};
+
+const getStatusLabel = (status: API.CompanyStatus): string => {
+  const labelMap: Record<string, string> = {
+    pending: 'در انتظار تایید',
+    approved: 'تایید شده',
+    rejected: 'رد شده',
+    disable: 'غیرفعال',
+  };
+  return labelMap[status] || status;
 };
 
 // Helper function to get contact type label
@@ -92,7 +128,7 @@ const exportColumns: ExportColumn[] = [
   { title: 'ایمیل', dataIndex: 'email' },
   { title: 'خلاصه', dataIndex: 'summary' },
   {
-    title: 'وضعیت',
+    title: 'تگ',
     dataIndex: 'tag',
     render: (value) => {
       const tagMap: Record<string, string> = {
@@ -101,6 +137,19 @@ const exportColumns: ExportColumn[] = [
         promoted: 'ویژه',
       };
       return tagMap[value] || 'عادی';
+    },
+  },
+  {
+    title: 'وضعیت',
+    dataIndex: 'status',
+    render: (value) => {
+      const statusMap: Record<string, string> = {
+        pending: 'در انتظار تایید',
+        approved: 'تایید شده',
+        rejected: 'رد شده',
+        disable: 'غیرفعال',
+      };
+      return statusMap[value] || value;
     },
   },
 ];
@@ -116,10 +165,23 @@ const CompanyPage: React.FC = () => {
    * actionRef.current?.reset() to reset filters, etc.
    */
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<any>();
+
+  // Category tree for Cascader
+  const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
+
+  // Tag stats
+  const [tagStats, setTagStats] = useState<API.CompanyStats>({
+    regular: 0,
+    most_view: 0,
+    promoted: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
 
   // Modal visibility states
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
 
   // Currently selected record for modals
   const [currentRecord, setCurrentRecord] = useState<API.CompanyItem | null>(
@@ -136,6 +198,49 @@ const CompanyPage: React.FC = () => {
   // ============================================
   // EVENT HANDLERS
   // ============================================
+
+  const fetchTagStats = async () => {
+    setStatsLoading(true);
+    try {
+      const response = await getCompanyStats();
+      if (response.success && response.data) {
+        setTagStats(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tag stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchCategoryTree = async () => {
+    try {
+      const response = await getCategoryTree();
+      if (response.success && response.data) {
+        setCategoryTree(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch category tree:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTagStats();
+    fetchCategoryTree();
+  }, []);
+
+  const buildCascaderOptions = (
+    items: API.CategoryTreeItem[],
+  ): { value: string; label: string; children?: any[] }[] => {
+    return items.map((item) => ({
+      value: String(item.code),
+      label: item.title,
+      children:
+        item.children && item.children.length > 0
+          ? buildCascaderOptions(item.children)
+          : undefined,
+    }));
+  };
 
   // Handle export to Excel with batch fetching (uses lightweight export endpoint)
   const handleExport = async () => {
@@ -209,8 +314,22 @@ const CompanyPage: React.FC = () => {
   const handleUpdateSuccess = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
-    // Use actionRef to reload the table data
     actionRef.current?.reload();
+    fetchTagStats();
+  };
+
+  // Open status change modal
+  const handleChangeStatus = (record: API.CompanyItem) => {
+    setCurrentRecord(record);
+    setStatusModalVisible(true);
+  };
+
+  // Handle successful status update
+  const handleStatusUpdateSuccess = () => {
+    setStatusModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+    fetchTagStats();
   };
 
   // Handle flag actions
@@ -220,6 +339,7 @@ const CompanyPage: React.FC = () => {
       if (response.success) {
         message.success('شرکت با موفقیت به حالت عادی تغییر یافت');
         actionRef.current?.reload();
+        fetchTagStats();
       }
     } catch (error) {
       message.error('خطا در تغییر وضعیت شرکت');
@@ -232,6 +352,7 @@ const CompanyPage: React.FC = () => {
       if (response.success) {
         message.success('شرکت با موفقیت به حالت پربازدید تغییر یافت');
         actionRef.current?.reload();
+        fetchTagStats();
       }
     } catch (error) {
       message.error('خطا در تغییر وضعیت شرکت');
@@ -244,6 +365,7 @@ const CompanyPage: React.FC = () => {
       if (response.success) {
         message.success('شرکت با موفقیت به حالت ویژه تغییر یافت');
         actionRef.current?.reload();
+        fetchTagStats();
       }
     } catch (error) {
       message.error('خطا در تغییر وضعیت شرکت');
@@ -359,9 +481,68 @@ const CompanyPage: React.FC = () => {
       hideInSearch: true,
     },
     {
+      title: 'تگ',
+      dataIndex: 'tag',
+      key: 'tag',
+      width: 100,
+      valueType: 'select',
+      valueEnum: {
+        regular: { text: 'عادی', status: 'Default' },
+        most_view: { text: 'پربازدید', status: 'Processing' },
+        promoted: { text: 'ویژه', status: 'Success' },
+      },
+      render: (_, record) => {
+        const config = getTagConfig(record.tag);
+        return <Tag color={config.color}>{config.label}</Tag>;
+      },
+      fieldProps: {
+        placeholder: 'انتخاب تگ',
+      },
+    },
+    {
+      title: 'دسته‌بندی',
+      dataIndex: 'category_code',
+      key: 'category_code',
+      hideInTable: true,
+      renderFormItem: () => (
+        <Cascader
+          options={buildCascaderOptions(categoryTree)}
+          changeOnSelect
+          showSearch={{
+            filter: (inputValue, path) =>
+              path.some((option) =>
+                (option.label as string)
+                  .toLowerCase()
+                  .includes(inputValue.toLowerCase()),
+              ),
+          }}
+          placeholder="انتخاب دسته‌بندی"
+        />
+      ),
+    },
+    {
+      title: 'وضعیت',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      valueType: 'select',
+      valueEnum: statusEnum,
+      render: (_, record) =>
+        record.status ? (
+          <Tag color={getStatusColor(record.status)}>
+            {getStatusLabel(record.status)}
+          </Tag>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
+      fieldProps: {
+        placeholder: 'انتخاب وضعیت',
+      },
+    },
+    {
       title: 'عملیات',
       key: 'actions',
-      width: 150,
+      width: 180,
       // Actions column shouldn't be in search form
       hideInSearch: true,
       // Fixed position keeps actions visible when scrolling horizontally
@@ -380,6 +561,13 @@ const CompanyPage: React.FC = () => {
             onClick={() => handleEdit(record)}
             title="ویرایش شرکت"
           />
+          <Tooltip title="تغییر وضعیت">
+            <Button
+              type="text"
+              icon={<SwapOutlined />}
+              onClick={() => handleChangeStatus(record)}
+            />
+          </Tooltip>
           {/* Show icon for can_set_regular */}
           {record.can_set_regular && (
             <Tooltip title="تنظیم به عادی">
@@ -422,14 +610,64 @@ const CompanyPage: React.FC = () => {
   // RENDER
   // ============================================
 
+  const handleTagCardClick = (tag: API.CompanyTag) => {
+    formRef.current?.setFieldsValue({ tag });
+    formRef.current?.submit();
+  };
+
   return (
     <>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={8}>
+          <Card
+            hoverable
+            onClick={() => handleTagCardClick('regular')}
+            style={{ borderTop: '3px solid #d9d9d9' }}
+          >
+            <Statistic
+              title="عادی"
+              value={tagStats.regular}
+              loading={statsLoading}
+              valueStyle={{ color: '#8c8c8c' }}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card
+            hoverable
+            onClick={() => handleTagCardClick('most_view')}
+            style={{ borderTop: '3px solid #1890ff' }}
+          >
+            <Statistic
+              title="پربازدید"
+              value={tagStats.most_view}
+              loading={statsLoading}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card
+            hoverable
+            onClick={() => handleTagCardClick('promoted')}
+            style={{ borderTop: '3px solid #52c41a' }}
+          >
+            <Statistic
+              title="ویژه"
+              value={tagStats.promoted}
+              loading={statsLoading}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       <ProTable<API.CompanyItem>
         // Table header text
         headerTitle="مدیریت شرکت‌ها"
         // Ref for programmatic control (reload, reset, etc.)
         actionRef={actionRef}
-        // Unique key for each row
+        formRef={formRef}
         rowKey="id"
         /**
          * Column definitions with ProColumns features
@@ -468,11 +706,20 @@ const CompanyPage: React.FC = () => {
           );
           setFilterParams(filters);
 
+          // Extract last element from Cascader array for category_code
+          const categoryCodeArr = params.category_code;
+          const categoryCode =
+            Array.isArray(categoryCodeArr) && categoryCodeArr.length > 0
+              ? categoryCodeArr[categoryCodeArr.length - 1]
+              : undefined;
+
           // Map ProTable params to our API params
           const response = await getCompanies({
             name: params.name,
             tag: params.tag,
+            status: params.status,
             user_search: params.user_search,
+            category_code: categoryCode,
             page: params.current,
             page_size: params.pageSize,
           });
@@ -546,6 +793,17 @@ const CompanyPage: React.FC = () => {
           setCurrentRecord(null);
         }}
         onSuccess={handleUpdateSuccess}
+        record={currentRecord}
+      />
+
+      {/* Update Status Modal */}
+      <UpdateStatusForm
+        visible={statusModalVisible}
+        onCancel={() => {
+          setStatusModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleStatusUpdateSuccess}
         record={currentRecord}
       />
 

@@ -21,6 +21,8 @@ export async function getCompanies(params?: {
   tag?: API.CompanyTag;
   name?: string;
   user_search?: string;
+  status?: API.CompanyStatus;
+  category_code?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.CompanyItem>>>(
     `${API_BASE}/companies`,
@@ -147,17 +149,25 @@ export async function getCities(provinceId: string) {
 }
 
 /**
- * Get companies for export with minimal data (faster response)
- * Uses lightweight export endpoint that returns only essential fields
- *
- * @param params - Same filter params as getCompanies
+ * Get company status statistics
  */
+export async function getCompanyStats() {
+  return request<API.ApiResponse<API.CompanyStats>>(
+    `${API_BASE}/companies/stats`,
+    {
+      method: 'GET',
+    },
+  );
+}
+
 export async function getCompaniesForExport(params?: {
   page?: number;
   page_size?: number;
   tag?: API.CompanyTag;
   name?: string;
   user_search?: string;
+  status?: API.CompanyStatus;
+  category_code?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.CompanyItem>>>(
     `${API_BASE}/companies/export`,
