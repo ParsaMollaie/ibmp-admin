@@ -8,15 +8,7 @@ import {
 } from '@ant-design/pro-components';
 import { Form, Modal, Upload, message } from 'antd';
 import type { RcFile, UploadProps } from 'antd/es/upload/interface';
-import { useState } from 'react';
-
-const getBase64 = (file: RcFile): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
+import { useEffect, useState } from 'react';
 
 interface UpdateFormProps {
   visible: boolean;
@@ -40,32 +32,66 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     initialValues.portrait_image || '',
   );
 
-  const handleImageChange: UploadProps['onChange'] = async ({ file }) => {
-    if (file.status === 'removed') {
+  const [imageFile, setImageFile] = useState<RcFile | null>(null);
+  const [portraitImageFile, setPortraitImageFile] = useState<RcFile | null>(
+    null,
+  );
+
+  const [imageChanged, setImageChanged] = useState(false);
+  const [portraitImageChanged, setPortraitImageChanged] = useState(false);
+
+  // Reset states when modal opens with new initialValues
+  useEffect(() => {
+    if (visible) {
       setImagePreview(initialValues.image || '');
+      setPortraitImagePreview(initialValues.portrait_image || '');
+      setImageFile(null);
+      setPortraitImageFile(null);
+      setImageChanged(false);
+      setPortraitImageChanged(false);
+    }
+  }, [visible, initialValues]);
+
+  const handleImageChange: UploadProps['onChange'] = ({ file }) => {
+    if (file.status === 'removed') {
+      setImageFile(null);
+      setImagePreview('');
+      setImageChanged(true);
       return;
     }
 
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj as RcFile);
-    }
+    if (file.originFileObj) {
+      // For immediate preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file.originFileObj as RcFile);
 
-    setImagePreview(file.url || (file.preview as string));
+      setImageFile(file.originFileObj as RcFile);
+      setImageChanged(true);
+    }
   };
 
-  const handlePortraitImageChange: UploadProps['onChange'] = async ({
-    file,
-  }) => {
+  const handlePortraitImageChange: UploadProps['onChange'] = ({ file }) => {
     if (file.status === 'removed') {
-      setPortraitImagePreview(initialValues.portrait_image || '');
+      setPortraitImageFile(null);
+      setPortraitImagePreview('');
+      setPortraitImageChanged(true);
       return;
     }
 
-    if (!file.url && !file.preview) {
-      file.preview = await getBase64(file.originFileObj as RcFile);
-    }
+    if (file.originFileObj) {
+      // For immediate preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPortraitImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file.originFileObj as RcFile);
 
-    setPortraitImagePreview(file.url || (file.preview as string));
+      setPortraitImageFile(file.originFileObj as RcFile);
+      setPortraitImageChanged(true);
+    }
   };
 
   const beforeUpload = (file: RcFile) => {
@@ -77,37 +103,54 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     if (!isLt5M) {
       message.error('حجم تصویر باید کمتر از 5MB باشد!');
     }
-    return isImage && isLt5M;
+    return false; // Prevent auto upload
   };
 
   const handleSubmit = async (values: any) => {
     try {
-      delete values.image;
-      delete values.portrait_image;
-
       const formData = new FormData();
 
+      // Add all form values
       Object.keys(values).forEach((key) => {
-        if (values[key] !== undefined) {
+        if (
+          values[key] !== undefined &&
+          key !== 'image' &&
+          key !== 'portrait_image'
+        ) {
           formData.append(key, values[key]);
         }
       });
 
-      if (imagePreview && imagePreview !== initialValues.image) {
-        formData.append('image', imagePreview);
+      // Handle main image - only if changed
+      if (imageChanged) {
+        if (imageFile) {
+          // New image uploaded
+          formData.append('image', imageFile);
+        } else {
+          // Image was removed - send empty string to indicate removal
+          formData.append('image', '');
+        }
       }
+      // If not changed, don't append image field at all
 
-      if (
-        portraitImagePreview &&
-        portraitImagePreview !== initialValues.portrait_image
-      ) {
-        formData.append('portrait_image', portraitImagePreview);
+      // Handle portrait image - only if changed
+      if (portraitImageChanged) {
+        if (portraitImageFile) {
+          // New portrait image uploaded
+          formData.append('portrait_image', portraitImageFile);
+        } else {
+          // Portrait image was removed - send empty string
+          formData.append('portrait_image', '');
+        }
       }
+      // If not changed, don't append portrait_image field at all
 
       await updateSlider(initialValues.id, formData);
+
       message.success('اسلایدر با موفقیت به‌روزرسانی شد');
       onSuccess();
     } catch (error) {
+      console.error('Update slider error:', error);
       message.error('خطا در به‌روزرسانی اسلایدر');
     }
   };
@@ -124,7 +167,18 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         form={form}
         onFinish={handleSubmit}
         initialValues={{
-          ...initialValues,
+          title: initialValues.title,
+          type: initialValues.type,
+          status: initialValues.status,
+          priority: initialValues.priority,
+          link: initialValues.link,
+          alt_image: initialValues.alt_image,
+        }}
+        submitter={{
+          searchConfig: {
+            submitText: 'ذخیره تغییرات',
+            resetText: 'انصراف',
+          },
         }}
       >
         <ProFormText
@@ -186,57 +240,99 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         />
 
         <Form.Item
-          name="image"
           label="تصویر اصلی"
-          rules={[
-            { required: true, message: 'لطفاً تصویر اصلی را آپلود کنید' },
-          ]}
+          required
+          tooltip="تصویر اصلی اسلایدر - اگر نمی‌خواهید تغییر کند، خالی بگذارید"
         >
-          <Upload
-            name="image"
-            listType="picture-card"
-            showUploadList={false}
-            beforeUpload={beforeUpload}
-            onChange={handleImageChange}
-            maxCount={1}
-          >
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            {/* Show existing image if available and not changed */}
+            {initialValues.image && !imageChanged && (
               <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>آپلود</div>
+                <img
+                  src={initialValues.image}
+                  alt="current"
+                  style={{
+                    width: 100,
+                    height: 80,
+                    objectFit: 'cover',
+                    borderRadius: 4,
+                    border: '1px solid #d9d9d9',
+                  }}
+                />
+                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  تصویر فعلی
+                </div>
               </div>
             )}
-          </Upload>
+            <Upload
+              name="image"
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={beforeUpload}
+              onChange={handleImageChange}
+              maxCount={1}
+              accept="image/*"
+            >
+              {imageChanged && imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>تغییر</div>
+                </div>
+              )}
+            </Upload>
+          </div>
         </Form.Item>
 
-        <Form.Item name="portrait_image" label="تصویر پرتره">
-          <Upload
-            name="portrait_image"
-            listType="picture-card"
-            showUploadList={false}
-            beforeUpload={beforeUpload}
-            onChange={handlePortraitImageChange}
-            maxCount={1}
-          >
-            {portraitImagePreview ? (
-              <img
-                src={portraitImagePreview}
-                alt="portrait preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
+        <Form.Item label="تصویر پرتره">
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            {/* Show existing portrait image if available and not changed */}
+            {initialValues.portrait_image && !portraitImageChanged && (
               <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>آپلود</div>
+                <img
+                  src={initialValues.portrait_image}
+                  alt="current portrait"
+                  style={{
+                    width: 80,
+                    height: 100,
+                    objectFit: 'cover',
+                    borderRadius: 4,
+                    border: '1px solid #d9d9d9',
+                  }}
+                />
+                <div style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                  تصویر فعلی
+                </div>
               </div>
             )}
-          </Upload>
+            <Upload
+              name="portrait_image"
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={beforeUpload}
+              onChange={handlePortraitImageChange}
+              maxCount={1}
+              accept="image/*"
+            >
+              {portraitImageChanged && portraitImagePreview ? (
+                <img
+                  src={portraitImagePreview}
+                  alt="portrait preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>تغییر</div>
+                </div>
+              )}
+            </Upload>
+          </div>
         </Form.Item>
       </ProForm>
     </Modal>

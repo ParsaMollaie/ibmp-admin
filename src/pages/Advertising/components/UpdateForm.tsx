@@ -38,7 +38,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [imageList, setImageList] = useState<UploadFile[]>([]);
   const [portraitImageList, setPortraitImageList] = useState<UploadFile[]>([]);
 
-  // Track if user has changed the images (if not, we send null to keep existing)
+  // Track if user has changed the images
   const [imageChanged, setImageChanged] = useState(false);
   const [portraitImageChanged, setPortraitImageChanged] = useState(false);
 
@@ -79,30 +79,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     if (!record) return;
 
     try {
-      // Prepare image data based on whether user changed them
-      let imageData: string | null = null;
-      let portraitImageData: string | null = null;
-
-      if (imageChanged) {
-        // User changed the image - send new base64 or null if removed
-        if (imageList.length > 0 && imageList[0].originFileObj) {
-          imageData = await fileToBase64(imageList[0].originFileObj);
-        }
-        // If imageList is empty and changed, it means user removed it - send null
-      }
-      // If not changed, we send null to keep existing image on server
-
-      if (portraitImageChanged) {
-        if (
-          portraitImageList.length > 0 &&
-          portraitImageList[0].originFileObj
-        ) {
-          portraitImageData = await fileToBase64(
-            portraitImageList[0].originFileObj,
-          );
-        }
-      }
-
+      // Prepare payload with proper image handling
       const payload: API.AdvertisingPayload = {
         title: values.title,
         priority: values.priority,
@@ -110,8 +87,18 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         section: values.section,
         link: values.link,
         alt_image: values.alt_image || null,
-        image: imageData,
-        portrait_image: portraitImageData,
+        ...(imageChanged && {
+          image:
+            imageList.length > 0 && imageList[0].originFileObj
+              ? await fileToBase64(imageList[0].originFileObj)
+              : null,
+        }),
+        ...(portraitImageChanged && {
+          portrait_image:
+            portraitImageList.length > 0 && portraitImageList[0].originFileObj
+              ? await fileToBase64(portraitImageList[0].originFileObj)
+              : null, // User removed the portrait image
+        }),
       };
 
       const res = await updateAdvertising(record.id, payload);
@@ -224,6 +211,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               setImageList(fileList);
               setImageChanged(true);
             }}
+            onRemove={() => {
+              setImageChanged(true);
+              return true;
+            }}
             beforeUpload={() => false}
             maxCount={1}
             accept="image/*"
@@ -255,6 +246,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             onChange={({ fileList }) => {
               setPortraitImageList(fileList);
               setPortraitImageChanged(true);
+            }}
+            onRemove={() => {
+              setPortraitImageChanged(true);
+              return true;
             }}
             beforeUpload={() => false}
             maxCount={1}

@@ -37,10 +37,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   const [imageList, setImageList] = useState<UploadFile[]>([]);
 
-  // Track if user has changed the image (if not, we send null to keep existing)
   const [imageChanged, setImageChanged] = useState(false);
 
-  // When record changes (modal opens with new data), populate the form
   useEffect(() => {
     if (record && open) {
       form.setFieldsValue({
@@ -74,25 +72,19 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     const hide = message.loading('در حال بروزرسانی...');
 
     try {
-      // Prepare image data based on whether user changed it
-      let imageData: string | null = null;
-
-      if (imageChanged) {
-        // User changed the image - send new base64 or null if removed
-        if (imageList.length > 0 && imageList[0].originFileObj) {
-          imageData = await fileToBase64(imageList[0].originFileObj);
-        }
-        // If imageList is empty and changed, it means user removed it - send null
-      }
-      // If not changed, we send null to keep existing image on server
-
+      // Prepare payload with proper image handling
       const payload: API.BusinessPartnerPayload = {
         title: values.title,
         priority: values.priority,
         status: values.status,
         link: values.link,
         alt_image: values.alt_image || null,
-        image: imageData,
+        ...(imageChanged && {
+          image:
+            imageList.length > 0 && imageList[0].originFileObj
+              ? await fileToBase64(imageList[0].originFileObj)
+              : null,
+        }),
       };
 
       const res = await updateBusinessPartner(record.id, payload);
@@ -193,6 +185,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             onChange={({ fileList }) => {
               setImageList(fileList);
               setImageChanged(true);
+            }}
+            onRemove={() => {
+              setImageChanged(true);
+              return true;
             }}
             beforeUpload={() => false}
             maxCount={1}

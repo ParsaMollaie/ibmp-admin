@@ -122,9 +122,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   // EFFECTS
   // ============================================
 
-  /**
-   * Fetch dropdown data when modal opens
-   */
   useEffect(() => {
     if (visible) {
       fetchCompanies();
@@ -132,29 +129,23 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     }
   }, [visible]);
 
-  /**
-   * Populate form when record changes
-   */
   useEffect(() => {
-    if (record && visible) {
-      // Set basic form fields
+    if (record && visible && companies.length > 0 && categories.length > 0) {
       form.setFieldsValue({
         title: record.title,
         company_id: record.company?.id,
         category_id: record.category?.id,
         description: record.description,
         contact_numbers: record.contact_numbers || [],
-        social_medias: record.social_media || [], // Note: API returns 'social_media', we use 'social_medias' in form
+        social_medias: record.social_media || [],
         products:
           record.products?.map((p) => ({
             name: p.name,
             minimum_price: p.minimum_price,
             maximum_price: p.maximum_price,
-            // Image is handled separately via productImages state
           })) || [],
       });
 
-      // Set up product images from existing data
       const images: Record<number, UploadFile[]> = {};
       record.products?.forEach((product, index) => {
         if (product.image) {
@@ -170,7 +161,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       });
       setProductImages(images);
     }
-  }, [record, visible, form]);
+  }, [record, visible, companies, categories, form]);
 
   // ============================================
   // IMAGE HANDLING
