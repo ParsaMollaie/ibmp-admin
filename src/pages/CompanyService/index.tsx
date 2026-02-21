@@ -1,7 +1,9 @@
+import { getCategoryTree } from '@/services/category';
 import {
   approveCompanyService,
   getCompanyServices,
   getCompanyServicesForExport,
+  getCompanyServiceStats,
   rejectCompanyService,
 } from '@/services/company-service';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
@@ -21,18 +23,22 @@ import { ProTable } from '@ant-design/pro-components';
 import {
   Button,
   Card,
+  Cascader,
+  Col,
   Descriptions,
   Divider,
   Image,
   message,
   Modal,
+  Row,
   Space,
+  Statistic,
   Table,
   Tag,
   Tooltip,
   Typography,
 } from 'antd';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
@@ -52,6 +58,7 @@ const statusEnum: Record<string, { text: string; status: string }> = {
   pending: { text: 'در انتظار تایید', status: 'Warning' },
   approved: { text: 'تایید شده', status: 'Success' },
   rejected: { text: 'رد شده', status: 'Error' },
+  disable: { text: 'غیرفعال', status: 'Default' },
 };
 
 /**
@@ -75,6 +82,7 @@ const getStatusColor = (status: API.CompanyServiceStatus): string => {
     pending: 'warning',
     approved: 'success',
     rejected: 'error',
+    disable: 'default',
   };
   return colorMap[status] || 'default';
 };
@@ -87,6 +95,7 @@ const getStatusLabel = (status: API.CompanyServiceStatus): string => {
     pending: 'در انتظار تایید',
     approved: 'تایید شده',
     rejected: 'رد شده',
+    disable: 'غیرفعال',
   };
   return labelMap[status] || status;
 };
@@ -186,6 +195,7 @@ const exportColumns: ExportColumn[] = [
         pending: 'در انتظار تایید',
         approved: 'تایید شده',
         rejected: 'رد شده',
+        disable: 'غیرفعال',
       };
       return statusMap[value] || value;
     },
@@ -210,6 +220,62 @@ const CompanyServicePage: React.FC = () => {
   // ============================================
 
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<any>();
+
+  // Status stats
+  const [statusStats, setStatusStats] = useState<API.CompanyServiceStats>({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    disable: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // Category tree for Cascader
+  const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
+
+  const fetchStatusStats = async () => {
+    setStatsLoading(true);
+    try {
+      const response = await getCompanyServiceStats();
+      if (response.success && response.data) {
+        setStatusStats(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch status stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const fetchCategoryTree = async () => {
+    try {
+      const response = await getCategoryTree();
+      if (response.success && response.data) {
+        setCategoryTree(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch category tree:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatusStats();
+    fetchCategoryTree();
+  }, []);
+
+  const buildCascaderOptions = (
+    items: API.CategoryTreeItem[],
+  ): { value: string; label: string; children?: any[] }[] => {
+    return items.map((item) => ({
+      value: String(item.code),
+      label: item.title,
+      children:
+        item.children && item.children.length > 0
+          ? buildCascaderOptions(item.children)
+          : undefined,
+    }));
+  };
 
   // Modal visibility states
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
@@ -318,6 +384,7 @@ const CompanyServicePage: React.FC = () => {
     setStatusModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+    fetchStatusStats();
   };
 
   // Handle approve action with confirmation
@@ -335,6 +402,7 @@ const CompanyServicePage: React.FC = () => {
           if (response.success) {
             message.success('سرویس با موفقیت تایید شد');
             actionRef.current?.reload();
+            fetchStatusStats();
           } else {
             message.error(response.message || 'خطا در تایید سرویس');
           }
@@ -362,6 +430,7 @@ const CompanyServicePage: React.FC = () => {
           if (response.success) {
             message.success('سرویس با موفقیت رد شد');
             actionRef.current?.reload();
+            fetchStatusStats();
           } else {
             message.error(response.message || 'خطا در رد سرویس');
           }
@@ -435,6 +504,27 @@ const CompanyServicePage: React.FC = () => {
         <span title={buildCategoryPath(record.category)}>
           {record.category?.title || '—'}
         </span>
+      ),
+    },
+    {
+      title: 'دسته‌بندی',
+      dataIndex: 'category_code',
+      key: 'category_code',
+      hideInTable: true,
+      renderFormItem: () => (
+        <Cascader
+          options={buildCascaderOptions(categoryTree)}
+          changeOnSelect
+          showSearch={{
+            filter: (inputValue, path) =>
+              path.some((option) =>
+                (option.label as string)
+                  .toLowerCase()
+                  .includes(inputValue.toLowerCase()),
+              ),
+          }}
+          placeholder="انتخاب دسته‌بندی"
+        />
       ),
     },
     {
@@ -636,11 +726,76 @@ const CompanyServicePage: React.FC = () => {
   // RENDER
   // ============================================
 
+  const handleStatusCardClick = (status: API.CompanyServiceStatus) => {
+    formRef.current?.setFieldsValue({ status });
+    formRef.current?.submit();
+  };
+
   return (
     <>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={6}>
+          <Card
+            hoverable
+            onClick={() => handleStatusCardClick('pending')}
+            style={{ borderTop: '3px solid #faad14' }}
+          >
+            <Statistic
+              title="در انتظار تایید"
+              value={statusStats.pending}
+              loading={statsLoading}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card
+            hoverable
+            onClick={() => handleStatusCardClick('approved')}
+            style={{ borderTop: '3px solid #52c41a' }}
+          >
+            <Statistic
+              title="تایید شده"
+              value={statusStats.approved}
+              loading={statsLoading}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card
+            hoverable
+            onClick={() => handleStatusCardClick('rejected')}
+            style={{ borderTop: '3px solid #ff4d4f' }}
+          >
+            <Statistic
+              title="رد شده"
+              value={statusStats.rejected}
+              loading={statsLoading}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card
+            hoverable
+            onClick={() => handleStatusCardClick('disable')}
+            style={{ borderTop: '3px solid #d9d9d9' }}
+          >
+            <Statistic
+              title="غیرفعال"
+              value={statusStats.disable}
+              loading={statsLoading}
+              valueStyle={{ color: '#8c8c8c' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       <ProTable<API.CompanyServiceItem>
         headerTitle="مدیریت سرویس‌های شرکت‌ها"
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="id"
         columns={columns}
         toolBarRender={() => [
@@ -662,12 +817,20 @@ const CompanyServicePage: React.FC = () => {
           );
           setFilterParams(filters);
 
+          // Extract last element from Cascader array for category_code
+          const categoryCodeArr = params.category_code;
+          const categoryCode =
+            Array.isArray(categoryCodeArr) && categoryCodeArr.length > 0
+              ? categoryCodeArr[categoryCodeArr.length - 1]
+              : undefined;
+
           const response = await getCompanyServices({
             title: params.title,
             status: params.status,
             type: params.type,
             company_name: params.company_name,
             user_search: params.user_search,
+            category_code: categoryCode,
             page: params.current,
             page_size: params.pageSize,
           });

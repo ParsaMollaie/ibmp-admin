@@ -486,7 +486,14 @@ declare namespace API {
    * - 'approved': Active and visible
    * - 'rejected': Not approved
    */
-  type CompanyServiceStatus = 'pending' | 'approved' | 'rejected';
+  type CompanyServiceStatus = 'pending' | 'approved' | 'rejected' | 'disable';
+
+  interface CompanyServiceStats {
+    pending: number;
+    approved: number;
+    rejected: number;
+    disable: number;
+  }
 
   /**
    * Type/visibility level of a company service

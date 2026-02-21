@@ -13,6 +13,7 @@ const statusOptions: { label: string; value: API.CompanyServiceStatus }[] = [
   { label: 'در انتظار تایید', value: 'pending' },
   { label: 'تایید شده', value: 'approved' },
   { label: 'رد شده', value: 'rejected' },
+  { label: 'غیرفعال', value: 'disable' },
 ];
 
 const UpdateStatusForm: React.FC<UpdateStatusFormProps> = ({

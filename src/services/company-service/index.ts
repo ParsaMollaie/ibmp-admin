@@ -22,6 +22,7 @@ export async function getCompanyServices(params?: {
   type?: API.CompanyServiceType;
   company_name?: string;
   user_search?: string;
+  category_code?: string;
   page?: number;
   page_size?: number;
 }) {
@@ -152,12 +153,22 @@ export async function updateCompanyServiceStatus(
  *
  * @param params - Same filter params as getCompanyServices
  */
+export async function getCompanyServiceStats() {
+  return request<API.ApiResponse<API.CompanyServiceStats>>(
+    `${API_BASE}/company-services/stats`,
+    {
+      method: 'GET',
+    },
+  );
+}
+
 export async function getCompanyServicesForExport(params?: {
   title?: string;
   status?: API.CompanyServiceStatus;
   type?: API.CompanyServiceType;
   company_name?: string;
   user_search?: string;
+  category_code?: string;
   page?: number;
   page_size?: number;
 }) {
