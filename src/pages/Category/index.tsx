@@ -172,6 +172,20 @@ const CategoryPage: React.FC = () => {
       },
     },
     {
+      title: 'نوع',
+      dataIndex: 'type',
+      key: 'type',
+      width: 100,
+      hideInSearch: true,
+      render: (_, record: any) => {
+        if (record._depth !== 0)
+          return <span style={{ color: '#999' }}>—</span>;
+        if (record.type === 'company') return <Tag color="blue">شرکتی</Tag>;
+        if (record.type === 'engineers') return <Tag color="green">مهندسی</Tag>;
+        return <span style={{ color: '#999' }}>—</span>;
+      },
+    },
+    {
       title: 'اولویت',
       dataIndex: 'priority',
       key: 'priority',

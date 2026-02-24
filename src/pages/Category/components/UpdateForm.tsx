@@ -17,6 +17,12 @@ const statusOptions = [
   { label: 'غیرفعال', value: 'inactive' },
 ];
 
+// Type options for root categories
+const typeOptions = [
+  { label: 'شرکتی', value: 'company' },
+  { label: 'مهندسی', value: 'engineers' },
+];
+
 const UpdateForm: React.FC<UpdateFormProps> = ({
   visible,
   onCancel,
@@ -113,6 +119,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       priority: record.priority,
       status: record.status,
       alt_image: record.alt_image,
+      type: record.type || undefined,
     });
 
     // If record has an existing image, show it in the upload component
@@ -190,6 +197,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         status: values.status,
         image: imageValue,
         alt_image: values.alt_image || null,
+        type: values.type || null,
       };
 
       const response = await updateCategory(record.id, payload);
@@ -297,6 +305,34 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                 .includes(input.toLowerCase())
             }
           />
+        </Form.Item>
+
+        {/* Type - Shown for root categories (no parent) */}
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.parent_id !== currentValues.parent_id
+          }
+        >
+          {({ getFieldValue }) =>
+            !getFieldValue('parent_id') ? (
+              <Form.Item
+                name="type"
+                label="نوع دسته‌بندی"
+                rules={[
+                  {
+                    required: true,
+                    message: 'لطفاً نوع دسته‌بندی را انتخاب کنید',
+                  },
+                ]}
+              >
+                <Select
+                  options={typeOptions}
+                  placeholder="انتخاب نوع دسته‌بندی"
+                />
+              </Form.Item>
+            ) : null
+          }
         </Form.Item>
 
         {/* Priority - Required */}

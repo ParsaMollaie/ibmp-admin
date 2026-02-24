@@ -16,6 +16,12 @@ const statusOptions = [
   { label: 'غیرفعال', value: 'inactive' },
 ];
 
+// Type options for root categories
+const typeOptions = [
+  { label: 'شرکتی', value: 'company' },
+  { label: 'مهندسی', value: 'engineers' },
+];
+
 const CreateForm: React.FC<CreateFormProps> = ({
   visible,
   onCancel,
@@ -131,6 +137,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
         status: values.status,
         image: imageBase64,
         alt_image: values.alt_image || null,
+        type: values.type || null,
       };
 
       const response = await createCategory(payload);
@@ -218,6 +225,34 @@ const CreateForm: React.FC<CreateFormProps> = ({
                 .includes(input.toLowerCase())
             }
           />
+        </Form.Item>
+
+        {/* Type - Required for root categories (no parent) */}
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.parent_id !== currentValues.parent_id
+          }
+        >
+          {({ getFieldValue }) =>
+            !getFieldValue('parent_id') ? (
+              <Form.Item
+                name="type"
+                label="نوع دسته‌بندی"
+                rules={[
+                  {
+                    required: true,
+                    message: 'لطفاً نوع دسته‌بندی را انتخاب کنید',
+                  },
+                ]}
+              >
+                <Select
+                  options={typeOptions}
+                  placeholder="انتخاب نوع دسته‌بندی"
+                />
+              </Form.Item>
+            ) : null
+          }
         </Form.Item>
 
         {/* Priority - Required */}

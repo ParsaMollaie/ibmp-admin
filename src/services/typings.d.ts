@@ -56,6 +56,7 @@ declare namespace API {
     id: string;
     code: number;
     title: string;
+    type?: 'company' | 'engineers' | null;
     priority: number;
     status: 'active' | 'inactive';
     image: string | null;
@@ -78,6 +79,7 @@ declare namespace API {
     status: 'active' | 'inactive';
     image?: string | null;
     alt_image?: string | null;
+    type?: 'company' | 'engineers' | null;
   }
 
   interface CompanyInfo {
