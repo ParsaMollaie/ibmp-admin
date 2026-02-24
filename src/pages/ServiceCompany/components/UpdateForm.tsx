@@ -118,7 +118,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   useEffect(() => {
     if (record && visible && categories.length > 0) {
-      // Find the leaf category ID by walking the child chain
+      // Find the leaf category ID by walking the parent chain (API returns leaf→root via parent)
+      // or child chain (root→leaf) depending on the resource
       let categoryId = record.category?.id;
       if (record.category?.child) {
         let current: API.ServiceCategoryChild | null = record.category.child;
@@ -126,6 +127,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           categoryId = current.id;
           current = current.child;
         }
+      } else if ((record.category as any)?.parent) {
+        // IndentedCategoryResource returns parent chain (leaf is the category itself)
+        categoryId = record.category?.id;
       }
 
       form.setFieldsValue({
@@ -250,9 +254,14 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   const getCatalogUploadProps = (): UploadProps => ({
     beforeUpload: (file) => {
-      const isPdf = file.type === 'application/pdf';
-      if (!isPdf) {
-        message.error('فقط فایل‌های PDF مجاز هستند');
+      const isAllowed =
+        file.type === 'application/pdf' ||
+        file.type === 'application/msword' ||
+        file.type ===
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type.startsWith('image/');
+      if (!isAllowed) {
+        message.error('فقط فایل‌های PDF، Word و تصویری مجاز هستند');
         return Upload.LIST_IGNORE;
       }
       return false;
@@ -518,7 +527,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="کاتالوگ (PDF)">
+              <Form.Item label="کاتالوگ (PDF, Word, تصویر)">
                 <Upload {...getCatalogUploadProps()}>
                   <Button icon={<PlusOutlined />}>آپلود کاتالوگ</Button>
                 </Upload>

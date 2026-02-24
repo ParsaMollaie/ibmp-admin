@@ -116,7 +116,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   useEffect(() => {
     if (record && visible && categories.length > 0) {
-      // Find the leaf category ID by walking the child chain
+      // Find the leaf category ID by walking the parent chain (API returns leaf→root via parent)
+      // or child chain (root→leaf) depending on the resource
       let categoryId = record.category?.id;
       if (record.category?.child) {
         let current: API.ServiceCategoryChild | null = record.category.child;
@@ -124,6 +125,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           categoryId = current.id;
           current = current.child;
         }
+      } else if ((record.category as any)?.parent) {
+        // IndentedCategoryResource returns parent chain (leaf is the category itself)
+        categoryId = record.category?.id;
       }
 
       form.setFieldsValue({
