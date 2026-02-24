@@ -295,7 +295,7 @@ declare namespace API {
     created_at: string;
     updated_at: string;
     user: OrderUser;
-    company_service: OrderCompanyService;
+    company_service: OrderCompanyService | null;
     plan: OrderPlan;
   }
 

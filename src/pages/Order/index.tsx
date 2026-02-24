@@ -67,7 +67,9 @@ const OrderPage: React.FC = () => {
       key: 'company_service',
       width: 150,
       search: false,
-      render: (_, record) => <span>{record.company_service.title}</span>,
+      render: (_, record) => (
+        <span>{record.company_service?.title ?? '—'}</span>
+      ),
     },
     {
       title: 'پلن',
