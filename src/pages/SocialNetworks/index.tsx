@@ -75,6 +75,14 @@ const SocialNetworkTable: React.FC = () => {
       valueType: 'dateTime',
       sorter: true,
       search: false,
+      width: 150,
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      valueType: 'dateTime',
+      search: false,
+      width: 150,
     },
     {
       title: 'عملیات',
@@ -134,6 +142,7 @@ const SocialNetworkTable: React.FC = () => {
           showSizeChanger: true,
           pageSizeOptions: ['10', '20', '50', '100'],
         }}
+        scroll={{ x: 900 }}
       />
 
       {selectedRows?.length > 0 && (

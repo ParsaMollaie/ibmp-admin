@@ -310,6 +310,20 @@ const OrderPage: React.FC = () => {
       ),
     },
     {
+      title: 'تاریخ بروزرسانی',
+      key: 'updated_at_display',
+      width: 120,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.updated_at) return <span style={{ color: '#999' }}>—</span>;
+        return (
+          <Tooltip title={formatJalaliDateTime(record.updated_at)}>
+            <span>{formatJalaliDate(record.updated_at)}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: 'از تاریخ ایجاد',
       dataIndex: 'created_from',
       key: 'created_from',
@@ -407,7 +421,7 @@ const OrderPage: React.FC = () => {
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} سفارش`,
         }}
-        scroll={{ x: 1400 }}
+        scroll={{ x: 1600 }}
         dateFormatter="string"
         cardBordered
         options={{

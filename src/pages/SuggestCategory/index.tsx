@@ -214,6 +214,17 @@ const SuggestCategoryPage: React.FC = () => {
         new Date(record.created_at).toLocaleDateString('fa-IR'),
     },
     {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+      },
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       width: 180,
@@ -317,7 +328,7 @@ const SuggestCategoryPage: React.FC = () => {
             listsHeight: 400,
           },
         }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1100 }}
         dateFormatter="string"
         cardBordered
       />

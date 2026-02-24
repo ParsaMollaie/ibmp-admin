@@ -94,6 +94,13 @@ const BusinessPartnersPage: React.FC = () => {
       search: false,
     },
     {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      valueType: 'dateTime',
+      width: 150,
+      search: false,
+    },
+    {
       title: 'عملیات',
       valueType: 'option',
       width: 100,
@@ -151,6 +158,7 @@ const BusinessPartnersPage: React.FC = () => {
           defaultPageSize: 10,
           showSizeChanger: true,
         }}
+        scroll={{ x: 1000 }}
         toolBarRender={() => [
           <Button
             type="primary"

@@ -136,10 +136,18 @@ const UserTable: React.FC = () => {
       },
     },
     {
-      title: 'تاریخ آخرین بروزرسانی',
+      title: 'تاریخ ایجاد',
+      dataIndex: 'created_at',
+      valueType: 'dateTime',
+      search: false,
+      width: 150,
+    },
+    {
+      title: 'تاریخ بروزرسانی',
       dataIndex: 'updated_at',
       valueType: 'dateTime',
       search: false,
+      width: 150,
     },
     {
       title: 'نوع کاربر',
@@ -243,8 +251,10 @@ const UserTable: React.FC = () => {
           }
         }}
         columns={columns}
+        scroll={{ x: 1200 }}
         pagination={{
           pageSize: 10,
+          showSizeChanger: true,
         }}
       />
 

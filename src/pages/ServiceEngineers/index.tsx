@@ -783,6 +783,16 @@ const ServiceEngineersPage: React.FC = () => {
       ),
     },
     {
+      title: 'تاریخ بروزرسانی',
+      key: 'updated_at_display',
+      width: 120,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+      },
+    },
+    {
       title: 'از تاریخ',
       dataIndex: 'created_from',
       key: 'created_from',
@@ -1197,7 +1207,7 @@ const ServiceEngineersPage: React.FC = () => {
             listsHeight: 400,
           },
         }}
-        scroll={{ x: 1700 }}
+        scroll={{ x: 1900 }}
         dateFormatter="string"
         cardBordered
       />

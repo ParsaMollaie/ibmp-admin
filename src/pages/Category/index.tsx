@@ -212,8 +212,18 @@ const CategoryPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (!record.created_at) return '—';
-        const date = new Date(record.created_at);
-        return date.toLocaleDateString('fa-IR');
+        return new Date(record.created_at).toLocaleDateString('fa-IR');
+      },
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return new Date(record.updated_at).toLocaleDateString('fa-IR');
       },
     },
     {
@@ -274,7 +284,7 @@ const CategoryPage: React.FC = () => {
             listsHeight: 400,
           },
         }}
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1200 }}
         dateFormatter="string"
         cardBordered
       />

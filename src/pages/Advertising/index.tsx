@@ -107,6 +107,20 @@ const AdvertisingPage: React.FC = () => {
       },
     },
     {
+      title: 'تاریخ ایجاد',
+      dataIndex: 'created_at',
+      width: 150,
+      search: false,
+      valueType: 'dateTime',
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      width: 150,
+      search: false,
+      valueType: 'dateTime',
+    },
+    {
       title: 'عملیات',
       valueType: 'option',
       width: 100,
@@ -163,6 +177,7 @@ const AdvertisingPage: React.FC = () => {
           defaultPageSize: 10,
           showSizeChanger: true,
         }}
+        scroll={{ x: 1100 }}
         toolBarRender={() => [
           <Button
             type="primary"

@@ -550,6 +550,28 @@ const CompanyPage: React.FC = () => {
       },
     },
     {
+      title: 'تاریخ ایجاد',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 150,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.created_at) return '—';
+        return new Date(record.created_at).toLocaleDateString('fa-IR');
+      },
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+      },
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       width: 180,
@@ -783,7 +805,7 @@ const CompanyPage: React.FC = () => {
         /**
          * Enable horizontal scroll when content overflows
          */
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1600 }}
         /**
          * Date formatting for any date columns
          * Using Jalali format for Persian dates

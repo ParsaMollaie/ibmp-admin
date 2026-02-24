@@ -112,6 +112,22 @@ const PlanPage: React.FC = () => {
         record.attributes || <span style={{ color: '#999' }}>—</span>,
     },
     {
+      title: 'تاریخ ایجاد',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 150,
+      search: false,
+      valueType: 'dateTime',
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      search: false,
+      valueType: 'dateTime',
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       width: 80,
@@ -178,6 +194,8 @@ const PlanPage: React.FC = () => {
           showSizeChanger: true,
           showTotal: (total) => `مجموع: ${total} پلن`,
         }}
+        // Horizontal scroll for responsiveness
+        scroll={{ x: 1000 }}
         // Date formatting
         dateFormatter="string"
         // Header title (optional, since we use toolbar.title)

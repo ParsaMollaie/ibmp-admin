@@ -123,6 +123,20 @@ const NewsPage: React.FC = () => {
       },
     },
     {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      width: 150,
+      search: false,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return (
+          <span>
+            {convertEnDateToFaDate(record.updated_at).format('YYYY/MM/DD')}
+          </span>
+        );
+      },
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       valueType: 'option',
@@ -183,7 +197,7 @@ const NewsPage: React.FC = () => {
           showSizeChanger: true,
         }}
         // Add scroll configuration for horizontal scrolling on mobile
-        scroll={{ x: 1300 }}
+        scroll={{ x: 1500 }}
         // Add options similar to Category table for better UX
         options={{
           density: true,

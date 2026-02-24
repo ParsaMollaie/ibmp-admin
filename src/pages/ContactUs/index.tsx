@@ -135,6 +135,14 @@ const ContactUsPage: React.FC = () => {
       render: (_, record) => formatJalaliDate(record.created_at),
     },
     {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 150,
+      search: false,
+      render: (_, record) => formatJalaliDate(record.updated_at),
+    },
+    {
       title: 'عملیات',
       key: 'actions',
       width: 100,
@@ -202,7 +210,7 @@ const ContactUsPage: React.FC = () => {
           showTotal: (total) => `مجموع: ${total} پیام`,
         }}
         // Horizontal scroll for responsiveness
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1300 }}
         // Date formatting
         dateFormatter="string"
         // Header title
