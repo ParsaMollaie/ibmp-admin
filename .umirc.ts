@@ -57,18 +57,18 @@ export default defineConfig({
       component: './User',
       icon: 'UserOutlined',
     },
-    {
-      name: 'شرکت‌ها',
-      path: '/company',
-      component: './Company',
-      icon: 'BankOutlined',
-    },
-    {
-      name: 'مجریان و مهندسان',
-      path: '/company-services',
-      component: './CompanyService',
-      icon: 'ShopOutlined',
-    },
+    // {
+    //   name: 'شرکت‌ها',
+    //   path: '/company',
+    //   component: './Company',
+    //   icon: 'BankOutlined',
+    // },
+    // {
+    //   name: 'مجریان و مهندسان',
+    //   path: '/company-services',
+    //   component: './CompanyService',
+    //   icon: 'ShopOutlined',
+    // },
     {
       name: 'خدمات شرکت‌ها',
       path: '/services-company',
@@ -76,7 +76,7 @@ export default defineConfig({
       icon: 'ShopOutlined',
     },
     {
-      name: 'خدمات مهندسان',
+      name: 'خدمات مهندسان و مجریان',
       path: '/services-engineers',
       component: './ServiceEngineers',
       icon: 'ToolOutlined',

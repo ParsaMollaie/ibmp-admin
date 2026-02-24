@@ -124,28 +124,21 @@ export async function updateServiceTag(id: string, tag: API.ServiceTag) {
 }
 
 /**
- * Get service status statistics
+ * Get service statistics (status + tag counts), filtered by type
  */
-export async function getServiceStatusStats() {
-  return request<API.ApiResponse<API.ServiceStatusStats>>(
+export async function getServiceStats(type: API.ServiceType) {
+  return request<API.ApiResponse<API.ServiceStats>>(
     `${API_BASE}/services/stats`,
     {
       method: 'GET',
+      params: { type },
     },
   );
 }
 
-/**
- * Get service tag statistics
- */
-export async function getServiceTagStats() {
-  return request<API.ApiResponse<API.ServiceTagStats>>(
-    `${API_BASE}/services/tag-stats`,
-    {
-      method: 'GET',
-    },
-  );
-}
+// Old separate functions — replaced by getServiceStats(type) which returns both status & tag stats
+// export async function getServiceStatusStats() { ... }
+// export async function getServiceTagStats() { ... }
 
 /**
  * Bulk update service categories from Excel import

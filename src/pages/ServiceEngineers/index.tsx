@@ -3,8 +3,7 @@ import {
   approveService,
   getServices,
   getServicesForExport,
-  getServiceStatusStats,
-  getServiceTagStats,
+  getServiceStats,
   rejectService,
   updateServiceTag,
 } from '@/services/service';
@@ -247,30 +246,19 @@ const ServiceEngineersPage: React.FC = () => {
   // Category tree for Cascader
   const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
 
-  const fetchStatusStats = async () => {
+  const fetchStats = async () => {
     setStatusStatsLoading(true);
-    try {
-      const response = await getServiceStatusStats();
-      if (response.success && response.data) {
-        setStatusStats(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch status stats:', error);
-    } finally {
-      setStatusStatsLoading(false);
-    }
-  };
-
-  const fetchTagStats = async () => {
     setTagStatsLoading(true);
     try {
-      const response = await getServiceTagStats();
+      const response = await getServiceStats('engineers');
       if (response.success && response.data) {
-        setTagStats(response.data);
+        setStatusStats(response.data.status);
+        setTagStats(response.data.tag);
       }
     } catch (error) {
-      console.error('Failed to fetch tag stats:', error);
+      console.error('Failed to fetch stats:', error);
     } finally {
+      setStatusStatsLoading(false);
       setTagStatsLoading(false);
     }
   };
@@ -287,8 +275,7 @@ const ServiceEngineersPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchStatusStats();
-    fetchTagStats();
+    fetchStats();
     fetchCategoryTree();
   }, []);
 
@@ -509,7 +496,7 @@ const ServiceEngineersPage: React.FC = () => {
     setStatusModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
-    fetchStatusStats();
+    fetchStats();
   };
 
   const handleApprove = (record: API.ServiceItem) => {
@@ -526,7 +513,7 @@ const ServiceEngineersPage: React.FC = () => {
           if (response.success) {
             message.success('خدمت با موفقیت تایید شد');
             actionRef.current?.reload();
-            fetchStatusStats();
+            fetchStats();
           } else {
             message.error(response.message || 'خطا در تایید خدمت');
           }
@@ -553,7 +540,7 @@ const ServiceEngineersPage: React.FC = () => {
           if (response.success) {
             message.success('خدمت با موفقیت رد شد');
             actionRef.current?.reload();
-            fetchStatusStats();
+            fetchStats();
           } else {
             message.error(response.message || 'خطا در رد خدمت');
           }
@@ -573,7 +560,7 @@ const ServiceEngineersPage: React.FC = () => {
       if (response.success) {
         message.success('خدمت با موفقیت به حالت عادی تغییر یافت');
         actionRef.current?.reload();
-        fetchTagStats();
+        fetchStats();
       }
     } catch (error) {
       message.error('خطا در تغییر تگ خدمت');
@@ -586,7 +573,7 @@ const ServiceEngineersPage: React.FC = () => {
       if (response.success) {
         message.success('خدمت با موفقیت به حالت پربازدید تغییر یافت');
         actionRef.current?.reload();
-        fetchTagStats();
+        fetchStats();
       }
     } catch (error) {
       message.error('خطا در تغییر تگ خدمت');
@@ -599,7 +586,7 @@ const ServiceEngineersPage: React.FC = () => {
       if (response.success) {
         message.success('خدمت با موفقیت به حالت ویژه تغییر یافت');
         actionRef.current?.reload();
-        fetchTagStats();
+        fetchStats();
       }
     } catch (error) {
       message.error('خطا در تغییر تگ خدمت');

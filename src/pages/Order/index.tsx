@@ -24,6 +24,11 @@ const getStatusConfig = (
   return statusMap[status] || { color: 'default', label: status };
 };
 
+// Get service title from either company_service (old) or service (new)
+const getServiceTitle = (record: API.OrderItem): string => {
+  return record.company_service?.title ?? record.service?.title ?? '—';
+};
+
 const OrderPage: React.FC = () => {
   // ============================================
   // STATE MANAGEMENT
@@ -48,42 +53,46 @@ const OrderPage: React.FC = () => {
       title: 'کاربر',
       key: 'user_search',
       width: 180,
-      render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>
-            {record.user.first_name} {record.user.last_name}
+      render: (_, record) =>
+        record.user ? (
+          <div>
+            <div style={{ fontWeight: 500 }}>
+              {record.user.first_name} {record.user.last_name}
+            </div>
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {record.user.username} (کد: {record.user.code})
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: '#666' }}>
-            {record.user.username} (کد: {record.user.code})
-          </div>
-        </div>
-      ),
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
       fieldProps: {
         placeholder: 'کد، نام کاربری یا نام',
       },
     },
     {
       title: 'سرویس',
-      key: 'company_service',
+      key: 'service_title',
       width: 150,
       search: false,
-      render: (_, record) => (
-        <span>{record.company_service?.title ?? '—'}</span>
-      ),
+      render: (_, record) => <span>{getServiceTitle(record)}</span>,
     },
     {
       title: 'پلن',
       key: 'plan',
       width: 120,
       search: false,
-      render: (_, record) => (
-        <div>
-          <div>{record.plan.name}</div>
-          <div style={{ fontSize: 12, color: '#666' }}>
-            {record.plan.month} ماهه
+      render: (_, record) =>
+        record.plan ? (
+          <div>
+            <div>{record.plan.name}</div>
+            <div style={{ fontSize: 12, color: '#666' }}>
+              {record.plan.month} ماهه
+            </div>
           </div>
-        </div>
-      ),
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
     },
     {
       title: 'مبلغ (تومان)',

@@ -269,6 +269,15 @@ declare namespace API {
     type: string;
   }
 
+  // Nested service info within an order (new Service model)
+  interface OrderService {
+    id: string;
+    code: number;
+    title: string;
+    type: string;
+    status: string;
+  }
+
   // Nested plan info within an order (reuses PlanItem structure)
   interface OrderPlan {
     id: string;
@@ -296,7 +305,8 @@ declare namespace API {
     updated_at: string;
     user: OrderUser;
     company_service: OrderCompanyService | null;
-    plan: OrderPlan;
+    service: OrderService | null;
+    plan: OrderPlan | null;
   }
 
   // Contact Us status options
@@ -703,6 +713,11 @@ declare namespace API {
     regular: number;
     most_view: number;
     promoted: number;
+  }
+
+  interface ServiceStats {
+    status: ServiceStatusStats;
+    tag: ServiceTagStats;
   }
 
   interface ServiceProvince {
