@@ -779,6 +779,18 @@ declare namespace API {
   }
 
   /**
+   * Nested active order info within a service (latest paid order)
+   */
+  interface ServiceActiveOrder {
+    id: string;
+    plan: { id: string; name: string } | null;
+    price: string;
+    status: string;
+    expires_at: string | null;
+    created_at: string;
+  }
+
+  /**
    * Service item returned from admin API
    */
   interface ServiceItem {
@@ -802,6 +814,7 @@ declare namespace API {
     products: ServiceProduct[];
     work_samples: ServiceWorkSample[];
     user?: OrderUser;
+    latest_active_order?: ServiceActiveOrder | null;
     can_approve?: boolean;
     can_reject?: boolean;
     can_set_regular?: boolean;

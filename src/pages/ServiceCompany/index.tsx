@@ -1,4 +1,5 @@
 import { getCategoryTree } from '@/services/category';
+import { getPlans } from '@/services/plan';
 import {
   approveService,
   getServices,
@@ -11,8 +12,10 @@ import { collectLeafCategories } from '@/utils/categoryHelpers';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   AppstoreOutlined,
+  CalendarOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  CrownOutlined,
   DownloadOutlined,
   EditOutlined,
   EyeOutlined,
@@ -30,12 +33,14 @@ import {
   Card,
   Cascader,
   Col,
+  DatePicker,
   Descriptions,
   Divider,
   Image,
   message,
   Modal,
   Row,
+  Select,
   Space,
   Statistic,
   Table,
@@ -253,6 +258,9 @@ const ServiceCompanyPage: React.FC = () => {
   // Category tree for Cascader
   const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
 
+  // Plans list for filter
+  const [plansList, setPlansList] = useState<API.PlanItem[]>([]);
+
   const fetchStats = async () => {
     setStatusStatsLoading(true);
     setTagStatsLoading(true);
@@ -281,9 +289,21 @@ const ServiceCompanyPage: React.FC = () => {
     }
   };
 
+  const fetchPlans = async () => {
+    try {
+      const response = await getPlans({ page_size: 100 });
+      if (response.success && response.data?.list) {
+        setPlansList(response.data.list);
+      }
+    } catch (error) {
+      console.error('Failed to fetch plans:', error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchCategoryTree();
+    fetchPlans();
   }, []);
 
   const buildCascaderOptions = (
@@ -690,7 +710,7 @@ const ServiceCompanyPage: React.FC = () => {
       render: (_, record) =>
         record.user ? (
           <div
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', color: '#1890ff' }}
             onClick={() =>
               history.push(`/user?username=${record.user!.username}`)
             }
@@ -698,11 +718,11 @@ const ServiceCompanyPage: React.FC = () => {
             <div style={{ fontWeight: 500 }}>
               {record.user.first_name} {record.user.last_name}
             </div>
-            <div style={{ fontSize: 12, color: '#666' }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
               {record.user.username}
             </div>
             {record.user.job_position && (
-              <div style={{ fontSize: 12, color: '#888' }}>
+              <div style={{ fontSize: 12, opacity: 0.7 }}>
                 {record.user.job_position}
               </div>
             )}
@@ -713,6 +733,99 @@ const ServiceCompanyPage: React.FC = () => {
       fieldProps: {
         placeholder: 'کد، نام کاربری یا نام',
       },
+    },
+    {
+      title: 'پلن',
+      key: 'plan_display',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) => {
+        const order = record.latest_active_order;
+        if (!order?.plan) {
+          return <Tag color="default">بدون پلن</Tag>;
+        }
+        const isExpired =
+          order.expires_at && new Date(order.expires_at) < new Date();
+        return (
+          <Tooltip
+            title={
+              order.expires_at
+                ? `انقضا: ${new Date(order.expires_at).toLocaleDateString(
+                    'fa-IR',
+                  )}`
+                : undefined
+            }
+          >
+            <Tag icon={<CrownOutlined />} color={isExpired ? 'red' : 'gold'}>
+              {order.plan.name}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: 'پلن',
+      dataIndex: 'plan_id',
+      key: 'plan_id',
+      hideInTable: true,
+      renderFormItem: () => (
+        <Select
+          allowClear
+          placeholder="انتخاب پلن"
+          options={plansList.map((p) => ({
+            value: p.id,
+            label: p.name,
+          }))}
+        />
+      ),
+    },
+    {
+      title: 'وضعیت پلن',
+      dataIndex: 'has_active_plan',
+      key: 'has_active_plan',
+      hideInTable: true,
+      valueType: 'select',
+      valueEnum: {
+        yes: { text: 'دارای پلن فعال' },
+        no: { text: 'بدون پلن' },
+      },
+      fieldProps: {
+        placeholder: 'وضعیت پلن',
+      },
+    },
+    {
+      title: 'تاریخ ثبت',
+      key: 'created_at_display',
+      width: 120,
+      hideInSearch: true,
+      render: (_, record) => (
+        <Tooltip title={new Date(record.created_at).toLocaleString('fa-IR')}>
+          <Space size={4}>
+            <CalendarOutlined style={{ color: '#8c8c8c' }} />
+            <span>
+              {new Date(record.created_at).toLocaleDateString('fa-IR')}
+            </span>
+          </Space>
+        </Tooltip>
+      ),
+    },
+    {
+      title: 'از تاریخ',
+      dataIndex: 'created_from',
+      key: 'created_from',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="از تاریخ" style={{ width: '100%' }} />
+      ),
+    },
+    {
+      title: 'تا تاریخ',
+      dataIndex: 'created_to',
+      key: 'created_to',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="تا تاریخ" style={{ width: '100%' }} />
+      ),
     },
     {
       title: 'محصولات',
@@ -1082,6 +1195,18 @@ const ServiceCompanyPage: React.FC = () => {
               ? categoryCodeArr[categoryCodeArr.length - 1]
               : undefined;
 
+          // Format date params
+          const createdFrom = params.created_from
+            ? typeof params.created_from === 'string'
+              ? params.created_from
+              : params.created_from.format?.('YYYY-MM-DD')
+            : undefined;
+          const createdTo = params.created_to
+            ? typeof params.created_to === 'string'
+              ? params.created_to
+              : params.created_to.format?.('YYYY-MM-DD')
+            : undefined;
+
           const apiParams = {
             search: params.search,
             status: params.status,
@@ -1089,6 +1214,10 @@ const ServiceCompanyPage: React.FC = () => {
             tag: params.tag,
             user_search: params.user_search,
             category_code: categoryCode,
+            plan_id: params.plan_id,
+            has_active_plan: params.has_active_plan,
+            created_from: createdFrom,
+            created_to: createdTo,
             type: 'company' as const,
           };
 
@@ -1128,7 +1257,7 @@ const ServiceCompanyPage: React.FC = () => {
             listsHeight: 400,
           },
         }}
-        scroll={{ x: 1400 }}
+        scroll={{ x: 1700 }}
         dateFormatter="string"
         cardBordered
       />

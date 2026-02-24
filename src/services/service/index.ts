@@ -14,6 +14,10 @@ export async function getServices(params?: {
   tag?: API.ServiceTag;
   user_search?: string;
   category_code?: string;
+  plan_id?: string;
+  has_active_plan?: string;
+  created_from?: string;
+  created_to?: string;
   page?: number;
   page_size?: number;
 }) {
@@ -166,6 +170,10 @@ export async function getServicesForExport(params?: {
   tag?: API.ServiceTag;
   user_search?: string;
   category_code?: string;
+  plan_id?: string;
+  has_active_plan?: string;
+  created_from?: string;
+  created_to?: string;
   page?: number;
   page_size?: number;
 }) {
