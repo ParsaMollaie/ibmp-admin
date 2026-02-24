@@ -1,5 +1,6 @@
 import RichTextEditor from '@/components/RichTextEditor';
 import { createNews } from '@/services/news';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
@@ -9,11 +10,10 @@ import {
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, message, Upload } from 'antd';
-import { DatePicker as DatePickerJalali } from 'antd-jalali';
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
-(dayjs as any).calendar('jalali');
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import DatePicker from 'react-multi-date-picker';
 
 interface CreateFormProps {
   open: boolean;
@@ -42,12 +42,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
   const [portraitImageList, setPortraitImageList] = useState<UploadFile[]>([]);
   const [previewImageList, setPreviewImageList] = useState<UploadFile[]>([]);
 
+  const resetFormState = () => {
+    form.resetFields();
+    setImageList([]);
+    setPortraitImageList([]);
+    setPreviewImageList([]);
+  };
+
   const handleOpenChange = (visible: boolean) => {
     if (!visible) {
-      form.resetFields();
-      setImageList([]);
-      setPortraitImageList([]);
-      setPreviewImageList([]);
+      resetFormState();
     }
     onOpenChange(visible);
   };
@@ -79,12 +83,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
         previewImageList[0].originFileObj,
       );
 
-      // Convert Jalali date to Gregorian for API
-      const publishDate = values.publish_at
-        ? dayjs(values.publish_at)
-            .calendar('gregory')
-            .format('YYYY-MM-DD HH:mm:ss')
-        : dayjs().calendar('gregory').format('YYYY-MM-DD HH:mm:ss');
+      // Convert selected date to Gregorian datetime for API
+      const publishDate = convertFaDateToEnDate(values.publish_at).format(
+        'YYYY-MM-DD HH:mm:ss',
+      );
 
       const payload: API.NewsPayload = {
         title: values.title,
@@ -105,6 +107,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
 
       if (res.success) {
         message.success('خبر با موفقیت ایجاد شد');
+        resetFormState();
         onSuccess();
       } else {
         message.error(res.message || 'خطا در ایجاد خبر');
@@ -164,7 +167,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
         label="تاریخ انتشار"
         rules={[{ required: true, message: 'تاریخ انتشار الزامی است' }]}
       >
-        <DatePickerJalali
+        <DatePicker
+          calendar={persian}
+          locale={persian_fa}
+          format="YYYY/MM/DD"
           placeholder="تاریخ انتشار را انتخاب کنید"
           style={{ width: '100%' }}
         />

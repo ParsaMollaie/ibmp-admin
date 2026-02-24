@@ -1,32 +1,12 @@
 import { getNewsList } from '@/services/news';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import { Button, Image, message, Space, Tag } from 'antd';
-import moment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
-
-// Helper function to convert Gregorian date to Jalali (Persian) format
-const toJalali = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD HH:mm');
-  } catch {
-    return dateString;
-  }
-};
-
-// Helper function to convert Gregorian date to Jalali (Persian) format - date only
-const toJalaliDate = (dateString: string): string => {
-  if (!dateString) return '-';
-  try {
-    return moment(dateString).locale('fa').format('jYYYY/jMM/jDD');
-  } catch {
-    return dateString;
-  }
-};
 
 // Strip HTML tags for plain-text display
 const stripHtml = (html: string): string => {
@@ -99,7 +79,11 @@ const NewsPage: React.FC = () => {
       width: 130,
       search: false,
       render: (_, record) => {
-        return <span>{toJalaliDate(record.publish_at)}</span>;
+        return (
+          <span>
+            {convertEnDateToFaDate(record.publish_at).format('YYYY/MM/DD')}
+          </span>
+        );
       },
     },
     {
@@ -131,7 +115,11 @@ const NewsPage: React.FC = () => {
       width: 150,
       search: false,
       render: (_, record) => {
-        return <span>{toJalali(record.created_at)}</span>;
+        return (
+          <span>
+            {convertEnDateToFaDate(record.created_at).format('YYYY/MM/DD')}
+          </span>
+        );
       },
     },
     {

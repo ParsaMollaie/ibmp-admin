@@ -1,5 +1,7 @@
 import RichTextEditor from '@/components/RichTextEditor';
 import { updateNews } from '@/services/news';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
@@ -9,11 +11,10 @@ import {
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, Image, message, Spin, Upload } from 'antd';
-import { DatePicker as DatePickerJalali } from 'antd-jalali';
-import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-
-(dayjs as any).calendar('jalali');
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import DatePicker from 'react-multi-date-picker';
 
 interface UpdateFormProps {
   open: boolean;
@@ -56,9 +57,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   useEffect(() => {
     if (record && open) {
       // Pass dayjs object — JalaliLocaleListener ensures it renders as Jalali
-      const jalaliDate = record.publish_at
-        ? dayjs(record.publish_at)
-        : undefined;
+
+      const jalaliDate = convertEnDateToFaDate(record.publish_at);
 
       form.setFieldsValue({
         title: record.title,
@@ -103,11 +103,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
     try {
       // Convert Jalali date to Gregorian for API
-      const publishDate = values.publish_at
-        ? dayjs(values.publish_at)
-            .calendar('gregory')
-            .format('YYYY-MM-DD HH:mm:ss')
-        : dayjs().calendar('gregory').format('YYYY-MM-DD HH:mm:ss');
+      const publishDate = convertFaDateToEnDate(values.publish_at).format(
+        'YYYY-MM-DD HH:mm:ss',
+      );
 
       // Start with required fields
       const payload: Partial<API.NewsPayload> = {
@@ -251,7 +249,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           label="تاریخ انتشار"
           rules={[{ required: true, message: 'تاریخ انتشار الزامی است' }]}
         >
-          <DatePickerJalali
+          <DatePicker
+            calendar={persian}
+            locale={persian_fa}
+            format="YYYY/MM/DD"
             placeholder="تاریخ انتشار را انتخاب کنید"
             style={{ width: '100%' }}
           />

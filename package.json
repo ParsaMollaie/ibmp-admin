@@ -21,6 +21,7 @@
     "file-saver": "^2.0.5",
     "jalali-moment": "^3.3.11",
     "js-cookie": "^3.0.5",
+    "react-multi-date-picker": "^4.5.2",
     "react-quill-new": "^3.8.3",
     "recharts": "^3.6.0",
     "styled-components": "^6.1.18",
