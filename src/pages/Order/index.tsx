@@ -1,17 +1,43 @@
 import { getOrders } from '@/services/order';
+import { getPlans } from '@/services/plan';
+import {
+  CalendarOutlined,
+  CrownOutlined,
+  ShoppingCartOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Card, Tag } from 'antd';
+import {
+  Card,
+  Col,
+  DatePicker,
+  Row,
+  Select,
+  Statistic,
+  Tag,
+  Tooltip,
+  Typography,
+} from 'antd';
 import jalaliMoment from 'jalali-moment';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
 
-// Helper function to format dates to Jalali (Persian) calendar
+const { Text } = Typography;
+
+// ============================================
+// HELPERS
+// ============================================
+
 const formatJalaliDate = (dateString: string): string => {
   if (!dateString) return '—';
   return jalaliMoment(dateString).locale('fa').format('jYYYY/jMM/jDD');
 };
 
-// Helper function to get status color and label
+const formatJalaliDateTime = (dateString: string): string => {
+  if (!dateString) return '—';
+  return jalaliMoment(dateString).locale('fa').format('jYYYY/jMM/jDD - HH:mm');
+};
+
 const getStatusConfig = (
   status: API.OrderStatus,
 ): { color: string; label: string } => {
@@ -24,30 +50,115 @@ const getStatusConfig = (
   return statusMap[status] || { color: 'default', label: status };
 };
 
-// Get service title from either company_service (old) or service (new)
 const getServiceTitle = (record: API.OrderItem): string => {
   return record.company_service?.title ?? record.service?.title ?? '—';
 };
 
+// Status card colors
+const STATUS_CARD_CONFIG: Record<
+  string,
+  { borderColor: string; valueColor: string; label: string }
+> = {
+  paid: {
+    borderColor: '#52c41a',
+    valueColor: '#52c41a',
+    label: 'پرداخت شده',
+  },
+  pending: {
+    borderColor: '#faad14',
+    valueColor: '#faad14',
+    label: 'در انتظار پرداخت',
+  },
+  cancelled: {
+    borderColor: '#ff4d4f',
+    valueColor: '#ff4d4f',
+    label: 'لغو شده',
+  },
+  expired: {
+    borderColor: '#d9d9d9',
+    valueColor: '#8c8c8c',
+    label: 'منقضی شده',
+  },
+};
+
+// ============================================
+// PAGE COMPONENT
+// ============================================
+
 const OrderPage: React.FC = () => {
-  // ============================================
-  // STATE MANAGEMENT
-  // ============================================
-
-  // ProTable action ref - allows programmatic control of table
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<any>();
+
+  // Plans list for filter
+  const [plansList, setPlansList] = useState<API.PlanItem[]>([]);
+
+  // Status stats
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({
+    paid: 0,
+    pending: 0,
+    cancelled: 0,
+    expired: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const fetchPlans = async () => {
+    try {
+      const response = await getPlans({ page_size: 100 });
+      if (response.success && response.data?.list) {
+        setPlansList(response.data.list);
+      }
+    } catch (error) {
+      console.error('Failed to fetch plans:', error);
+    }
+  };
+
+  // Fetch rough status counts (from first page total per status)
+  const fetchStatusCounts = async () => {
+    setStatsLoading(true);
+    try {
+      const statuses = ['paid', 'pending', 'cancelled', 'expired'] as const;
+      const results = await Promise.all(
+        statuses.map((s) => getOrders({ status: s, page: 1, page_size: 1 })),
+      );
+      const counts: Record<string, number> = {};
+      statuses.forEach((s, i) => {
+        counts[s] = results[i]?.data?.pagination?.total || 0;
+      });
+      setStatusCounts(counts);
+    } catch (error) {
+      console.error('Failed to fetch status counts:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlans();
+    fetchStatusCounts();
+  }, []);
+
+  const handleStatusCardClick = (status: string) => {
+    formRef.current?.setFieldsValue({
+      status,
+      // Clear other filters when clicking stat card
+    });
+    formRef.current?.submit();
+  };
 
   // ============================================
-  // PROTABLE COLUMN DEFINITIONS
+  // COLUMNS
   // ============================================
 
   const columns: ProColumns<API.OrderItem>[] = [
     {
-      title: 'کد',
+      title: 'کد سفارش',
       dataIndex: 'code',
       key: 'code',
-      width: 70,
-      search: false,
+      width: 90,
+      copyable: true,
+      fieldProps: {
+        placeholder: 'کد سفارش',
+      },
     },
     {
       title: 'کاربر',
@@ -55,12 +166,17 @@ const OrderPage: React.FC = () => {
       width: 180,
       render: (_, record) =>
         record.user ? (
-          <div>
+          <div
+            style={{ cursor: 'pointer', color: '#1890ff' }}
+            onClick={() =>
+              history.push(`/user?username=${record.user.username}`)
+            }
+          >
             <div style={{ fontWeight: 500 }}>
               {record.user.first_name} {record.user.last_name}
             </div>
-            <div style={{ fontSize: 12, color: '#666' }}>
-              {record.user.username} (کد: {record.user.code})
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
+              {record.user.username}
             </div>
           </div>
         ) : (
@@ -72,21 +188,42 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'سرویس',
-      key: 'service_title',
-      width: 150,
-      search: false,
-      render: (_, record) => <span>{getServiceTitle(record)}</span>,
+      key: 'service_search',
+      width: 160,
+      ellipsis: true,
+      render: (_, record) => {
+        const title = getServiceTitle(record);
+        const serviceType = record.service?.type;
+        return (
+          <div>
+            <div>{title}</div>
+            {serviceType && (
+              <Tag
+                color={serviceType === 'company' ? 'blue' : 'green'}
+                style={{ fontSize: 10, marginTop: 2 }}
+              >
+                {serviceType === 'company' ? 'شرکت' : 'مهندسی'}
+              </Tag>
+            )}
+          </div>
+        );
+      },
+      fieldProps: {
+        placeholder: 'عنوان یا کد سرویس',
+      },
     },
     {
       title: 'پلن',
-      key: 'plan',
-      width: 120,
-      search: false,
+      key: 'plan_display',
+      width: 130,
+      hideInSearch: true,
       render: (_, record) =>
         record.plan ? (
           <div>
-            <div>{record.plan.name}</div>
-            <div style={{ fontSize: 12, color: '#666' }}>
+            <Tag icon={<CrownOutlined />} color="gold">
+              {record.plan.name}
+            </Tag>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
               {record.plan.month} ماهه
             </div>
           </div>
@@ -95,14 +232,30 @@ const OrderPage: React.FC = () => {
         ),
     },
     {
+      title: 'پلن',
+      dataIndex: 'plan_id',
+      key: 'plan_id',
+      hideInTable: true,
+      renderFormItem: () => (
+        <Select
+          allowClear
+          placeholder="انتخاب پلن"
+          options={plansList.map((p) => ({
+            value: p.id,
+            label: `${p.name} (${p.month} ماهه)`,
+          }))}
+        />
+      ),
+    },
+    {
       title: 'مبلغ (تومان)',
       dataIndex: 'price',
       key: 'price',
       width: 120,
-      search: false,
+      hideInSearch: true,
       render: (_, record) => {
         const numericPrice = parseFloat(record.price);
-        return numericPrice.toLocaleString('fa-IR');
+        return <Text strong>{numericPrice.toLocaleString('fa-IR')}</Text>;
       },
     },
     {
@@ -110,7 +263,6 @@ const OrderPage: React.FC = () => {
       dataIndex: 'status',
       key: 'status',
       width: 130,
-      // Make status searchable with select dropdown
       valueType: 'select',
       valueEnum: {
         paid: { text: 'پرداخت شده', status: 'Success' },
@@ -122,22 +274,58 @@ const OrderPage: React.FC = () => {
         const config = getStatusConfig(record.status);
         return <Tag color={config.color}>{config.label}</Tag>;
       },
+      fieldProps: {
+        placeholder: 'انتخاب وضعیت',
+      },
     },
     {
       title: 'تاریخ انقضا',
-      dataIndex: 'expires_at',
-      key: 'expires_at',
+      key: 'expires_at_display',
       width: 120,
-      search: false,
-      render: (_, record) => formatJalaliDate(record.expires_at),
+      hideInSearch: true,
+      render: (_, record) => {
+        if (!record.expires_at) return <span style={{ color: '#999' }}>—</span>;
+        const isExpired = new Date(record.expires_at) < new Date();
+        return (
+          <Tooltip title={formatJalaliDateTime(record.expires_at)}>
+            <Tag color={isExpired ? 'red' : 'green'}>
+              {formatJalaliDate(record.expires_at)}
+            </Tag>
+          </Tooltip>
+        );
+      },
     },
     {
       title: 'تاریخ ایجاد',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      key: 'created_at_display',
       width: 120,
-      search: false,
-      render: (_, record) => formatJalaliDate(record.created_at),
+      hideInSearch: true,
+      render: (_, record) => (
+        <Tooltip title={formatJalaliDateTime(record.created_at)}>
+          <span>
+            <CalendarOutlined style={{ color: '#8c8c8c', marginLeft: 4 }} />
+            {formatJalaliDate(record.created_at)}
+          </span>
+        </Tooltip>
+      ),
+    },
+    {
+      title: 'از تاریخ ایجاد',
+      dataIndex: 'created_from',
+      key: 'created_from',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="از تاریخ" style={{ width: '100%' }} />
+      ),
+    },
+    {
+      title: 'تا تاریخ ایجاد',
+      dataIndex: 'created_to',
+      key: 'created_to',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="تا تاریخ" style={{ width: '100%' }} />
+      ),
     },
   ];
 
@@ -146,19 +334,56 @@ const OrderPage: React.FC = () => {
   // ============================================
 
   return (
-    <Card>
+    <>
+      {/* Status Stat Cards */}
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        {Object.entries(STATUS_CARD_CONFIG).map(([status, config]) => (
+          <Col span={6} key={status}>
+            <Card
+              hoverable
+              onClick={() => handleStatusCardClick(status)}
+              style={{ borderTop: `3px solid ${config.borderColor}` }}
+            >
+              <Statistic
+                title={config.label}
+                value={statusCounts[status] || 0}
+                loading={statsLoading}
+                valueStyle={{ color: config.valueColor }}
+                prefix={<ShoppingCartOutlined />}
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
       <ProTable<API.OrderItem>
+        headerTitle="مدیریت سفارشات"
         columns={columns}
         actionRef={actionRef}
-        // ProTable request function - handles params automatically
+        formRef={formRef}
         request={async (params) => {
-          const { status, user_search, current, pageSize } = params;
+          // Format date params
+          const createdFrom = params.created_from
+            ? typeof params.created_from === 'string'
+              ? params.created_from
+              : params.created_from.format?.('YYYY-MM-DD')
+            : undefined;
+          const createdTo = params.created_to
+            ? typeof params.created_to === 'string'
+              ? params.created_to
+              : params.created_to.format?.('YYYY-MM-DD')
+            : undefined;
 
           const response = await getOrders({
-            status: status || undefined,
-            user_search: user_search || undefined,
-            page: current,
-            page_size: pageSize,
+            code: params.code ? Number(params.code) : undefined,
+            status: params.status || undefined,
+            user_search: params.user_search || undefined,
+            service_search: params.service_search || undefined,
+            plan_id: params.plan_id || undefined,
+            created_from: createdFrom,
+            created_to: createdTo,
+            page: params.current,
+            page_size: params.pageSize,
           });
 
           return {
@@ -168,30 +393,33 @@ const OrderPage: React.FC = () => {
           };
         }}
         rowKey="id"
-        // Toolbar configuration
-        toolbar={{
-          title: 'مدیریت سفارشات',
-        }}
-        // Search form configuration
         search={{
-          labelWidth: 'auto',
+          layout: 'horizontal',
+          defaultCollapsed: false,
           searchText: 'جستجو',
-          resetText: 'بازنشانی',
-          collapsed: false, // Keep search form expanded by default
+          resetText: 'پاک کردن',
+          labelWidth: 'auto',
         }}
-        // Pagination configuration
         pagination={{
+          defaultPageSize: 10,
           showSizeChanger: true,
-          showTotal: (total) => `مجموع: ${total} سفارش`,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `نمایش ${range[0]}-${range[1]} از ${total} سفارش`,
         }}
-        // Horizontal scroll for better responsiveness
-        scroll={{ x: 1100 }}
-        // Date formatting
+        scroll={{ x: 1400 }}
         dateFormatter="string"
-        // Header title
-        headerTitle={false}
+        cardBordered
+        options={{
+          density: true,
+          fullScreen: true,
+          reload: true,
+          setting: {
+            listsHeight: 400,
+          },
+        }}
       />
-    </Card>
+    </>
   );
 };
 
