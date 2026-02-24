@@ -680,4 +680,164 @@ declare namespace API {
     description?: string | null;
     status?: SuggestCategoryStatus;
   }
+
+  // ===========================================
+  // SERVICE (NEW UNIFIED MODEL)
+  // ===========================================
+
+  type ServiceType = 'company' | 'engineers';
+  type ServicePromotionType = 'regular' | 'promoted';
+  type ServiceTag = 'regular' | 'most_view' | 'promoted';
+  type ServiceStatus = 'pending' | 'approved' | 'rejected' | 'disable';
+
+  interface ServiceStatusStats {
+    pending: number;
+    approved: number;
+    rejected: number;
+    disable: number;
+  }
+
+  interface ServiceTagStats {
+    regular: number;
+    most_view: number;
+    promoted: number;
+  }
+
+  interface ServiceProvince {
+    id: string;
+    code: number;
+    name: string;
+  }
+
+  interface ServiceCity {
+    id: string;
+    name: string;
+  }
+
+  interface ServiceContactNumber {
+    type: 'phone' | 'mobile';
+    data: string;
+  }
+
+  interface ServiceSocialMedia {
+    type: 'instagram' | 'telegram' | 'eita' | 'bale' | 'whatsapp' | 'website';
+    data: string;
+  }
+
+  /**
+   * Company sub-object nested within a company-type service
+   */
+  interface ServiceCompany {
+    logo: string | null;
+    catalog: string | null;
+    address: string | null;
+  }
+
+  /**
+   * Category with recursive child chain (root → child → child)
+   * Unlike CompanyServiceCategory which uses parent chain
+   */
+  interface ServiceCategoryChild {
+    id: string;
+    title: string;
+    child: ServiceCategoryChild | null;
+  }
+
+  interface ServiceCategory {
+    id: string;
+    title: string;
+    child: ServiceCategoryChild | null;
+  }
+
+  interface ServiceProduct {
+    name: string;
+    image: string;
+    minimum_price: number;
+    maximum_price: number;
+  }
+
+  interface ServiceWorkSample {
+    title: string | null;
+    image: string;
+  }
+
+  /**
+   * Service item returned from admin API
+   */
+  interface ServiceItem {
+    id: string;
+    code: number;
+    title: string;
+    summary: string;
+    description: string;
+    email: string | null;
+    type: ServiceType;
+    promotion_type: ServicePromotionType;
+    tag: ServiceTag;
+    status: ServiceStatus;
+    priority: number;
+    province: ServiceProvince | null;
+    city: ServiceCity | null;
+    company: ServiceCompany | null;
+    category: ServiceCategory;
+    contact_numbers: ServiceContactNumber[];
+    social_media: ServiceSocialMedia[];
+    products: ServiceProduct[];
+    work_samples: ServiceWorkSample[];
+    user?: OrderUser;
+    can_approve?: boolean;
+    can_reject?: boolean;
+    can_set_regular?: boolean;
+    can_set_most_view?: boolean;
+    can_set_promoted?: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ServiceProductPayload {
+    name: string;
+    image: string;
+    minimum_price: number;
+    maximum_price: number;
+  }
+
+  interface ServiceWorkSamplePayload {
+    title: string;
+    image: string;
+  }
+
+  /**
+   * Payload for updating a company-type service
+   */
+  interface ServiceCompanyPayload {
+    title: string;
+    summary?: string;
+    description: string;
+    email?: string;
+    category_id: string;
+    province_id?: string;
+    city_id?: string;
+    address?: string;
+    logo?: string | null;
+    catalog?: string | null;
+    contact_numbers: ServiceContactNumber[];
+    social_medias: ServiceSocialMedia[];
+    products: ServiceProductPayload[];
+  }
+
+  /**
+   * Payload for updating an engineers-type service
+   */
+  interface ServiceEngineersPayload {
+    title: string;
+    summary?: string;
+    description: string;
+    email?: string;
+    category_id: string;
+    province_id?: string;
+    city_id?: string;
+    contact_numbers: ServiceContactNumber[];
+    social_medias: ServiceSocialMedia[];
+    work_samples: ServiceWorkSamplePayload[];
+  }
 }

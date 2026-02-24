@@ -70,6 +70,18 @@ export default defineConfig({
       icon: 'ShopOutlined',
     },
     {
+      name: 'خدمات شرکت‌ها',
+      path: '/services-company',
+      component: './ServiceCompany',
+      icon: 'ShopOutlined',
+    },
+    {
+      name: 'خدمات مهندسان',
+      path: '/services-engineers',
+      component: './ServiceEngineers',
+      icon: 'ToolOutlined',
+    },
+    {
       name: 'اسلایدر',
       path: '/slider',
       component: './Slider',
