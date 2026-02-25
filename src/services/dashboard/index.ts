@@ -51,9 +51,24 @@ export interface TopCategory {
   count: number;
 }
 
+export interface DailyPaidAmount {
+  date: string;
+  amount: number;
+}
+
+export interface DailyServiceLog {
+  date: string;
+  view: number;
+  call_click: number;
+  website_click: number;
+  catalog_download: number;
+}
+
 export interface DashboardCharts {
   registrations_by_month: RegistrationByMonth[];
-  orders_by_status: OrderByStatus[];
+  // orders_by_status: OrderByStatus[]; // Replaced by daily_paid_amounts
+  daily_paid_amounts: DailyPaidAmount[];
+  daily_service_logs: DailyServiceLog[];
   revenue_by_month: RevenueByMonth[];
   companies_by_province: CompanyByProvince[];
   companies_by_tag: CompanyByTag[];
@@ -69,11 +84,16 @@ export interface DashboardStats {
 /**
  * Get dashboard statistics
  */
-export async function getDashboardStats() {
+export async function getDashboardStats(startDate?: string, endDate?: string) {
+  const params: Record<string, string> = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+
   return request<API.ApiResponse<DashboardStats>>(
     `${API_BASE}/dashboard/stats`,
     {
       method: 'GET',
+      params,
     },
   );
 }

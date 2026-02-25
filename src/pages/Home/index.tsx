@@ -7,7 +7,17 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Col, Row, Skeleton, Statistic, Typography } from 'antd';
+import {
+  Card,
+  Col,
+  DatePicker,
+  Row,
+  Skeleton,
+  Statistic,
+  Typography,
+} from 'antd';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import {
   Bar,
@@ -31,14 +41,14 @@ import styles from './index.less';
 const { Title } = Typography;
 
 // Color palette
-const COLORS = [
-  '#52c41a',
-  '#faad14',
-  '#ff4d4f',
-  '#d9d9d9',
-  '#1890ff',
-  '#722ed1',
-];
+// const COLORS = [ // Was used by Order Status Pie Chart, replaced by daily_paid_amounts bar chart
+//   '#52c41a',
+//   '#faad14',
+//   '#ff4d4f',
+//   '#d9d9d9',
+//   '#1890ff',
+//   '#722ed1',
+// ];
 const TAG_COLORS = ['#d9d9d9', '#1890ff', '#52c41a'];
 const STATUS_COLORS = ['#faad14', '#52c41a', '#ff4d4f', '#d9d9d9'];
 const CHART_COLORS = {
@@ -133,13 +143,20 @@ const renderLegend = (props: any, onClick?: (entry: any) => void) => {
 const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [activeOrderIndex, setActiveOrderIndex] = useState(0);
+  // const [activeOrderIndex, setActiveOrderIndex] = useState(0); // Replaced by daily_paid_amounts bar chart
   const [activeTagIndex, setActiveTagIndex] = useState(0);
   const [activeStatusIndex, setActiveStatusIndex] = useState(0);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(30, 'day'),
+    dayjs(),
+  ]);
 
-  const fetchStats = async () => {
+  const fetchStats = async (start?: string, end?: string) => {
+    setLoading(true);
     try {
-      const response = await getDashboardStats();
+      const startDate = start || dateRange[0].format('YYYY-MM-DD');
+      const endDate = end || dateRange[1].format('YYYY-MM-DD');
+      const response = await getDashboardStats(startDate, endDate);
       if (response.success) {
         setStats(response.data);
       }
@@ -153,6 +170,15 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const handleDateRangeChange = (
+    dates: [Dayjs | null, Dayjs | null] | null,
+  ) => {
+    if (dates && dates[0] && dates[1]) {
+      setDateRange([dates[0], dates[1]]);
+      fetchStats(dates[0].format('YYYY-MM-DD'), dates[1].format('YYYY-MM-DD'));
+    }
+  };
 
   // Quick access card configuration
   const quickAccessCards = [
@@ -208,11 +234,11 @@ const HomePage: React.FC = () => {
   };
 
   // Click handlers for charts
-  const handleOrderStatusClick = (data: any) => {
-    if (data?.status) {
-      history.push(`/order?status=${data.status}`);
-    }
-  };
+  // const handleOrderStatusClick = (data: any) => { // Replaced by daily_paid_amounts bar chart
+  //   if (data?.status) {
+  //     history.push(`/order?status=${data.status}`);
+  //   }
+  // };
 
   const handleCompanyTagClick = (data: any) => {
     if (data?.tag) {
@@ -266,6 +292,16 @@ const HomePage: React.FC = () => {
         title: 'داشبورد مدیریت',
         subTitle: 'نمای کلی از وضعیت سیستم',
       }}
+      extra={[
+        <DatePicker.RangePicker
+          key="date-range"
+          value={dateRange}
+          onChange={handleDateRangeChange as any}
+          format="YYYY/MM/DD"
+          allowClear={false}
+          style={{ direction: 'ltr' }}
+        />,
+      ]}
     >
       <div className={styles.dashboard}>
         {/* Quick Access Section */}
@@ -386,47 +422,105 @@ const HomePage: React.FC = () => {
             </Card>
           </Col>
 
-          {/* Order Status Pie Chart */}
+          {/* Daily Paid Amounts Bar Chart (replaced Order Status Pie Chart) */}
           <Col xs={24} lg={10}>
-            <Card title="وضعیت سفارشات" className={styles.chartCard}>
+            <Card title="مبالغ پرداختی سفارشات" className={styles.chartCard}>
               {loading ? (
                 <Skeleton active paragraph={{ rows: 6 }} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      activeIndex={activeOrderIndex}
-                      activeShape={renderActiveShape}
-                      data={stats?.charts.orders_by_status || []}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="count"
-                      nameKey="label"
-                      onMouseEnter={(_, index) => setActiveOrderIndex(index)}
-                      onClick={(data) => handleOrderStatusClick(data)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {(stats?.charts.orders_by_status || []).map(
-                        (_, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ),
-                      )}
-                    </Pie>
-                    <Legend
-                      content={(props) =>
-                        renderLegend(props, (entry) =>
-                          handleOrderStatusClick(entry.payload),
-                        )
-                      }
-                      verticalAlign="bottom"
+                  <BarChart data={stats?.charts.daily_paid_amounts || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
                     />
-                  </PieChart>
+                    <YAxis
+                      tickFormatter={(value) => formatCurrency(value)}
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      content={<CustomTooltip suffix=" تومان" />}
+                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                    />
+                    <Bar
+                      dataKey="amount"
+                      name="مبلغ پرداختی"
+                      fill={CHART_COLORS.revenue}
+                      radius={[4, 4, 0, 0]}
+                      cursor="pointer"
+                      onClick={() => history.push('/order')}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </Card>
+          </Col>
+
+          {/* Service Logs Line Chart */}
+          <Col xs={24}>
+            <Card title="آمار بازدید خدمات" className={styles.chartCard}>
+              {loading ? (
+                <Skeleton active paragraph={{ rows: 6 }} />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={stats?.charts.daily_service_logs || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{ paddingTop: 20 }}
+                      formatter={(value) => (
+                        <span style={{ color: '#666', fontSize: 12 }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="view"
+                      name="بازدید"
+                      stroke="#1890ff"
+                      strokeWidth={2}
+                      dot={{ fill: '#1890ff', r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="call_click"
+                      name="کلیک تماس"
+                      stroke="#52c41a"
+                      strokeWidth={2}
+                      dot={{ fill: '#52c41a', r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="website_click"
+                      name="کلیک وبسایت"
+                      stroke="#722ed1"
+                      strokeWidth={2}
+                      dot={{ fill: '#722ed1', r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="catalog_download"
+                      name="دانلود کاتالوگ"
+                      stroke="#fa8c16"
+                      strokeWidth={2}
+                      dot={{ fill: '#fa8c16', r: 3 }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               )}
             </Card>
