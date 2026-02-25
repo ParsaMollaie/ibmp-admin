@@ -800,6 +800,7 @@ declare namespace API {
     summary: string;
     description: string;
     email: string | null;
+    website: string | null;
     type: ServiceType;
     promotion_type: ServicePromotionType;
     tag: ServiceTag;
@@ -844,6 +845,7 @@ declare namespace API {
     summary?: string;
     description: string;
     email?: string;
+    website?: string;
     category_id: string;
     province_id?: string;
     city_id?: string;
@@ -863,6 +865,7 @@ declare namespace API {
     summary?: string;
     description: string;
     email?: string;
+    website?: string;
     category_id: string;
     province_id?: string;
     city_id?: string;

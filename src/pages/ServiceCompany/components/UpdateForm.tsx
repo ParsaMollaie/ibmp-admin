@@ -137,6 +137,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         summary: record.summary,
         description: record.description,
         email: record.email,
+        website: record.website,
         category_id: categoryId,
         province_id: record.province?.id,
         city_id: record.city?.id,
@@ -337,6 +338,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         summary: values.summary,
         description: values.description,
         email: values.email,
+        website: values.website || undefined,
         category_id: values.category_id,
         province_id: values.province_id,
         city_id: values.city_id,
@@ -435,6 +437,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             <Col span={12}>
               <Form.Item name="email" label="ایمیل">
                 <Input placeholder="ایمیل" style={{ direction: 'ltr' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="website" label="وب‌سایت">
+                <Input
+                  placeholder="https://example.com"
+                  style={{ direction: 'ltr' }}
+                />
               </Form.Item>
             </Col>
           </Row>
