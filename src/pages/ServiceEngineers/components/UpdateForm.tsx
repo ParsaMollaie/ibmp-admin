@@ -606,7 +606,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         </Card>
 
         {/* Avatar */}
-        <Card size="small" title="تصویر نمایه" style={{ marginBottom: 16 }}>
+        <Card size="small" title="آواتار" style={{ marginBottom: 16 }}>
           <Form.Item label="تصویر">
             <Upload {...getAvatarUploadProps()}>
               {avatarFile.length === 0 && (
