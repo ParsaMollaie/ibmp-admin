@@ -801,6 +801,8 @@ declare namespace API {
     description: string;
     email: string | null;
     website: string | null;
+    avatar?: string | null;
+    avatar_path?: string | null;
     type: ServiceType;
     promotion_type: ServicePromotionType;
     tag: ServiceTag;
@@ -909,6 +911,7 @@ declare namespace API {
     description: string;
     email?: string;
     website?: string;
+    avatar?: string | null;
     category_id: string;
     province_id?: string;
     city_id?: string;

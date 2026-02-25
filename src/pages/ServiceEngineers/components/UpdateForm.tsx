@@ -59,6 +59,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [loadingCities, setLoadingCities] = useState(false);
 
   /**
+   * Avatar image
+   */
+  const [avatarFile, setAvatarFile] = useState<UploadFile[]>([]);
+
+  /**
    * Work sample images - keyed by index
    */
   const [workSampleImages, setWorkSampleImages] = useState<
@@ -152,6 +157,20 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         fetchCities(record.province.id);
       }
 
+      // Set avatar image
+      if (record.avatar) {
+        setAvatarFile([
+          {
+            uid: '-avatar',
+            name: 'avatar',
+            status: 'done',
+            url: record.avatar,
+          },
+        ]);
+      } else {
+        setAvatarFile([]);
+      }
+
       // Set work sample images
       const images: Record<number, UploadFile[]> = {};
       record.work_samples?.forEach((sample, index) => {
@@ -178,6 +197,26 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       reader.onerror = (error) => reject(error);
     });
   };
+
+  const getAvatarUploadProps = (): UploadProps => ({
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('فقط فایل‌های تصویری مجاز هستند');
+        return Upload.LIST_IGNORE;
+      }
+      const isLt500K = file.size / 1024 < 500;
+      if (!isLt500K) {
+        message.error('حجم تصویر باید کمتر از 500 کیلوبایت باشد');
+        return Upload.LIST_IGNORE;
+      }
+      return false;
+    },
+    onChange: (info) => setAvatarFile(info.fileList),
+    fileList: avatarFile,
+    listType: 'picture-card',
+    maxCount: 1,
+  });
 
   const handleWorkSampleImageChange = (
     index: number,
@@ -211,6 +250,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   const resetForm = () => {
     form.resetFields();
+    setAvatarFile([]);
     setWorkSampleImages({});
     setCities([]);
   };
@@ -246,12 +286,24 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         });
       }
 
+      // Process avatar
+      let avatarValue: string | null = null;
+      if (avatarFile.length > 0) {
+        const file = avatarFile[0];
+        if (file.originFileObj) {
+          avatarValue = await getBase64(file.originFileObj);
+        } else if (file.url) {
+          avatarValue = file.url;
+        }
+      }
+
       const payload: API.ServiceEngineersPayload = {
         title: values.title,
         summary: values.summary,
         description: values.description,
         email: values.email,
         website: values.website || undefined,
+        avatar: avatarValue,
         category_id: values.category_id,
         province_id: values.province_id,
         city_id: values.city_id,
@@ -551,6 +603,20 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               </>
             )}
           </Form.List>
+        </Card>
+
+        {/* Avatar */}
+        <Card size="small" title="تصویر نمایه" style={{ marginBottom: 16 }}>
+          <Form.Item label="تصویر">
+            <Upload {...getAvatarUploadProps()}>
+              {avatarFile.length === 0 && (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>آپلود</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
         </Card>
 
         {/* Work Samples */}
