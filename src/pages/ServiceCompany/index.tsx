@@ -304,6 +304,14 @@ const ServiceCompanyPage: React.FC = () => {
     fetchStats();
     fetchCategoryTree();
     fetchPlans();
+
+    // Read search query param from URL (e.g. navigated from complaints page)
+    const params = new URLSearchParams(history.location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      formRef.current?.setFieldsValue({ search: searchParam });
+      formRef.current?.submit();
+    }
   }, []);
 
   const buildCascaderOptions = (

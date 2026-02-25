@@ -147,7 +147,13 @@ const ComplaintsPage: React.FC = () => {
             direction="vertical"
             size={0}
             style={{ cursor: 'pointer' }}
-            onClick={() => history.push(serviceRoute)}
+            onClick={() =>
+              history.push(
+                `${serviceRoute}?search=${encodeURIComponent(
+                  record.service!.title,
+                )}`,
+              )
+            }
           >
             <Text strong style={{ color: '#1890ff' }}>
               {record.service.title}
