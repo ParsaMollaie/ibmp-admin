@@ -33,7 +33,6 @@ import {
   Card,
   Cascader,
   Col,
-  DatePicker,
   Descriptions,
   Divider,
   Image,
@@ -47,6 +46,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import { saveAs } from 'file-saver';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';

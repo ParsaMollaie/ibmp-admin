@@ -1,6 +1,7 @@
 import { getProfile } from '@/services/auth';
 import { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { ConfigProvider, theme as antdTheme } from 'antd';
+import { JalaliLocaleListener } from 'antd-jalali';
 import faIR from 'antd/locale/fa_IR';
 import dayjs from 'dayjs';
 import jalaliday from 'jalaliday';
@@ -127,6 +128,7 @@ export const rootContainer: RuntimeConfig['rootContainer'] = (
           algorithm: antdTheme.defaultAlgorithm,
         }}
       >
+        <JalaliLocaleListener />
         {container}
       </ConfigProvider>
     </StyleSheetManager>

@@ -10,7 +10,6 @@ import { ProTable } from '@ant-design/pro-components';
 import {
   Card,
   Col,
-  DatePicker,
   Row,
   Select,
   Statistic,
@@ -18,6 +17,7 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import jalaliMoment from 'jalali-moment';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';

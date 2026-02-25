@@ -7,15 +7,8 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import {
-  Card,
-  Col,
-  DatePicker,
-  Row,
-  Skeleton,
-  Statistic,
-  Typography,
-} from 'antd';
+import { Card, Col, Row, Skeleton, Statistic, Typography } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
