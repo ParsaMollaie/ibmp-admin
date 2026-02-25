@@ -200,7 +200,7 @@ const HomePage: React.FC = () => {
       path: '/company-services',
     },
     {
-      title: 'سفارشات',
+      title: 'پرداختی ها',
       value: stats?.counts.orders || 0,
       icon: <ShoppingCartOutlined style={{ fontSize: 32, color: '#fa8c16' }} />,
       color: '#fff7e6',

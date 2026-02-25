@@ -106,7 +106,7 @@ export default defineConfig({
       icon: 'CreditCardOutlined',
     },
     {
-      name: 'سفارشات',
+      name: 'پرداختی ها',
       path: '/order',
       component: './Order',
       icon: 'ShoppingCartOutlined',

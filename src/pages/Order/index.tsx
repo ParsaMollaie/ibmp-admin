@@ -371,7 +371,7 @@ const OrderPage: React.FC = () => {
       </Row>
 
       <ProTable<API.OrderItem>
-        headerTitle="مدیریت سفارشات"
+        headerTitle="مدیریت پرداختی ها"
         columns={columns}
         actionRef={actionRef}
         formRef={formRef}
