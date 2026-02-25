@@ -142,6 +142,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         description: record.description,
         email: record.email,
         website: record.website,
+        video: record.video || '',
         category_id: categoryId,
         province_id: record.province?.id,
         city_id: record.city?.id,
@@ -304,6 +305,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         description: values.description,
         email: values.email,
         website: values.website || undefined,
+        video: values.video || null,
         avatar: avatarValue,
         category_id: values.category_id,
         province_id: values.province_id,
@@ -604,6 +606,21 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               </>
             )}
           </Form.List>
+        </Card>
+
+        {/* Video */}
+        <Card size="small" title="ویدئو معرفی" style={{ marginBottom: 16 }}>
+          <Form.Item
+            name="video"
+            label="لینک ویدئو"
+            extra="لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)"
+          >
+            <TextArea
+              rows={2}
+              placeholder="لینک embed ویدئو را وارد کنید"
+              style={{ direction: 'ltr' }}
+            />
+          </Form.Item>
         </Card>
 
         {/* Avatar */}
