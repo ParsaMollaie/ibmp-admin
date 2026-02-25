@@ -857,6 +857,49 @@ declare namespace API {
     products: ServiceProductPayload[];
   }
 
+  // ===========================================
+  // SERVICE COMPLAINT
+  // ===========================================
+
+  type ServiceComplaintStatus =
+    | 'pending'
+    | 'in_review'
+    | 'resolved'
+    | 'rejected';
+
+  interface ServiceComplaintService {
+    id: string;
+    title: string;
+    type: ServiceType;
+    code: number;
+  }
+
+  interface ServiceComplaintItem {
+    id: string;
+    code: number;
+    service: ServiceComplaintService | null;
+    first_name: string;
+    last_name: string;
+    mobile: string;
+    description: string;
+    status: ServiceComplaintStatus;
+    admin_note: string | null;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ServiceComplaintPayload {
+    status: ServiceComplaintStatus;
+    admin_note?: string | null;
+  }
+
+  interface ServiceComplaintStats {
+    pending: number;
+    in_review: number;
+    resolved: number;
+    rejected: number;
+  }
+
   /**
    * Payload for updating an engineers-type service
    */

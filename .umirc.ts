@@ -82,6 +82,12 @@ export default defineConfig({
       icon: 'ToolOutlined',
     },
     {
+      name: 'شکایات',
+      path: '/complaints',
+      component: './Complaints',
+      icon: 'ExclamationCircleOutlined',
+    },
+    {
       name: 'اسلایدر',
       path: '/slider',
       component: './Slider',
