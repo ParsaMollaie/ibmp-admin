@@ -8,6 +8,9 @@ const API_BASE = '/api/v1/admin';
 export async function getComplaints(params?: {
   status?: API.ServiceComplaintStatus;
   search?: string;
+  service_type?: string;
+  date_from?: string;
+  date_to?: string;
   page?: number;
   page_size?: number;
 }) {

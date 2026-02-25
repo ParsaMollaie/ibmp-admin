@@ -14,7 +14,9 @@ import {
   Tooltip,
   Typography,
 } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
 import UpdateForm from './components/UpdateForm';
 
 const { Text } = Typography;
@@ -136,9 +138,20 @@ const ComplaintsPage: React.FC = () => {
       width: 200,
       render: (_, record) => {
         if (!record.service) return '—';
+        const serviceRoute =
+          record.service.type === 'company'
+            ? '/services-company'
+            : '/services-engineers';
         return (
-          <Space direction="vertical" size={0}>
-            <Text strong>{record.service.title}</Text>
+          <Space
+            direction="vertical"
+            size={0}
+            style={{ cursor: 'pointer' }}
+            onClick={() => history.push(serviceRoute)}
+          >
+            <Text strong style={{ color: '#1890ff' }}>
+              {record.service.title}
+            </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
               کد: {record.service.code} |{' '}
               {getServiceTypeLabel(record.service.type)}
@@ -201,6 +214,32 @@ const ComplaintsPage: React.FC = () => {
       fieldProps: {
         placeholder: 'نام، نام خانوادگی یا موبایل',
       },
+    },
+    {
+      title: 'نوع خدمت',
+      dataIndex: 'service_type',
+      hideInTable: true,
+      valueType: 'select',
+      valueEnum: {
+        company: { text: 'شرکت' },
+        engineers: { text: 'مهندسان' },
+      },
+    },
+    {
+      title: 'از تاریخ',
+      dataIndex: 'date_from',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="از تاریخ" style={{ width: '100%' }} />
+      ),
+    },
+    {
+      title: 'تا تاریخ',
+      dataIndex: 'date_to',
+      hideInTable: true,
+      renderFormItem: () => (
+        <DatePicker placeholder="تا تاریخ" style={{ width: '100%' }} />
+      ),
     },
     {
       title: 'عملیات',
@@ -298,9 +337,23 @@ const ComplaintsPage: React.FC = () => {
         rowKey="id"
         headerTitle="لیست شکایات"
         request={async (params) => {
+          const dateFrom = params.date_from
+            ? typeof params.date_from === 'string'
+              ? params.date_from
+              : params.date_from.format?.('YYYY-MM-DD')
+            : undefined;
+          const dateTo = params.date_to
+            ? typeof params.date_to === 'string'
+              ? params.date_to
+              : params.date_to.format?.('YYYY-MM-DD')
+            : undefined;
+
           const response = await getComplaints({
             status: params.status,
             search: params.search,
+            service_type: params.service_type,
+            date_from: dateFrom,
+            date_to: dateTo,
             page: params.current,
             page_size: params.pageSize,
           });
