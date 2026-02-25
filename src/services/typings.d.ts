@@ -767,15 +767,19 @@ declare namespace API {
   }
 
   interface ServiceProduct {
+    id: string;
     name: string;
     image: string;
     minimum_price: number;
     maximum_price: number;
+    status: string;
   }
 
   interface ServiceWorkSample {
+    id: string;
     title: string | null;
     image: string;
+    status: string;
   }
 
   /**

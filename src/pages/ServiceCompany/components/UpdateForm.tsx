@@ -14,6 +14,7 @@ import {
   Modal,
   Row,
   Select,
+  Tag,
   Upload,
   message,
 } from 'antd';
@@ -681,8 +682,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                 {fields.map(({ key, name, ...restField }, index) => (
                   <div key={key}>
                     {index > 0 && <Divider />}
-                    <Row gutter={16}>
-                      <Col span={16}>
+                    <Row gutter={16} align="middle">
+                      <Col span={12}>
                         <Form.Item
                           {...restField}
                           name={[name, 'name']}
@@ -697,7 +698,22 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           <Input placeholder="نام محصول" />
                         </Form.Item>
                       </Col>
-                      <Col span={8} style={{ textAlign: 'left' }}>
+                      <Col span={6}>
+                        {record?.products?.[index]?.status && (
+                          <Tag
+                            color={
+                              record.products[index].status === 'active'
+                                ? 'green'
+                                : 'red'
+                            }
+                          >
+                            {record.products[index].status === 'active'
+                              ? 'فعال'
+                              : 'غیرفعال'}
+                          </Tag>
+                        )}
+                      </Col>
+                      <Col span={6} style={{ textAlign: 'left' }}>
                         <Button
                           type="text"
                           danger
