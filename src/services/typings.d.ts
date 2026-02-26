@@ -946,6 +946,7 @@ declare namespace API {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    replies?: ServiceCommentItem[];
   }
 
   interface ServiceCommentPayload {

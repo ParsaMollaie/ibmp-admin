@@ -14,7 +14,6 @@ import { ProTable } from '@ant-design/pro-components';
 import {
   Card,
   Col,
-  Descriptions,
   message,
   Modal,
   Popconfirm,
@@ -446,7 +445,7 @@ const ServiceCommentsPage: React.FC = () => {
         cardBordered
       />
 
-      {/* Detail Modal */}
+      {/* Detail Modal — Thread View */}
       <Modal
         title="جزئیات نظر"
         open={detailModalVisible}
@@ -455,58 +454,136 @@ const ServiceCommentsPage: React.FC = () => {
           setCurrentRecord(null);
         }}
         footer={null}
-        width={600}
+        width={700}
       >
         {currentRecord && (
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="کد نظر">
-              {currentRecord.code}
-            </Descriptions.Item>
-            <Descriptions.Item label="نوع نظر دهنده">
-              <Tag color={getCommenterTypeColor(currentRecord.commenter_type)}>
-                {getCommenterTypeLabel(currentRecord.commenter_type)}
-              </Tag>
-            </Descriptions.Item>
-            {currentRecord.commenter_type === 'user' && (
-              <>
-                <Descriptions.Item label="نام">
-                  {currentRecord.first_name} {currentRecord.last_name}
-                </Descriptions.Item>
-                <Descriptions.Item label="شماره موبایل">
-                  <span dir="ltr">{currentRecord.mobile}</span>
-                </Descriptions.Item>
-              </>
-            )}
-            <Descriptions.Item label="متن نظر">
-              <div style={{ whiteSpace: 'pre-wrap' }}>
-                {currentRecord.description}
-              </div>
-            </Descriptions.Item>
-            <Descriptions.Item label="وضعیت">
-              <Tag color={currentRecord.is_active ? 'success' : 'error'}>
-                {currentRecord.is_active ? 'فعال' : 'غیرفعال'}
-              </Tag>
-            </Descriptions.Item>
-            {currentRecord.service && (
-              <>
-                <Descriptions.Item label="عنوان خدمت">
-                  {currentRecord.service.title}
-                </Descriptions.Item>
-                <Descriptions.Item label="کد خدمت">
-                  {currentRecord.service.code}
-                </Descriptions.Item>
-                <Descriptions.Item label="نوع خدمت">
-                  {getServiceTypeLabel(currentRecord.service.type)}
-                </Descriptions.Item>
-              </>
-            )}
-            <Descriptions.Item label="تاریخ ثبت">
-              {new Date(currentRecord.created_at).toLocaleString('fa-IR')}
-            </Descriptions.Item>
-            <Descriptions.Item label="آخرین بروزرسانی">
-              {new Date(currentRecord.updated_at).toLocaleString('fa-IR')}
-            </Descriptions.Item>
-          </Descriptions>
+          <div>
+            {/* Header: Service & commenter info */}
+            <div
+              style={{
+                background: '#fafafa',
+                borderRadius: 8,
+                padding: '12px 16px',
+                marginBottom: 16,
+              }}
+            >
+              {currentRecord.service && (
+                <div style={{ marginBottom: 8 }}>
+                  <Text strong>{currentRecord.service.title}</Text>
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: 12, marginRight: 8 }}
+                  >
+                    کد: {currentRecord.service.code} |{' '}
+                    {getServiceTypeLabel(currentRecord.service.type)}
+                  </Text>
+                </div>
+              )}
+              <Space size={4}>
+                {currentRecord.commenter_type === 'user' ? (
+                  <Text>
+                    {currentRecord.first_name} {currentRecord.last_name}
+                  </Text>
+                ) : (
+                  <Text style={{ color: '#52c41a' }}>صاحب خدمت</Text>
+                )}
+                <Tag
+                  color={getCommenterTypeColor(currentRecord.commenter_type)}
+                >
+                  {getCommenterTypeLabel(currentRecord.commenter_type)}
+                </Tag>
+                {currentRecord.mobile && (
+                  <Text type="secondary" style={{ fontSize: 12 }} dir="ltr">
+                    {currentRecord.mobile}
+                  </Text>
+                )}
+              </Space>
+            </div>
+
+            {/* Thread body: chat-like messages */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                maxHeight: 500,
+                overflowY: 'auto',
+                padding: '8px 0',
+              }}
+            >
+              {[currentRecord, ...(currentRecord.replies || [])].map((msg) => {
+                const isOwner = msg.commenter_type === 'owner';
+                return (
+                  <div
+                    key={msg.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: isOwner ? 'flex-start' : 'flex-end',
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: '80%',
+                        background: isOwner ? '#f6ffed' : '#e6f4ff',
+                        border: `1px solid ${isOwner ? '#b7eb8f' : '#91caff'}`,
+                        borderRadius: 12,
+                        ...(isOwner
+                          ? { borderTopRight: '4px' }
+                          : { borderTopLeft: '4px' }),
+                        borderTopRightRadius: isOwner ? 4 : 12,
+                        borderTopLeftRadius: isOwner ? 12 : 4,
+                        padding: '10px 14px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          marginBottom: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        {isOwner ? (
+                          <Tag color="green" style={{ margin: 0 }}>
+                            صاحب خدمت
+                          </Tag>
+                        ) : (
+                          <Text style={{ fontSize: 13, fontWeight: 500 }}>
+                            {msg.first_name} {msg.last_name}
+                          </Text>
+                        )}
+                        <Tag
+                          color={msg.is_active ? 'success' : 'error'}
+                          style={{ margin: 0 }}
+                        >
+                          {msg.is_active ? 'فعال' : 'غیرفعال'}
+                        </Tag>
+                      </div>
+                      <div
+                        style={{
+                          whiteSpace: 'pre-wrap',
+                          fontSize: 14,
+                          lineHeight: 1.8,
+                        }}
+                      >
+                        {msg.description}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 11,
+                          color: '#8c8c8c',
+                          textAlign: isOwner ? 'left' : 'right',
+                        }}
+                      >
+                        {new Date(msg.created_at).toLocaleString('fa-IR')}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </Modal>
 
