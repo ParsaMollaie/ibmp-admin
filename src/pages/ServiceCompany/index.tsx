@@ -1406,23 +1406,54 @@ const ServiceCompanyPage: React.FC = () => {
             <Paragraph>{currentRecord.description}</Paragraph>
 
             {/* Location & Company Info */}
-            <Divider orientation="right">اطلاعات مکانی</Divider>
-            <Descriptions bordered column={2} size="small">
-              {currentRecord.province && (
-                <Descriptions.Item label="استان">
-                  {currentRecord.province.name}
-                </Descriptions.Item>
-              )}
-              {currentRecord.city && (
-                <Descriptions.Item label="شهرستان">
-                  {currentRecord.city.name}
-                </Descriptions.Item>
-              )}
-              {currentRecord.company?.address && (
-                <Descriptions.Item label="آدرس" span={2}>
-                  {currentRecord.company.address}
-                </Descriptions.Item>
-              )}
+            <Divider orientation="right">آدرس‌ها</Divider>
+            {currentRecord.addresses?.length > 0 ? (
+              currentRecord.addresses.map((addr, idx) => (
+                <Descriptions
+                  key={idx}
+                  bordered
+                  column={2}
+                  size="small"
+                  style={{ marginBottom: 8 }}
+                >
+                  <Descriptions.Item label="استان">
+                    {addr.province?.name}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="شهرستان">
+                    {addr.city?.name}
+                  </Descriptions.Item>
+                  {addr.address && (
+                    <Descriptions.Item label="آدرس" span={2}>
+                      {addr.address}
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              ))
+            ) : (
+              <Descriptions bordered column={2} size="small">
+                {currentRecord.province && (
+                  <Descriptions.Item label="استان">
+                    {currentRecord.province.name}
+                  </Descriptions.Item>
+                )}
+                {currentRecord.city && (
+                  <Descriptions.Item label="شهرستان">
+                    {currentRecord.city.name}
+                  </Descriptions.Item>
+                )}
+                {currentRecord.company?.address && (
+                  <Descriptions.Item label="آدرس" span={2}>
+                    {currentRecord.company.address}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            )}
+            <Descriptions
+              bordered
+              column={2}
+              size="small"
+              style={{ marginTop: 8 }}
+            >
               {currentRecord.email && (
                 <Descriptions.Item label="ایمیل">
                   <span style={{ direction: 'ltr', display: 'inline-block' }}>

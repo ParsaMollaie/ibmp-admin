@@ -182,8 +182,31 @@ const exportColumns: ExportColumn[] = [
     dataIndex: 'category',
     render: (_, record) => getLeafCategoryTitle(record.category),
   },
-  { title: 'استان', dataIndex: ['province', 'name'] },
-  { title: 'شهر', dataIndex: ['city', 'name'] },
+  // deprecated — use addresses
+  // { title: 'استان', dataIndex: ['province', 'name'] },
+  // { title: 'شهر', dataIndex: ['city', 'name'] },
+  {
+    title: 'استان',
+    dataIndex: 'addresses',
+    render: (_, record) =>
+      record.addresses?.length > 0
+        ? record.addresses
+            .map((a) => a.province?.name)
+            .filter(Boolean)
+            .join('، ')
+        : record.province?.name || '—',
+  },
+  {
+    title: 'شهر',
+    dataIndex: 'addresses',
+    render: (_, record) =>
+      record.addresses?.length > 0
+        ? record.addresses
+            .map((a) => a.city?.name)
+            .filter(Boolean)
+            .join('، ')
+        : record.city?.name || '—',
+  },
   {
     title: 'وضعیت',
     dataIndex: 'status',
@@ -835,7 +858,25 @@ const ServiceEngineersPage: React.FC = () => {
       key: 'province',
       width: 100,
       hideInSearch: true,
-      render: (_, record) => record.province?.name || '—',
+      // deprecated — use addresses
+      // render: (_, record) => record.province?.name || '—',
+      render: (_, record) => {
+        if (record.addresses?.length > 0) {
+          const names = record.addresses
+            .map((a) => a.province?.name)
+            .filter(Boolean);
+          return names.length > 1 ? (
+            <Tooltip title={names.join('، ')}>
+              <span>
+                {names[0]} (+{names.length - 1})
+              </span>
+            </Tooltip>
+          ) : (
+            <span>{names[0] || '—'}</span>
+          );
+        }
+        return record.province?.name || '—';
+      },
     },
     {
       title: 'وضعیت',
@@ -1322,32 +1363,58 @@ const ServiceEngineersPage: React.FC = () => {
             <Divider orientation="right">توضیحات</Divider>
             <Paragraph>{currentRecord.description}</Paragraph>
 
-            {/* Location */}
-            {(currentRecord.province || currentRecord.email) && (
-              <>
-                <Divider orientation="right">اطلاعات مکانی</Divider>
-                <Descriptions bordered column={2} size="small">
-                  {currentRecord.province && (
-                    <Descriptions.Item label="استان">
-                      {currentRecord.province.name}
-                    </Descriptions.Item>
-                  )}
-                  {currentRecord.city && (
-                    <Descriptions.Item label="شهرستان">
-                      {currentRecord.city.name}
-                    </Descriptions.Item>
-                  )}
-                  {currentRecord.email && (
-                    <Descriptions.Item label="ایمیل">
-                      <span
-                        style={{ direction: 'ltr', display: 'inline-block' }}
-                      >
-                        {currentRecord.email}
-                      </span>
+            {/* Location — multi-address */}
+            <Divider orientation="right">آدرس‌ها</Divider>
+            {currentRecord.addresses?.length > 0 ? (
+              currentRecord.addresses.map((addr, idx) => (
+                <Descriptions
+                  key={idx}
+                  bordered
+                  column={2}
+                  size="small"
+                  style={{ marginBottom: 8 }}
+                >
+                  <Descriptions.Item label="استان">
+                    {addr.province?.name}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="شهرستان">
+                    {addr.city?.name}
+                  </Descriptions.Item>
+                  {addr.address && (
+                    <Descriptions.Item label="آدرس" span={2}>
+                      {addr.address}
                     </Descriptions.Item>
                   )}
                 </Descriptions>
-              </>
+              ))
+            ) : (
+              /* deprecated — fallback to old province/city */
+              <Descriptions bordered column={2} size="small">
+                {currentRecord.province && (
+                  <Descriptions.Item label="استان">
+                    {currentRecord.province.name}
+                  </Descriptions.Item>
+                )}
+                {currentRecord.city && (
+                  <Descriptions.Item label="شهرستان">
+                    {currentRecord.city.name}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            )}
+            {currentRecord.email && (
+              <Descriptions
+                bordered
+                column={2}
+                size="small"
+                style={{ marginTop: 8 }}
+              >
+                <Descriptions.Item label="ایمیل">
+                  <span style={{ direction: 'ltr', display: 'inline-block' }}>
+                    {currentRecord.email}
+                  </span>
+                </Descriptions.Item>
+              </Descriptions>
             )}
 
             {/* Contact Numbers */}

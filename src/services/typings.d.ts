@@ -731,6 +731,19 @@ declare namespace API {
     name: string;
   }
 
+  interface ServiceAddress {
+    id: string;
+    province: ServiceProvince;
+    city: ServiceCity;
+    address: string | null;
+  }
+
+  interface ServiceAddressPayload {
+    province_id: string;
+    city_id: string;
+    address?: string;
+  }
+
   interface ServiceContactNumber {
     type: 'phone' | 'mobile';
     data: string;
@@ -813,8 +826,9 @@ declare namespace API {
     tag: ServiceTag;
     status: ServiceStatus;
     priority: number;
-    province: ServiceProvince | null;
-    city: ServiceCity | null;
+    province: ServiceProvince | null; // deprecated — use addresses
+    city: ServiceCity | null; // deprecated — use addresses
+    addresses: ServiceAddress[];
     company: ServiceCompany | null;
     category: ServiceCategory;
     contact_numbers: ServiceContactNumber[];
@@ -855,9 +869,10 @@ declare namespace API {
     website?: string;
     video?: string | null;
     category_id: string;
-    province_id?: string;
-    city_id?: string;
-    address?: string;
+    // province_id?: string; // deprecated — use addresses
+    // city_id?: string; // deprecated — use addresses
+    // address?: string; // deprecated — use addresses
+    addresses?: ServiceAddressPayload[];
     logo?: string | null;
     catalog?: string | null;
     contact_numbers: ServiceContactNumber[];
@@ -920,8 +935,9 @@ declare namespace API {
     video?: string | null;
     avatar?: string | null;
     category_id: string;
-    province_id?: string;
-    city_id?: string;
+    // province_id?: string; // deprecated — use addresses
+    // city_id?: string; // deprecated — use addresses
+    addresses?: ServiceAddressPayload[];
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
     work_samples: ServiceWorkSamplePayload[];

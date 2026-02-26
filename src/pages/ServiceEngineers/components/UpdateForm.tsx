@@ -55,9 +55,13 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [provinces, setProvinces] = useState<API.ProvinceItem[]>([]);
-  const [cities, setCities] = useState<API.CityItem[]>([]);
+  const [citiesMap, setCitiesMap] = useState<Record<number, API.CityItem[]>>(
+    {},
+  );
   const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingCitiesMap, setLoadingCitiesMap] = useState<
+    Record<number, boolean>
+  >({});
 
   /**
    * Avatar image
@@ -99,17 +103,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     }
   };
 
-  const fetchCities = async (provinceId: string) => {
-    setLoadingCities(true);
+  const fetchCitiesForRow = async (provinceId: string, rowIndex: number) => {
+    setLoadingCitiesMap((prev) => ({ ...prev, [rowIndex]: true }));
     try {
       const response = await getCities(provinceId);
       if (response.success && response.data?.list) {
-        setCities(response.data.list);
+        setCitiesMap((prev) => ({ ...prev, [rowIndex]: response.data.list }));
       }
     } catch (error) {
       console.error('Error fetching cities:', error);
     } finally {
-      setLoadingCities(false);
+      setLoadingCitiesMap((prev) => ({ ...prev, [rowIndex]: false }));
     }
   };
 
@@ -136,6 +140,24 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         categoryId = record.category?.id;
       }
 
+      // Build addresses from record
+      const addresses =
+        record.addresses?.length > 0
+          ? record.addresses.map((a) => ({
+              province_id: a.province?.id,
+              city_id: a.city?.id,
+              address: a.address || '',
+            }))
+          : record.province?.id
+          ? [
+              {
+                province_id: record.province.id,
+                city_id: record.city?.id,
+                address: '',
+              },
+            ]
+          : [{ province_id: undefined, city_id: undefined, address: '' }];
+
       form.setFieldsValue({
         title: record.title,
         summary: record.summary,
@@ -144,8 +166,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         website: record.website,
         video: record.video || '',
         category_id: categoryId,
-        province_id: record.province?.id,
-        city_id: record.city?.id,
+        // province_id: record.province?.id, // deprecated — use addresses
+        // city_id: record.city?.id, // deprecated — use addresses
+        addresses,
         contact_numbers: record.contact_numbers || [],
         social_medias: record.social_media || [],
         work_samples:
@@ -154,10 +177,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           })) || [],
       });
 
-      // Load cities for the province
-      if (record.province?.id) {
-        fetchCities(record.province.id);
-      }
+      // Load cities for each address row
+      addresses.forEach((addr, idx) => {
+        if (addr.province_id) {
+          fetchCitiesForRow(addr.province_id, idx);
+        }
+      });
 
       // Set avatar image
       if (record.avatar) {
@@ -254,7 +279,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     form.resetFields();
     setAvatarFile([]);
     setWorkSampleImages({});
-    setCities([]);
+    setCitiesMap({});
   };
 
   const handleSubmit = async () => {
@@ -308,8 +333,13 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         video: values.video || null,
         avatar: avatarValue,
         category_id: values.category_id,
-        province_id: values.province_id,
-        city_id: values.city_id,
+        // province_id: values.province_id, // deprecated — use addresses
+        // city_id: values.city_id, // deprecated — use addresses
+        addresses: (values.addresses || []).map((a: any) => ({
+          province_id: a.province_id,
+          city_id: a.city_id,
+          address: a.address || undefined,
+        })),
         contact_numbers: values.contact_numbers || [],
         social_medias: values.social_medias || [],
         work_samples: processedWorkSamples,
@@ -358,11 +388,18 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     remove(index);
   };
 
-  const handleProvinceChange = (provinceId: string) => {
-    form.setFieldsValue({ city_id: undefined });
-    setCities([]);
+  const handleAddressProvinceChange = (
+    provinceId: string,
+    rowIndex: number,
+  ) => {
+    const addresses = form.getFieldValue('addresses') || [];
+    if (addresses[rowIndex]) {
+      addresses[rowIndex].city_id = undefined;
+      form.setFieldsValue({ addresses });
+    }
+    setCitiesMap((prev) => ({ ...prev, [rowIndex]: [] }));
     if (provinceId) {
-      fetchCities(provinceId);
+      fetchCitiesForRow(provinceId, rowIndex);
     }
   };
 
@@ -449,39 +486,109 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           </Form.Item>
         </Card>
 
-        {/* Location */}
-        <Card size="small" title="موقعیت مکانی" style={{ marginBottom: 16 }}>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="province_id" label="استان">
-                <Select
-                  placeholder="انتخاب استان"
-                  loading={loadingProvinces}
-                  showSearch
-                  optionFilterProp="label"
-                  onChange={handleProvinceChange}
-                  options={provinces.map((p) => ({
-                    label: p.name,
-                    value: p.id,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="city_id" label="شهرستان">
-                <Select
-                  placeholder="انتخاب شهرستان"
-                  loading={loadingCities}
-                  showSearch
-                  optionFilterProp="label"
-                  options={cities.map((c) => ({
-                    label: c.name,
-                    value: c.id,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+        {/* Addresses */}
+        <Card size="small" title="آدرس‌ها" style={{ marginBottom: 16 }}>
+          <Form.List name="addresses">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }, index) => (
+                  <div
+                    key={key}
+                    style={{
+                      marginBottom: 16,
+                      padding: 12,
+                      border: '1px solid #f0f0f0',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Row gutter={16} align="middle">
+                      <Col span={8}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'province_id']}
+                          label="استان"
+                          rules={[
+                            { required: true, message: 'استان را انتخاب کنید' },
+                          ]}
+                        >
+                          <Select
+                            placeholder="انتخاب استان"
+                            loading={loadingProvinces}
+                            showSearch
+                            optionFilterProp="label"
+                            onChange={(val) =>
+                              handleAddressProvinceChange(val, index)
+                            }
+                            options={provinces.map((p) => ({
+                              label: p.name,
+                              value: p.id,
+                            }))}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'city_id']}
+                          label="شهرستان"
+                          rules={[
+                            {
+                              required: true,
+                              message: 'شهرستان را انتخاب کنید',
+                            },
+                          ]}
+                        >
+                          <Select
+                            placeholder="انتخاب شهرستان"
+                            loading={loadingCitiesMap[index] || false}
+                            showSearch
+                            optionFilterProp="label"
+                            options={(citiesMap[index] || []).map((c) => ({
+                              label: c.name,
+                              value: c.id,
+                            }))}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={6}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'address']}
+                          label="آدرس (اختیاری)"
+                        >
+                          <Input placeholder="آدرس" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={2}>
+                        {fields.length > 1 && (
+                          <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
+                            onClick={() => remove(name)}
+                          />
+                        )}
+                      </Col>
+                    </Row>
+                  </div>
+                ))}
+                <Button
+                  type="dashed"
+                  onClick={() =>
+                    add({
+                      province_id: undefined,
+                      city_id: undefined,
+                      address: '',
+                    })
+                  }
+                  block
+                  icon={<PlusOutlined />}
+                >
+                  افزودن آدرس
+                </Button>
+              </>
+            )}
+          </Form.List>
         </Card>
 
         {/* Contact Numbers */}
