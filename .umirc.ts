@@ -88,6 +88,12 @@ export default defineConfig({
       icon: 'ExclamationCircleOutlined',
     },
     {
+      name: 'نظرات',
+      path: '/service-comments',
+      component: './ServiceComments',
+      icon: 'CommentOutlined',
+    },
+    {
       name: 'اسلایدر',
       path: '/slider',
       component: './Slider',

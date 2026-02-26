@@ -923,6 +923,41 @@ declare namespace API {
     rejected: number;
   }
 
+  // --- Service Comments ---
+  interface ServiceCommentService {
+    id: string;
+    title: string;
+    type: string;
+    code: number;
+  }
+
+  type ServiceCommentCommenterType = 'user' | 'owner';
+
+  interface ServiceCommentItem {
+    id: string;
+    code: number;
+    service: ServiceCommentService | null;
+    parent_id: string | null;
+    commenter_type: ServiceCommentCommenterType;
+    first_name: string | null;
+    last_name: string | null;
+    mobile: string | null;
+    description: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ServiceCommentPayload {
+    is_active: boolean;
+  }
+
+  interface ServiceCommentStats {
+    active: number;
+    inactive: number;
+    total: number;
+  }
+
   /**
    * Payload for updating an engineers-type service
    */
