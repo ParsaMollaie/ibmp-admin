@@ -1,8 +1,13 @@
 import { getPlans } from '@/services/plan';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EditOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Card, message, Tag } from 'antd';
+import { Button, Card, message, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -71,6 +76,18 @@ const PlanPage: React.FC = () => {
       // ProTable automatically adds search for this field
     },
     {
+      title: 'نوع',
+      dataIndex: 'is_free_trial',
+      key: 'is_free_trial',
+      width: 130,
+      search: false,
+      render: (_, record) => (
+        <Tag color={record.is_free_trial ? 'green' : 'blue'}>
+          {record.is_free_trial ? 'آزمایشی رایگان' : 'پولی'}
+        </Tag>
+      ),
+    },
+    {
       title: 'مدت (ماه)',
       dataIndex: 'month',
       key: 'month',
@@ -86,6 +103,7 @@ const PlanPage: React.FC = () => {
       search: false,
       render: (_, record) => {
         const numericPrice = parseFloat(record.price);
+        if (numericPrice === 0) return <Tag color="green">رایگان</Tag>;
         return numericPrice.toLocaleString('fa-IR');
       },
     },
@@ -103,13 +121,42 @@ const PlanPage: React.FC = () => {
     },
     {
       title: 'ویژگی‌ها',
-      dataIndex: 'attributes',
-      key: 'attributes',
-      ellipsis: true,
-      width: 200,
+      dataIndex: 'features',
+      key: 'features',
+      width: 250,
       search: false,
-      render: (_, record) =>
-        record.attributes || <span style={{ color: '#999' }}>—</span>,
+      render: (_, record) => {
+        if (!record.features || record.features.length === 0) {
+          // Fallback to old attributes if no features
+          // return record.attributes || <span style={{ color: '#999' }}>—</span>;
+          return <span style={{ color: '#999' }}>—</span>;
+        }
+        return (
+          <Space direction="vertical" size={2}>
+            {record.features.map((feature, index) => (
+              <span key={index}>
+                {feature.included ? (
+                  <CheckCircleOutlined
+                    style={{ color: '#52c41a', marginLeft: 4 }}
+                  />
+                ) : (
+                  <CloseCircleOutlined
+                    style={{ color: '#999', marginLeft: 4 }}
+                  />
+                )}
+                <span
+                  style={{
+                    color: feature.included ? undefined : '#999',
+                    textDecoration: feature.included ? 'none' : 'line-through',
+                  }}
+                >
+                  {feature.title}
+                </span>
+              </span>
+            ))}
+          </Space>
+        );
+      },
     },
     {
       title: 'تاریخ ایجاد',
@@ -195,7 +242,7 @@ const PlanPage: React.FC = () => {
           showTotal: (total) => `مجموع: ${total} پلن`,
         }}
         // Horizontal scroll for responsiveness
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1200 }}
         // Date formatting
         dateFormatter="string"
         // Header title (optional, since we use toolbar.title)

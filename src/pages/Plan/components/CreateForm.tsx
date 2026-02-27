@@ -1,5 +1,15 @@
 import { createPlan } from '@/services/plan';
-import { Form, Input, InputNumber, Modal, Select, message } from 'antd';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Switch,
+  message,
+} from 'antd';
 import React, { useState } from 'react';
 
 // Props interface defining what this component receives from parent
@@ -18,6 +28,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
   const [form] = Form.useForm();
   // Loading state to show spinner on submit button
   const [loading, setLoading] = useState(false);
+  // Track free trial toggle state
+  const [isFreeTrial, setIsFreeTrial] = useState(false);
+
+  // Handle free trial toggle — auto-set price=0 and month=1
+  const handleFreeTrialChange = (checked: boolean) => {
+    setIsFreeTrial(checked);
+    if (checked) {
+      form.setFieldsValue({ price: 0, month: 1 });
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -31,7 +51,9 @@ const CreateForm: React.FC<CreateFormProps> = ({
         name: values.name,
         status: values.status,
         month: values.month,
-        attributes: values.attributes || '',
+        attributes: '', // deprecated
+        is_free_trial: values.is_free_trial || false,
+        features: values.features || null,
         price: values.price,
       };
 
@@ -41,6 +63,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
       if (response.success) {
         // Reset form to initial state
         form.resetFields();
+        setIsFreeTrial(false);
         // Notify parent component of success
         onSuccess();
       } else {
@@ -58,6 +81,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
   // Handle modal cancel - reset form and notify parent
   const handleCancel = () => {
     form.resetFields();
+    setIsFreeTrial(false);
     onCancel();
   };
 
@@ -80,6 +104,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
           status: 'active',
           month: 1,
           price: 0,
+          is_free_trial: false,
         }}
       >
         {/* Plan name field - required */}
@@ -89,6 +114,19 @@ const CreateForm: React.FC<CreateFormProps> = ({
           rules={[{ required: true, message: 'لطفاً نام پلن را وارد کنید' }]}
         >
           <Input placeholder="مثال: پلن یک ماهه" />
+        </Form.Item>
+
+        {/* Free trial toggle */}
+        <Form.Item
+          name="is_free_trial"
+          label="پلن آزمایشی رایگان"
+          valuePropName="checked"
+        >
+          <Switch
+            checkedChildren="بله"
+            unCheckedChildren="خیر"
+            onChange={handleFreeTrialChange}
+          />
         </Form.Item>
 
         {/* Duration in months - required, minimum 1 */}
@@ -101,6 +139,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
             min={1}
             style={{ width: '100%' }}
             placeholder="تعداد ماه"
+            disabled={isFreeTrial}
           />
         </Form.Item>
 
@@ -114,6 +153,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
             min={0}
             style={{ width: '100%' }}
             placeholder="قیمت پلن"
+            disabled={isFreeTrial}
             // Format number with thousand separators for better readability
             formatter={(value) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -142,13 +182,70 @@ const CreateForm: React.FC<CreateFormProps> = ({
           />
         </Form.Item>
 
-        {/* Attributes/features - optional text area for plan details */}
-        <Form.Item name="attributes" label="ویژگی‌ها">
+        {/* Features — dynamic list replacing old attributes TextArea */}
+        <Form.Item label="ویژگی‌ها">
+          <Form.List name="features">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <div
+                    key={key}
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      marginBottom: 8,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'title']}
+                      rules={[
+                        { required: true, message: 'عنوان ویژگی الزامی است' },
+                      ]}
+                      style={{ flex: 1, marginBottom: 0 }}
+                    >
+                      <Input placeholder="عنوان ویژگی" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'included']}
+                      valuePropName="checked"
+                      initialValue={true}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Switch
+                        checkedChildren="شامل"
+                        unCheckedChildren="ندارد"
+                      />
+                    </Form.Item>
+                    <MinusCircleOutlined
+                      onClick={() => remove(name)}
+                      style={{ color: '#ff4d4f', fontSize: 18 }}
+                    />
+                  </div>
+                ))}
+                <Button
+                  type="dashed"
+                  onClick={() => add({ title: '', included: true })}
+                  block
+                  icon={<PlusOutlined />}
+                >
+                  افزودن ویژگی
+                </Button>
+              </>
+            )}
+          </Form.List>
+        </Form.Item>
+
+        {/* Old attributes — deprecated, kept hidden
+        <Form.Item name="attributes" label="ویژگی‌ها (قدیمی)">
           <Input.TextArea
             rows={4}
             placeholder="ویژگی‌ها و امکانات پلن را وارد کنید"
           />
         </Form.Item>
+        */}
       </Form>
     </Modal>
   );

@@ -226,13 +226,20 @@ declare namespace API {
     study_time: number;
   }
 
+  interface PlanFeature {
+    title: string;
+    included: boolean;
+  }
+
   interface PlanItem {
     id: string;
     code: number;
     name: string;
     status: 'active' | 'inactive';
     month: number;
-    attributes: string;
+    attributes: string; // deprecated — use features
+    is_free_trial: boolean;
+    features: PlanFeature[] | null;
     price: string;
     created_at: string;
     updated_at: string;
@@ -242,7 +249,9 @@ declare namespace API {
     name: string;
     status: 'active' | 'inactive';
     month: number;
-    attributes: string;
+    attributes: string; // deprecated — use features
+    is_free_trial: boolean;
+    features: PlanFeature[] | null;
     price: number;
   }
 

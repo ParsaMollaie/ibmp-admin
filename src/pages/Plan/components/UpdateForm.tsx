@@ -1,5 +1,15 @@
 import { updatePlan } from '@/services/plan';
-import { Form, Input, InputNumber, Modal, Select, message } from 'antd';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Switch,
+  message,
+} from 'antd';
 import React, { useEffect, useState } from 'react';
 
 // Props interface - similar to CreateForm but includes the record being edited
@@ -18,21 +28,34 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [isFreeTrial, setIsFreeTrial] = useState(false);
 
   // Effect to populate form fields when record changes or modal opens
   // This ensures the form always reflects the current record's data
   useEffect(() => {
     if (record && visible) {
+      const isTrial = record.is_free_trial || false;
+      setIsFreeTrial(isTrial);
       form.setFieldsValue({
         name: record.name,
         month: record.month,
         // Parse the price string "1000.00" to number for the InputNumber component
         price: parseFloat(record.price),
         status: record.status,
-        attributes: record.attributes,
+        is_free_trial: isTrial,
+        features: record.features || [],
+        // attributes: record.attributes, // deprecated
       });
     }
   }, [record, visible, form]);
+
+  // Handle free trial toggle — auto-set price=0 and month=1
+  const handleFreeTrialChange = (checked: boolean) => {
+    setIsFreeTrial(checked);
+    if (checked) {
+      form.setFieldsValue({ price: 0, month: 1 });
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -48,7 +71,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         name: values.name,
         status: values.status,
         month: values.month,
-        attributes: values.attributes || '',
+        attributes: '', // deprecated
+        is_free_trial: values.is_free_trial || false,
+        features: values.features || null,
         price: values.price,
       };
 
@@ -57,6 +82,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
       if (response.success) {
         form.resetFields();
+        setIsFreeTrial(false);
         onSuccess();
       } else {
         message.error(response.message || 'خطا در ویرایش پلن');
@@ -72,6 +98,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   // Handle modal cancel - reset form state
   const handleCancel = () => {
     form.resetFields();
+    setIsFreeTrial(false);
     onCancel();
   };
 
@@ -96,6 +123,19 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <Input placeholder="مثال: پلن یک ماهه" />
         </Form.Item>
 
+        {/* Free trial toggle */}
+        <Form.Item
+          name="is_free_trial"
+          label="پلن آزمایشی رایگان"
+          valuePropName="checked"
+        >
+          <Switch
+            checkedChildren="بله"
+            unCheckedChildren="خیر"
+            onChange={handleFreeTrialChange}
+          />
+        </Form.Item>
+
         {/* Duration in months */}
         <Form.Item
           name="month"
@@ -106,6 +146,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             min={1}
             style={{ width: '100%' }}
             placeholder="تعداد ماه"
+            disabled={isFreeTrial}
           />
         </Form.Item>
 
@@ -119,6 +160,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             min={0}
             style={{ width: '100%' }}
             placeholder="قیمت پلن"
+            disabled={isFreeTrial}
             formatter={(value) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
             }
@@ -146,13 +188,70 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           />
         </Form.Item>
 
-        {/* Attributes/features text area */}
-        <Form.Item name="attributes" label="ویژگی‌ها">
+        {/* Features — dynamic list replacing old attributes TextArea */}
+        <Form.Item label="ویژگی‌ها">
+          <Form.List name="features">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <div
+                    key={key}
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      marginBottom: 8,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'title']}
+                      rules={[
+                        { required: true, message: 'عنوان ویژگی الزامی است' },
+                      ]}
+                      style={{ flex: 1, marginBottom: 0 }}
+                    >
+                      <Input placeholder="عنوان ویژگی" />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'included']}
+                      valuePropName="checked"
+                      initialValue={true}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Switch
+                        checkedChildren="شامل"
+                        unCheckedChildren="ندارد"
+                      />
+                    </Form.Item>
+                    <MinusCircleOutlined
+                      onClick={() => remove(name)}
+                      style={{ color: '#ff4d4f', fontSize: 18 }}
+                    />
+                  </div>
+                ))}
+                <Button
+                  type="dashed"
+                  onClick={() => add({ title: '', included: true })}
+                  block
+                  icon={<PlusOutlined />}
+                >
+                  افزودن ویژگی
+                </Button>
+              </>
+            )}
+          </Form.List>
+        </Form.Item>
+
+        {/* Old attributes — deprecated, kept hidden
+        <Form.Item name="attributes" label="ویژگی‌ها (قدیمی)">
           <Input.TextArea
             rows={4}
             placeholder="ویژگی‌ها و امکانات پلن را وارد کنید"
           />
         </Form.Item>
+        */}
       </Form>
     </Modal>
   );
