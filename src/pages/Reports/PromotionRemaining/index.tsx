@@ -52,7 +52,7 @@ const PromotionRemainingPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
 
   // Quick filter preset
-  const [quickFilter, setQuickFilter] = useState<number | undefined>(undefined);
+  const [quickFilter, setQuickFilter] = useState<number | undefined>(10);
 
   // Notes modal state
   const [notesModalVisible, setNotesModalVisible] = useState(false);
