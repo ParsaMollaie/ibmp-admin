@@ -1,6 +1,6 @@
 import { request } from 'umi';
 
-const API_BASE = '/api/v1/admin';
+const API_BASE = process.env.UMI_APP_API_BASE || '/api/v1/admin';
 
 // Auth endpoints
 export async function login(data: { username: string; password: string }) {

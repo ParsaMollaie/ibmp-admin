@@ -60,7 +60,7 @@ const exportColumns: ExportColumn[] = [
   },
 ];
 
-const CLIENT_APP_URL = 'https://ibmp.ir';
+const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
 
 const UserTable: React.FC = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
