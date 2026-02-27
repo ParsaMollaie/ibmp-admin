@@ -52,6 +52,7 @@ import { saveAs } from 'file-saver';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import * as XLSX from 'xlsx';
+import AssignPlanForm from './components/AssignPlanForm';
 import BulkCategoryUpdateModal from './components/BulkCategoryUpdateModal';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateForm from './components/UpdateForm';
@@ -333,6 +334,7 @@ const ServiceCompanyPage: React.FC = () => {
   const [updateCategoryModalVisible, setUpdateCategoryModalVisible] =
     useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [assignPlanModalVisible, setAssignPlanModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Currently selected record
@@ -530,6 +532,18 @@ const ServiceCompanyPage: React.FC = () => {
 
   const handleStatusUpdateSuccess = () => {
     setStatusModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+    fetchStats();
+  };
+
+  const handleAssignPlan = (record: API.ServiceItem) => {
+    setCurrentRecord(record);
+    setAssignPlanModalVisible(true);
+  };
+
+  const handleAssignPlanSuccess = () => {
+    setAssignPlanModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
     fetchStats();
@@ -919,7 +933,7 @@ const ServiceCompanyPage: React.FC = () => {
     {
       title: 'عملیات',
       key: 'actions',
-      width: 220,
+      width: 260,
       hideInSearch: true,
       fixed: 'right',
       render: (_, record) => (
@@ -975,6 +989,14 @@ const ServiceCompanyPage: React.FC = () => {
               type="text"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+
+          <Tooltip title="تخصیص پلن">
+            <Button
+              type="text"
+              icon={<CrownOutlined style={{ color: '#722ed1' }} />}
+              onClick={() => handleAssignPlan(record)}
             />
           </Tooltip>
 
@@ -1310,6 +1332,17 @@ const ServiceCompanyPage: React.FC = () => {
           setCurrentRecord(null);
         }}
         onSuccess={handleStatusUpdateSuccess}
+        record={currentRecord}
+      />
+
+      {/* Assign Plan Modal */}
+      <AssignPlanForm
+        visible={assignPlanModalVisible}
+        onCancel={() => {
+          setAssignPlanModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleAssignPlanSuccess}
         record={currentRecord}
       />
 

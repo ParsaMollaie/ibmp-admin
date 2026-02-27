@@ -51,6 +51,7 @@ import { saveAs } from 'file-saver';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import * as XLSX from 'xlsx';
+import AssignPlanForm from '../ServiceCompany/components/AssignPlanForm';
 import BulkCategoryUpdateModal from '../ServiceCompany/components/BulkCategoryUpdateModal';
 import UpdateCategoryForm from '../ServiceCompany/components/UpdateCategoryForm';
 import UpdateStatusForm from '../ServiceCompany/components/UpdateStatusForm';
@@ -349,6 +350,7 @@ const ServiceEngineersPage: React.FC = () => {
   const [updateCategoryModalVisible, setUpdateCategoryModalVisible] =
     useState(false);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [assignPlanModalVisible, setAssignPlanModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [currentRecord, setCurrentRecord] = useState<API.ServiceItem | null>(
@@ -545,6 +547,18 @@ const ServiceEngineersPage: React.FC = () => {
 
   const handleStatusUpdateSuccess = () => {
     setStatusModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+    fetchStats();
+  };
+
+  const handleAssignPlan = (record: API.ServiceItem) => {
+    setCurrentRecord(record);
+    setAssignPlanModalVisible(true);
+  };
+
+  const handleAssignPlanSuccess = () => {
+    setAssignPlanModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
     fetchStats();
@@ -940,7 +954,7 @@ const ServiceEngineersPage: React.FC = () => {
     {
       title: 'عملیات',
       key: 'actions',
-      width: 220,
+      width: 260,
       hideInSearch: true,
       fixed: 'right',
       render: (_, record) => (
@@ -996,6 +1010,14 @@ const ServiceEngineersPage: React.FC = () => {
               type="text"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+
+          <Tooltip title="تخصیص پلن">
+            <Button
+              type="text"
+              icon={<CrownOutlined style={{ color: '#722ed1' }} />}
+              onClick={() => handleAssignPlan(record)}
             />
           </Tooltip>
 
@@ -1291,6 +1313,17 @@ const ServiceEngineersPage: React.FC = () => {
           setCurrentRecord(null);
         }}
         onSuccess={handleStatusUpdateSuccess}
+        record={currentRecord}
+      />
+
+      {/* Assign Plan Modal — reused from ServiceCompany */}
+      <AssignPlanForm
+        visible={assignPlanModalVisible}
+        onCancel={() => {
+          setAssignPlanModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleAssignPlanSuccess}
         record={currentRecord}
       />
 

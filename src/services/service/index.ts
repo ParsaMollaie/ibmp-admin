@@ -179,6 +179,19 @@ export async function getServiceActivityReport(params?: {
 }
 
 /**
+ * Assign a plan to a service (admin-granted subscription)
+ */
+export async function assignServicePlan(serviceId: string, planId: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${serviceId}/assign-plan`,
+    {
+      method: 'POST',
+      data: { plan_id: planId },
+    },
+  );
+}
+
+/**
  * Get services for export (lightweight endpoint)
  */
 export async function getServicesForExport(params?: {
