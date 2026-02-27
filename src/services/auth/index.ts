@@ -75,6 +75,13 @@ export async function changeUserPassword(
   });
 }
 
+export async function generateUserToken(id: string | number) {
+  return request<API.ApiResponse<API.LoginResponse>>(
+    `${API_BASE}/users/${id}/token`,
+    { method: 'POST' },
+  );
+}
+
 // Slider endpoints
 export async function getSliders(params?: any) {
   return request(`${API_BASE}/sliders`, {

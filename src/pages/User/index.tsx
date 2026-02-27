@@ -1,6 +1,10 @@
-import { getUsers, updateUser } from '@/services/auth';
+import { generateUserToken, getUsers, updateUser } from '@/services/auth';
 import { ExportColumn, exportToExcel } from '@/utils/exportExcel';
-import { DownloadOutlined, KeyOutlined } from '@ant-design/icons';
+import {
+  DownloadOutlined,
+  KeyOutlined,
+  LoginOutlined,
+} from '@ant-design/icons';
 import {
   ActionType,
   PageContainer,
@@ -56,6 +60,8 @@ const exportColumns: ExportColumn[] = [
   },
 ];
 
+const CLIENT_APP_URL = 'https://ibmp.ir';
+
 const UserTable: React.FC = () => {
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
@@ -65,6 +71,27 @@ const UserTable: React.FC = () => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
   const actionRef = useRef<ActionType>();
+
+  const handleImpersonate = async (userId: string) => {
+    const hide = message.loading('در حال دریافت توکن...');
+    try {
+      const response = await generateUserToken(userId);
+      hide();
+      if (response.success && response.data?.access_token) {
+        window.open(
+          `${CLIENT_APP_URL}/api/impersonate?token=${encodeURIComponent(
+            response.data.access_token,
+          )}`,
+          '_blank',
+        );
+      } else {
+        message.error('خطا در دریافت توکن کاربر');
+      }
+    } catch (error) {
+      hide();
+      message.error('خطا در ورود به حساب کاربر');
+    }
+  };
 
   // Handle export to Excel
   const handleExport = async () => {
@@ -191,6 +218,15 @@ const UserTable: React.FC = () => {
           >
             تغییر رمز
           </Button>
+          {record.user_type === 'client' && (
+            <Button
+              type="text"
+              icon={<LoginOutlined />}
+              onClick={() => handleImpersonate(record.id)}
+            >
+              ورود به حساب
+            </Button>
+          )}
         </Space>
       ),
     },
