@@ -1,6 +1,6 @@
 import { getUsers } from '@/services/auth';
-import { getCities, getProvinces } from '@/services/company';
 import { createContactProfile } from '@/services/contact-profile';
+import { getCities, getProvinces } from '@/services/location';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Button,

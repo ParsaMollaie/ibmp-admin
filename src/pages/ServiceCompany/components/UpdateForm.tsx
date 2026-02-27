@@ -1,6 +1,6 @@
 import { getCategories } from '@/services/category';
-import { getCities, getProvinces } from '@/services/company';
 import { getContactProfiles } from '@/services/contact-profile';
+import { getCities, getProvinces } from '@/services/location';
 import { updateServiceCompany } from '@/services/service';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';

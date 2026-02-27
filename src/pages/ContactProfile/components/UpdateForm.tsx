@@ -1,5 +1,5 @@
-import { getCities, getProvinces } from '@/services/company';
 import { updateContactProfile } from '@/services/contact-profile';
+import { getCities, getProvinces } from '@/services/location';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Button,

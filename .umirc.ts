@@ -57,18 +57,6 @@ export default defineConfig({
       component: './User',
       icon: 'UserOutlined',
     },
-    // {
-    //   name: 'شرکت‌ها',
-    //   path: '/company',
-    //   component: './Company',
-    //   icon: 'BankOutlined',
-    // },
-    // {
-    //   name: 'مجریان و مهندسان',
-    //   path: '/company-services',
-    //   component: './CompanyService',
-    //   icon: 'ShopOutlined',
-    // },
     {
       name: 'پروفایل‌های تماس',
       path: '/contact-profiles',
