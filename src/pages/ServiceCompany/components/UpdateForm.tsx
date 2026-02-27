@@ -1,5 +1,6 @@
 import { getCategories } from '@/services/category';
 import { getCities, getProvinces } from '@/services/company';
+import { getContactProfiles } from '@/services/contact-profile';
 import { updateServiceCompany } from '@/services/service';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
@@ -71,6 +72,33 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [logoFile, setLogoFile] = useState<UploadFile[]>([]);
   const [catalogFile, setCatalogFile] = useState<UploadFile[]>([]);
 
+  // Contact profile state
+  const [contactProfiles, setContactProfiles] = useState<
+    API.ContactProfileItem[]
+  >([]);
+  const [loadingContactProfiles, setLoadingContactProfiles] = useState(false);
+  const [selectedContactProfileId, setSelectedContactProfileId] = useState<
+    string | null
+  >(null);
+
+  // Fetch contact profiles for the service's user
+  const fetchContactProfiles = async (userId: string) => {
+    setLoadingContactProfiles(true);
+    try {
+      const response = await getContactProfiles({
+        user_id: userId,
+        page_size: 100,
+      });
+      if (response.success && response.data?.list) {
+        setContactProfiles(response.data.list);
+      }
+    } catch (error) {
+      console.error('Error fetching contact profiles:', error);
+    } finally {
+      setLoadingContactProfiles(false);
+    }
+  };
+
   // Fetch dropdown data
   const fetchCategories = async () => {
     setLoadingCategories(true);
@@ -121,6 +149,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     }
   }, [visible]);
 
+  // Fetch contact profiles when record/visible changes
+  useEffect(() => {
+    if (visible && record?.user?.id) {
+      fetchContactProfiles(record.user.id);
+    }
+    if (!visible) {
+      setContactProfiles([]);
+      setSelectedContactProfileId(null);
+    }
+  }, [visible, record]);
+
   useEffect(() => {
     if (record && visible && categories.length > 0) {
       // Find the leaf category ID by walking the parent chain (API returns leaf→root via parent)
@@ -155,6 +194,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             ]
           : [{ province_id: undefined, city_id: undefined, address: '' }];
 
+      // Set initial contact profile selection
+      const cpId = record.contact_profile_id || null;
+      setSelectedContactProfileId(cpId);
+
       form.setFieldsValue({
         title: record.title,
         summary: record.summary,
@@ -163,6 +206,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         website: record.website,
         video: record.video || '',
         category_id: categoryId,
+        contact_profile_id: cpId,
         // province_id: record.province?.id, // deprecated — use addresses
         // city_id: record.city?.id, // deprecated — use addresses
         // address: record.company?.address, // deprecated — use addresses
@@ -305,6 +349,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     setLogoFile([]);
     setCatalogFile([]);
     setCitiesMap({});
+    setContactProfiles([]);
+    setSelectedContactProfileId(null);
   };
 
   const handleSubmit = async () => {
@@ -368,6 +414,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         website: values.website || undefined,
         video: values.video || null,
         category_id: values.category_id,
+        contact_profile_id: values.contact_profile_id || null,
         // province_id: values.province_id, // deprecated — use addresses
         // city_id: values.city_id, // deprecated — use addresses
         // address: values.address, // deprecated — use addresses
@@ -526,6 +573,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
         {/* Addresses */}
         <Card size="small" title="آدرس‌ها" style={{ marginBottom: 16 }}>
+          {selectedContactProfileId && (
+            <div style={{ marginBottom: 12, color: '#faad14' }}>
+              آدرس‌ها از پروفایل تماس بارگذاری خواهد شد. فیلدهای زیر غیرفعال
+              هستند.
+            </div>
+          )}
           <Form.List name="addresses">
             {(fields, { add, remove }) => (
               <>
@@ -554,6 +607,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                             loading={loadingProvinces}
                             showSearch
                             optionFilterProp="label"
+                            disabled={!!selectedContactProfileId}
                             onChange={(val) =>
                               handleAddressProvinceChange(val, index)
                             }
@@ -581,6 +635,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                             loading={loadingCitiesMap[index] || false}
                             showSearch
                             optionFilterProp="label"
+                            disabled={!!selectedContactProfileId}
                             options={(citiesMap[index] || []).map((c) => ({
                               label: c.name,
                               value: c.id,
@@ -594,7 +649,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           name={[name, 'address']}
                           label="آدرس"
                         >
-                          <Input placeholder="آدرس" />
+                          <Input
+                            placeholder="آدرس"
+                            disabled={!!selectedContactProfileId}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={2}>
@@ -604,6 +662,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                             danger
                             icon={<DeleteOutlined />}
                             onClick={() => remove(name)}
+                            disabled={!!selectedContactProfileId}
                           />
                         )}
                       </Col>
@@ -621,6 +680,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                   }
                   block
                   icon={<PlusOutlined />}
+                  disabled={!!selectedContactProfileId}
                 >
                   افزودن آدرس
                 </Button>
@@ -669,8 +729,34 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           </Row>
         </Card>
 
+        {/* Contact Profile Selector */}
+        <Card size="small" title="پروفایل تماس" style={{ marginBottom: 16 }}>
+          <Form.Item
+            name="contact_profile_id"
+            label="انتخاب پروفایل تماس"
+            extra="با انتخاب پروفایل تماس، اطلاعات تماس از پروفایل بارگذاری می‌شود و فیلدهای دستی غیرفعال می‌شوند."
+          >
+            <Select
+              placeholder="بدون پروفایل (دستی)"
+              allowClear
+              loading={loadingContactProfiles}
+              onChange={(value) => setSelectedContactProfileId(value || null)}
+              options={contactProfiles.map((cp) => ({
+                label: cp.title,
+                value: cp.id,
+              }))}
+            />
+          </Form.Item>
+        </Card>
+
         {/* Contact Numbers */}
         <Card size="small" title="شماره‌های تماس" style={{ marginBottom: 16 }}>
+          {selectedContactProfileId && (
+            <div style={{ marginBottom: 12, color: '#faad14' }}>
+              اطلاعات تماس از پروفایل تماس بارگذاری خواهد شد. فیلدهای زیر
+              غیرفعال هستند.
+            </div>
+          )}
           <Form.List name="contact_numbers">
             {(fields, { add, remove }) => (
               <>
@@ -687,6 +773,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                         <Select
                           placeholder="نوع"
                           options={contactTypeOptions}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -701,6 +788,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                         <Input
                           placeholder="شماره تماس"
                           style={{ direction: 'ltr' }}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -711,6 +799,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => remove(name)}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -721,6 +810,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                   onClick={() => add({ type: 'mobile', data: '' })}
                   block
                   icon={<PlusOutlined />}
+                  disabled={!!selectedContactProfileId}
                 >
                   افزودن شماره تماس
                 </Button>
@@ -735,6 +825,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           title="شبکه‌های اجتماعی"
           style={{ marginBottom: 16 }}
         >
+          {selectedContactProfileId && (
+            <div style={{ marginBottom: 12, color: '#faad14' }}>
+              اطلاعات شبکه‌های اجتماعی از پروفایل تماس بارگذاری خواهد شد.
+              فیلدهای زیر غیرفعال هستند.
+            </div>
+          )}
           <Form.List name="social_medias">
             {(fields, { add, remove }) => (
               <>
@@ -751,6 +847,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                         <Select
                           placeholder="نوع"
                           options={socialMediaTypeOptions}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -765,6 +862,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                         <Input
                           placeholder="آدرس لینک"
                           style={{ direction: 'ltr' }}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -775,6 +873,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => remove(name)}
+                          disabled={!!selectedContactProfileId}
                         />
                       </Form.Item>
                     </Col>
@@ -785,6 +884,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                   onClick={() => add({ type: 'instagram', data: '' })}
                   block
                   icon={<PlusOutlined />}
+                  disabled={!!selectedContactProfileId}
                 >
                   افزودن شبکه اجتماعی
                 </Button>

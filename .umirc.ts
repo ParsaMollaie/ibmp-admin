@@ -70,6 +70,12 @@ export default defineConfig({
     //   icon: 'ShopOutlined',
     // },
     {
+      name: 'پروفایل‌های تماس',
+      path: '/contact-profiles',
+      component: './ContactProfile',
+      icon: 'ContactsOutlined',
+    },
+    {
       name: 'خدمات شرکت‌ها',
       path: '/services-company',
       component: './ServiceCompany',

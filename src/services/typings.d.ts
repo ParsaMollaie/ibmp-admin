@@ -850,6 +850,8 @@ declare namespace API {
     notes_count?: number;
     can_approve?: boolean;
     can_reject?: boolean;
+    contact_profile_id?: string | null;
+    contact_profile_title?: string | null;
     can_set_regular?: boolean;
     can_set_most_view?: boolean;
     can_set_promoted?: boolean;
@@ -908,6 +910,7 @@ declare namespace API {
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
     products: ServiceProductPayload[];
+    contact_profile_id?: string | null;
   }
 
   // ===========================================
@@ -1032,5 +1035,34 @@ declare namespace API {
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
     work_samples: ServiceWorkSamplePayload[];
+    contact_profile_id?: string | null;
+  }
+
+  // ===========================================
+  // CONTACT PROFILE
+  // ===========================================
+
+  interface ContactProfileItem {
+    id: string;
+    title: string;
+    email: string | null;
+    website: string | null;
+    contact_numbers: ServiceContactNumber[];
+    social_medias: ServiceSocialMedia[];
+    addresses: ServiceAddress[];
+    user?: OrderUser;
+    services_count: number;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ContactProfilePayload {
+    user_id?: string;
+    title: string;
+    email?: string | null;
+    website?: string | null;
+    contact_numbers?: { type: string; data: string }[];
+    social_medias?: { type: string; data: string }[];
+    addresses?: { province_id: string; city_id: string; address?: string }[];
   }
 }
