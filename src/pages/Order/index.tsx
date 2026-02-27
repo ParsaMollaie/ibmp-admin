@@ -259,6 +259,21 @@ const OrderPage: React.FC = () => {
       },
     },
     {
+      title: 'مالیات (تومان)',
+      dataIndex: 'tax',
+      key: 'tax',
+      width: 110,
+      hideInSearch: true,
+      render: (_, record) => {
+        const numericTax = parseFloat(record.tax || '0');
+        return numericTax > 0 ? (
+          <Text>{numericTax.toLocaleString('fa-IR')}</Text>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        );
+      },
+    },
+    {
       title: 'وضعیت',
       dataIndex: 'status',
       key: 'status',

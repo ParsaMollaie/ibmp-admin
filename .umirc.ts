@@ -138,6 +138,13 @@ export default defineConfig({
     },
 
     {
+      name: 'تنظیمات',
+      path: '/settings',
+      component: './Settings',
+      icon: 'SettingOutlined',
+    },
+
+    {
       name: 'گزارش‌ها',
       path: '/reports',
       icon: 'BarChartOutlined',

@@ -308,6 +308,7 @@ declare namespace API {
     id: string;
     code: number;
     price: string;
+    tax: string;
     status: OrderStatus;
     expires_at: string;
     created_at: string;
@@ -1011,6 +1012,11 @@ declare namespace API {
   /**
    * Payload for updating an engineers-type service
    */
+  // Settings data (key-value)
+  interface SettingsData {
+    tax_percentage: string;
+  }
+
   interface ServiceEngineersPayload {
     title: string;
     summary?: string;
