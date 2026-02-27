@@ -79,7 +79,7 @@ const UserTable: React.FC = () => {
       hide();
       if (response.success && response.data?.access_token) {
         window.open(
-          `${CLIENT_APP_URL}/api/impersonate?token=${encodeURIComponent(
+          `${CLIENT_APP_URL}/impersonate?token=${encodeURIComponent(
             response.data.access_token,
           )}`,
           '_blank',
