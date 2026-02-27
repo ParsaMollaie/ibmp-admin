@@ -980,6 +980,26 @@ declare namespace API {
   }
 
   /**
+   * Service activity report item — aggregated log counts per service
+   */
+  interface ServiceActivityItem {
+    id: string;
+    code: number;
+    title: string;
+    type: ServiceType;
+    status: ServiceStatus;
+    category_title: string | null;
+    user_name: string | null;
+    view_count: number;
+    call_click_count: number;
+    website_click_count: number;
+    catalog_download_count: number;
+    social_click_count: number;
+    share_click_count: number;
+    total_count: number;
+  }
+
+  /**
    * Payload for updating an engineers-type service
    */
   interface ServiceEngineersPayload {

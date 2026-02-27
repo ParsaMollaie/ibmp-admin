@@ -161,6 +161,24 @@ export async function bulkUpdateServiceCategories(
 }
 
 /**
+ * Get service activity report (aggregated log counts per service)
+ */
+export async function getServiceActivityReport(params?: {
+  start_date?: string;
+  end_date?: string;
+  type?: API.ServiceType;
+  page?: number;
+  page_size?: number;
+}) {
+  return request<
+    API.ApiResponse<API.PaginatedResponse<API.ServiceActivityItem>>
+  >(`${API_BASE}/services/activity-report`, {
+    method: 'GET',
+    params,
+  });
+}
+
+/**
  * Get services for export (lightweight endpoint)
  */
 export async function getServicesForExport(params?: {

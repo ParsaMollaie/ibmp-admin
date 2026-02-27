@@ -147,6 +147,11 @@ export default defineConfig({
           path: '/reports/promotion-remaining',
           component: './Reports/PromotionRemaining',
         },
+        {
+          name: 'فعالیت خدمات',
+          path: '/reports/service-activity',
+          component: './Reports/ServiceActivity',
+        },
       ],
     },
 
