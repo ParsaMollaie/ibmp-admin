@@ -837,6 +837,7 @@ declare namespace API {
     work_samples: ServiceWorkSample[];
     user?: OrderUser;
     latest_active_order?: ServiceActiveOrder | null;
+    notes_count?: number;
     can_approve?: boolean;
     can_reject?: boolean;
     can_set_regular?: boolean;
@@ -844,6 +845,25 @@ declare namespace API {
     can_set_promoted?: boolean;
     created_at: string;
     updated_at: string;
+  }
+
+  /**
+   * Service note item returned from admin API
+   */
+  interface ServiceNoteItem {
+    id: string;
+    service_id: string;
+    content: string;
+    user: OrderUser;
+    created_at: string;
+    updated_at: string;
+  }
+
+  /**
+   * Payload for creating a service note
+   */
+  interface ServiceNotePayload {
+    content: string;
   }
 
   interface ServiceProductPayload {

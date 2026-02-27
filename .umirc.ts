@@ -137,6 +137,19 @@ export default defineConfig({
       icon: 'GlobalOutlined',
     },
 
+    {
+      name: 'گزارش‌ها',
+      path: '/reports',
+      icon: 'BarChartOutlined',
+      routes: [
+        {
+          name: 'باقیمانده ارتقا خدمات',
+          path: '/reports/promotion-remaining',
+          component: './Reports/PromotionRemaining',
+        },
+      ],
+    },
+
     { path: '/auth', component: './Auth', layout: false },
   ],
   locale: {
