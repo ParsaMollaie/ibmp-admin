@@ -51,7 +51,7 @@ const getStatusConfig = (
 };
 
 const getServiceTitle = (record: API.OrderItem): string => {
-  return record.company_service?.title ?? record.service?.title ?? '—';
+  return record.service?.title ?? '—';
 };
 
 // Status card colors

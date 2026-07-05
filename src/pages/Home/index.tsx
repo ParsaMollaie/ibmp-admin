@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
       icon: <BankOutlined style={{ fontSize: 32, color: '#52c41a' }} />,
       color: '#f6ffed',
       borderColor: '#52c41a',
-      path: '/company',
+      path: '/services-company',
     },
     {
       title: 'خدمات',
@@ -197,7 +197,7 @@ const HomePage: React.FC = () => {
       icon: <ShopOutlined style={{ fontSize: 32, color: '#722ed1' }} />,
       color: '#f9f0ff',
       borderColor: '#722ed1',
-      path: '/company-services',
+      path: '/services',
     },
     {
       title: 'پرداختی ها',
@@ -235,13 +235,13 @@ const HomePage: React.FC = () => {
 
   const handleCompanyTagClick = (data: any) => {
     if (data?.tag) {
-      history.push(`/company?tag=${data.tag}`);
+      history.push(`/services?tag=${data.tag}`);
     }
   };
 
   const handleServiceStatusClick = (data: any) => {
     if (data?.status) {
-      history.push(`/company-services?status=${data.status}`);
+      history.push(`/services?status=${data.status}`);
     }
   };
 
@@ -393,7 +393,7 @@ const HomePage: React.FC = () => {
                       activeDot={{
                         r: 6,
                         cursor: 'pointer',
-                        onClick: () => history.push('/company'),
+                        onClick: () => history.push('/services-company'),
                       }}
                     />
                     <Line
@@ -406,7 +406,7 @@ const HomePage: React.FC = () => {
                       activeDot={{
                         r: 6,
                         cursor: 'pointer',
-                        onClick: () => history.push('/company-services'),
+                        onClick: () => history.push('/services'),
                       }}
                     />
                   </LineChart>
@@ -605,7 +605,7 @@ const HomePage: React.FC = () => {
                       radius={[0, 4, 4, 0]}
                       cursor="pointer"
                       onClick={(data) =>
-                        handleBarClick(data, '/company', 'province')
+                        handleBarClick(data, '/services', 'province')
                       }
                     />
                   </BarChart>
@@ -746,7 +746,7 @@ const HomePage: React.FC = () => {
                       radius={[0, 4, 4, 0]}
                       cursor="pointer"
                       onClick={(data) =>
-                        handleBarClick(data, '/company-services', 'category')
+                        handleBarClick(data, '/services', 'category')
                       }
                     />
                   </BarChart>

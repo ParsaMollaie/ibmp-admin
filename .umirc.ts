@@ -76,6 +76,11 @@ export default defineConfig({
       icon: 'ToolOutlined',
     },
     {
+      path: '/services',
+      component: './Services',
+      hideInMenu: true,
+    },
+    {
       name: 'شکایات',
       path: '/complaints',
       component: './Complaints',

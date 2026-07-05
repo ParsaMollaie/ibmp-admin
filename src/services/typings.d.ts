@@ -82,24 +82,6 @@ declare namespace API {
     type?: 'company' | 'engineers' | null;
   }
 
-  interface CompanyInfo {
-    id?: string;
-    code?: number;
-    title?: string;
-    description?: string;
-    color?: string;
-    type?: string;
-    status?: string;
-    for?: string;
-    image?: string;
-    preview?: string;
-    startDate?: string;
-    endDate?: string;
-    createdAt?: string;
-    creator?: string;
-    updatedBy?: string;
-  }
-
   interface SliderItem {
     id: string;
     code: number;
@@ -269,15 +251,6 @@ declare namespace API {
     job_position?: string;
   }
 
-  // Nested company service info within an order
-  interface OrderCompanyService {
-    id: string;
-    code: number;
-    title: string;
-    status: string;
-    type: string;
-  }
-
   // Nested service info within an order (new Service model)
   interface OrderService {
     id: string;
@@ -314,7 +287,6 @@ declare namespace API {
     created_at: string;
     updated_at: string;
     user: OrderUser;
-    company_service: OrderCompanyService | null;
     service: OrderService | null;
     plan: OrderPlan | null;
   }
