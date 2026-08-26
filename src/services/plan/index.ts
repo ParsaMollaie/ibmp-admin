@@ -7,6 +7,7 @@ export async function getPlans(params?: {
   name?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.PlanItem>>>(
     `${API_BASE}/plans`,

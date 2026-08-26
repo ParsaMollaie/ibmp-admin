@@ -170,6 +170,7 @@ const CategoryPage: React.FC = () => {
           </span>
         );
       },
+      sorter: (a, b) => a.title.localeCompare(b.title, 'fa'),
     },
     {
       title: 'نوع',
@@ -183,6 +184,10 @@ const CategoryPage: React.FC = () => {
         if (record.type === 'company') return <Tag color="blue">شرکتی</Tag>;
         if (record.type === 'engineers') return <Tag color="green">مهندسی</Tag>;
         return <span style={{ color: '#999' }}>—</span>;
+      },
+      sorter: (a, b) => {
+        const rank: Record<string, number> = { company: 0, engineers: 1 };
+        return (rank[a.type ?? ''] ?? 2) - (rank[b.type ?? ''] ?? 2);
       },
     },
     {
@@ -203,6 +208,10 @@ const CategoryPage: React.FC = () => {
         const config = getStatusConfig(record.status);
         return <Tag color={config.color}>{config.label}</Tag>;
       },
+      sorter: (a, b) => {
+        const rank: Record<string, number> = { active: 0, inactive: 1 };
+        return rank[a.status] - rank[b.status];
+      },
     },
     {
       title: 'تاریخ ایجاد',
@@ -214,6 +223,8 @@ const CategoryPage: React.FC = () => {
         if (!record.created_at) return '—';
         return new Date(record.created_at).toLocaleDateString('fa-IR');
       },
+      sorter: (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -225,6 +236,8 @@ const CategoryPage: React.FC = () => {
         if (!record.updated_at) return '—';
         return new Date(record.updated_at).toLocaleDateString('fa-IR');
       },
+      sorter: (a, b) =>
+        new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
     },
     {
       title: 'عملیات',

@@ -13,6 +13,7 @@ export async function getContactProfiles(params?: {
   pageSize?: number;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.ContactProfileItem>>
@@ -23,6 +24,7 @@ export async function getContactProfiles(params?: {
       search: params?.search,
       page: params?.page || params?.current,
       page_size: params?.page_size || params?.pageSize,
+      sorter: params?.sorter,
     },
   });
 }

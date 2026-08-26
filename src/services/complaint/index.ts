@@ -13,6 +13,7 @@ export async function getComplaints(params?: {
   date_to?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.ServiceComplaintItem>>

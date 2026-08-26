@@ -21,6 +21,7 @@ export async function getServices(params?: {
   created_to?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.ServiceItem>>>(
     `${API_BASE}/services`,

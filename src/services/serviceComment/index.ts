@@ -14,6 +14,7 @@ export async function getServiceComments(params?: {
   date_to?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.ServiceCommentItem>>

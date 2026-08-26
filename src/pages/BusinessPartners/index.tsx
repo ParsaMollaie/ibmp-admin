@@ -25,11 +25,13 @@ const BusinessPartnersPage: React.FC = () => {
       dataIndex: 'code',
       width: 80,
       search: false,
+      sorter: true,
     },
     {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
+      sorter: true,
     },
     {
       title: 'تصویر',
@@ -55,12 +57,14 @@ const BusinessPartnersPage: React.FC = () => {
       dataIndex: 'priority',
       width: 80,
       search: false,
+      sorter: true,
     },
     {
       title: 'وضعیت',
       dataIndex: 'status',
       width: 100,
       valueType: 'select',
+      sorter: true,
       valueEnum: {
         active: { text: 'فعال', status: 'Success' },
         inactive: { text: 'غیرفعال', status: 'Default' },
@@ -85,6 +89,7 @@ const BusinessPartnersPage: React.FC = () => {
           </a>
         );
       },
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
@@ -92,6 +97,7 @@ const BusinessPartnersPage: React.FC = () => {
       valueType: 'dateTime',
       width: 150,
       search: false,
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -99,6 +105,7 @@ const BusinessPartnersPage: React.FC = () => {
       valueType: 'dateTime',
       width: 150,
       search: false,
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -131,13 +138,17 @@ const BusinessPartnersPage: React.FC = () => {
         search={{
           labelWidth: 'auto',
         }}
-        request={async (params) => {
+        request={async (params, sort) => {
           try {
             const response = await getBusinessPartners({
               title: params.title,
               status: params.status,
               page: params.current,
               page_size: params.pageSize,
+              sorter:
+                sort && Object.keys(sort).length
+                  ? JSON.stringify(sort)
+                  : undefined,
             });
 
             return {

@@ -155,6 +155,7 @@ const ServiceCommentsPage: React.FC = () => {
       dataIndex: 'code',
       width: 80,
       hideInSearch: true,
+      sorter: true,
     },
     {
       title: 'خدمت',
@@ -217,6 +218,7 @@ const ServiceCommentsPage: React.FC = () => {
           )}
         </Space>
       ),
+      sorter: true,
     },
     {
       title: 'متن نظر',
@@ -224,6 +226,7 @@ const ServiceCommentsPage: React.FC = () => {
       hideInSearch: true,
       width: 250,
       ellipsis: true,
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -239,6 +242,7 @@ const ServiceCommentsPage: React.FC = () => {
           {record.is_active ? 'فعال' : 'غیرفعال'}
         </Tag>
       ),
+      sorter: true,
     },
     {
       title: 'تاریخ',
@@ -255,6 +259,7 @@ const ServiceCommentsPage: React.FC = () => {
           </Space>
         </Tooltip>
       ),
+      sorter: true,
     },
     {
       title: 'جستجو',
@@ -389,7 +394,7 @@ const ServiceCommentsPage: React.FC = () => {
         formRef={formRef}
         rowKey="id"
         headerTitle="لیست نظرات"
-        request={async (params) => {
+        request={async (params, sort) => {
           const dateFrom = params.date_from
             ? typeof params.date_from === 'string'
               ? params.date_from
@@ -410,6 +415,10 @@ const ServiceCommentsPage: React.FC = () => {
             date_to: dateTo,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

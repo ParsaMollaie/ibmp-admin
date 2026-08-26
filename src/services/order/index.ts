@@ -15,6 +15,7 @@ export async function getOrders(params?: {
   created_to?: string;
   expires_from?: string;
   expires_to?: string;
+  sorter?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.OrderItem>>>(
     `${API_BASE}/orders`,

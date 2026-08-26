@@ -75,6 +75,7 @@ const ContactProfilePage: React.FC = () => {
       fieldProps: {
         placeholder: 'جستجوی عنوان',
       },
+      sorter: true,
     },
     {
       title: 'ایمیل',
@@ -84,6 +85,7 @@ const ContactProfilePage: React.FC = () => {
       ellipsis: true,
       hideInSearch: true,
       render: (_, record) => record.email || '—',
+      sorter: true,
     },
     {
       title: 'کاربر',
@@ -112,6 +114,7 @@ const ContactProfilePage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) =>
         new Date(record.created_at).toLocaleDateString('fa-IR'),
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -159,11 +162,15 @@ const ContactProfilePage: React.FC = () => {
             افزودن پروفایل تماس
           </Button>,
         ]}
-        request={async (params) => {
+        request={async (params, sort) => {
           const response = await getContactProfiles({
             search: params.title,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

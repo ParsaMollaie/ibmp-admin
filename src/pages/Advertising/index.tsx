@@ -32,11 +32,13 @@ const AdvertisingPage: React.FC = () => {
       dataIndex: 'code',
       width: 80,
       search: false,
+      sorter: true,
     },
     {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
+      sorter: true,
     },
     {
       title: 'تصویر',
@@ -69,18 +71,21 @@ const AdvertisingPage: React.FC = () => {
       render: (_, record) => {
         return sectionLabels[record.section] || record.section;
       },
+      sorter: true,
     },
     {
       title: 'اولویت',
       dataIndex: 'priority',
       width: 80,
       search: false,
+      sorter: true,
     },
     {
       title: 'وضعیت',
       dataIndex: 'status',
       width: 100,
       valueType: 'select',
+      sorter: true,
       valueEnum: {
         active: { text: 'فعال', status: 'Success' },
         inactive: { text: 'غیرفعال', status: 'Default' },
@@ -105,6 +110,7 @@ const AdvertisingPage: React.FC = () => {
           </a>
         );
       },
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
@@ -112,6 +118,7 @@ const AdvertisingPage: React.FC = () => {
       width: 150,
       search: false,
       valueType: 'dateTime',
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -119,6 +126,7 @@ const AdvertisingPage: React.FC = () => {
       width: 150,
       search: false,
       valueType: 'dateTime',
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -148,7 +156,7 @@ const AdvertisingPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
-        request={async (params) => {
+        request={async (params, sort) => {
           try {
             const response = await getAdvertisings({
               title: params.title,
@@ -156,6 +164,10 @@ const AdvertisingPage: React.FC = () => {
               status: params.status,
               page: params.current,
               page_size: params.pageSize,
+              sorter:
+                sort && Object.keys(sort).length
+                  ? JSON.stringify(sort)
+                  : undefined,
             });
 
             return {

@@ -78,6 +78,7 @@ const ContactUsPage: React.FC = () => {
       key: 'code',
       width: 70,
       search: false,
+      sorter: true,
     },
     {
       title: 'نام',
@@ -85,6 +86,7 @@ const ContactUsPage: React.FC = () => {
       key: 'full_name',
       width: 150,
       search: false,
+      sorter: true,
     },
     {
       title: 'موبایل',
@@ -92,6 +94,7 @@ const ContactUsPage: React.FC = () => {
       key: 'mobile',
       width: 130,
       search: false,
+      sorter: true,
     },
     {
       title: 'ایمیل',
@@ -101,6 +104,7 @@ const ContactUsPage: React.FC = () => {
       search: false,
       render: (_, record) =>
         record.email || <span style={{ color: '#999' }}>—</span>,
+      sorter: true,
     },
     {
       title: 'عنوان',
@@ -109,6 +113,7 @@ const ContactUsPage: React.FC = () => {
       width: 150,
       ellipsis: true,
       search: false,
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -117,6 +122,7 @@ const ContactUsPage: React.FC = () => {
       width: 130,
       // Make status searchable with select dropdown
       valueType: 'select',
+      sorter: true,
       valueEnum: {
         pending: { text: 'در انتظار پیگیری', status: 'Warning' },
         followed_up: { text: 'پیگیری شده', status: 'Success' },
@@ -133,6 +139,7 @@ const ContactUsPage: React.FC = () => {
       width: 150,
       search: false,
       render: (_, record) => formatJalaliDate(record.created_at),
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -141,6 +148,7 @@ const ContactUsPage: React.FC = () => {
       width: 150,
       search: false,
       render: (_, record) => formatJalaliDate(record.updated_at),
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -177,13 +185,17 @@ const ContactUsPage: React.FC = () => {
         columns={columns}
         actionRef={actionRef}
         // ProTable request function
-        request={async (params) => {
+        request={async (params, sort) => {
           const { status, current, pageSize } = params;
 
           const response = await getContactUs({
             status: status || undefined,
             page: current,
             page_size: pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

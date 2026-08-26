@@ -9,6 +9,7 @@ export async function getAdvertisings(params?: {
   status?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   // Debug log - remove this after confirming it works
   console.log('🔍 getAdvertisings called with params:', params);

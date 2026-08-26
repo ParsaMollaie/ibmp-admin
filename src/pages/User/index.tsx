@@ -124,6 +124,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'کد',
       },
+      sorter: true,
     },
     {
       title: 'نام کاربری',
@@ -131,6 +132,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'نام کاربری را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'نام',
@@ -138,6 +140,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'نام را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'نام خانوادگی',
@@ -145,6 +148,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'نام خانوادگی را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'ایمیل',
@@ -152,6 +156,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'ایمیل را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'سمت شغلی',
@@ -161,6 +166,7 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'سمت شغلی را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
@@ -168,6 +174,7 @@ const UserTable: React.FC = () => {
       valueType: 'dateTime',
       search: false,
       width: 150,
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -175,6 +182,7 @@ const UserTable: React.FC = () => {
       valueType: 'dateTime',
       search: false,
       width: 150,
+      sorter: true,
     },
     {
       title: 'نوع کاربر',
@@ -192,6 +200,7 @@ const UserTable: React.FC = () => {
         admin: { text: 'ادمین' },
         client: { text: 'کاربر' },
       },
+      sorter: true,
     },
 
     {
@@ -256,7 +265,7 @@ const UserTable: React.FC = () => {
             دانلود اکسل
           </Button>,
         ]}
-        request={async (params = {}) => {
+        request={async (params = {}, sort) => {
           // Store filter params for export (excluding pagination params)
           const filters = Object.fromEntries(
             Object.entries(params).filter(
@@ -270,6 +279,10 @@ const UserTable: React.FC = () => {
               ...params,
               page: params.current,
               page_size: params.pageSize,
+              sorter:
+                sort && Object.keys(sort).length
+                  ? JSON.stringify(sort)
+                  : undefined,
             });
 
             return {

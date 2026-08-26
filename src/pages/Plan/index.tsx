@@ -68,12 +68,14 @@ const PlanPage: React.FC = () => {
       key: 'code',
       width: 80,
       search: false, // Not searchable
+      sorter: true,
     },
     {
       title: 'نام پلن',
       dataIndex: 'name',
       key: 'name',
       // ProTable automatically adds search for this field
+      sorter: true,
     },
     {
       title: 'نوع',
@@ -86,6 +88,7 @@ const PlanPage: React.FC = () => {
           {record.is_free_trial ? 'آزمایشی رایگان' : 'پولی'}
         </Tag>
       ),
+      sorter: true,
     },
     {
       title: 'مدت (ماه)',
@@ -94,6 +97,7 @@ const PlanPage: React.FC = () => {
       width: 100,
       search: false,
       render: (_, record) => `${record.month} ماه`,
+      sorter: true,
     },
     {
       title: 'قیمت (تومان)',
@@ -106,6 +110,7 @@ const PlanPage: React.FC = () => {
         if (numericPrice === 0) return <Tag color="green">رایگان</Tag>;
         return numericPrice.toLocaleString('fa-IR');
       },
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -118,6 +123,7 @@ const PlanPage: React.FC = () => {
           {record.status === 'active' ? 'فعال' : 'غیرفعال'}
         </Tag>
       ),
+      sorter: true,
     },
     {
       title: 'ویژگی‌ها',
@@ -165,6 +171,7 @@ const PlanPage: React.FC = () => {
       width: 150,
       search: false,
       valueType: 'dateTime',
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -173,6 +180,7 @@ const PlanPage: React.FC = () => {
       width: 150,
       search: false,
       valueType: 'dateTime',
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -200,13 +208,17 @@ const PlanPage: React.FC = () => {
         columns={columns}
         actionRef={actionRef}
         // ProTable request function - handles params automatically
-        request={async (params) => {
+        request={async (params, sort) => {
           const { name, current, pageSize } = params;
 
           const response = await getPlans({
             name: name || undefined,
             page: current,
             page_size: pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

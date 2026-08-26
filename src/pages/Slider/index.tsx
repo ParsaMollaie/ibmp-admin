@@ -31,6 +31,7 @@ const SliderTable: React.FC = () => {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
+      sorter: true,
     },
     {
       title: 'نوع',
@@ -40,6 +41,7 @@ const SliderTable: React.FC = () => {
         { text: 'اصلی', value: 'main' },
         { text: 'ثانویه', value: 'secondary' },
       ],
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -53,6 +55,7 @@ const SliderTable: React.FC = () => {
         { text: 'فعال', value: 'active' },
         { text: 'غیرفعال', value: 'inactive' },
       ],
+      sorter: true,
     },
     {
       title: 'تصویر',
@@ -109,6 +112,7 @@ const SliderTable: React.FC = () => {
       valueType: 'dateTime',
       search: false,
       width: 150,
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -141,8 +145,11 @@ const SliderTable: React.FC = () => {
         request={async (params = {}, sort, filter) => {
           const response = await getSliders({
             ...params,
-            ...sort,
             ...filter,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
           return {
             data: response.data.list,

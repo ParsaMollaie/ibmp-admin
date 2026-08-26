@@ -159,6 +159,7 @@ const OrderPage: React.FC = () => {
       fieldProps: {
         placeholder: 'کد سفارش',
       },
+      sorter: true,
     },
     {
       title: 'کاربر',
@@ -257,6 +258,7 @@ const OrderPage: React.FC = () => {
         const numericPrice = parseFloat(record.price);
         return <Text strong>{numericPrice.toLocaleString('fa-IR')}</Text>;
       },
+      sorter: true,
     },
     {
       title: 'مالیات (تومان)',
@@ -272,6 +274,7 @@ const OrderPage: React.FC = () => {
           <span style={{ color: '#999' }}>—</span>
         );
       },
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -292,10 +295,12 @@ const OrderPage: React.FC = () => {
       fieldProps: {
         placeholder: 'انتخاب وضعیت',
       },
+      sorter: true,
     },
     {
       title: 'تاریخ انقضا',
       key: 'expires_at_display',
+      dataIndex: 'expires_at',
       width: 120,
       hideInSearch: true,
       render: (_, record) => {
@@ -309,10 +314,12 @@ const OrderPage: React.FC = () => {
           </Tooltip>
         );
       },
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
       key: 'created_at_display',
+      dataIndex: 'created_at',
       width: 120,
       hideInSearch: true,
       render: (_, record) => (
@@ -323,10 +330,12 @@ const OrderPage: React.FC = () => {
           </span>
         </Tooltip>
       ),
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
       key: 'updated_at_display',
+      dataIndex: 'updated_at',
       width: 120,
       hideInSearch: true,
       render: (_, record) => {
@@ -337,6 +346,7 @@ const OrderPage: React.FC = () => {
           </Tooltip>
         );
       },
+      sorter: true,
     },
     {
       title: 'از تاریخ ایجاد',
@@ -390,7 +400,7 @@ const OrderPage: React.FC = () => {
         columns={columns}
         actionRef={actionRef}
         formRef={formRef}
-        request={async (params) => {
+        request={async (params, sort) => {
           // Format date params
           const createdFrom = params.created_from
             ? typeof params.created_from === 'string'
@@ -413,6 +423,10 @@ const OrderPage: React.FC = () => {
             created_to: createdTo,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

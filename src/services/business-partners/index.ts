@@ -8,6 +8,7 @@ export async function getBusinessPartners(params?: {
   status?: string;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.BusinessPartnerItem>>

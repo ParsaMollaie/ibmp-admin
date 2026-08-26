@@ -130,6 +130,7 @@ const ComplaintsPage: React.FC = () => {
       dataIndex: 'code',
       width: 80,
       hideInSearch: true,
+      sorter: true,
     },
     {
       title: 'خدمت',
@@ -172,6 +173,7 @@ const ComplaintsPage: React.FC = () => {
       hideInSearch: true,
       width: 160,
       render: (_, record) => `${record.first_name} ${record.last_name}`,
+      sorter: true,
     },
     {
       title: 'شماره موبایل',
@@ -179,6 +181,7 @@ const ComplaintsPage: React.FC = () => {
       hideInSearch: true,
       width: 130,
       render: (_, record) => <span dir="ltr">{record.mobile}</span>,
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -196,6 +199,7 @@ const ComplaintsPage: React.FC = () => {
           {getStatusLabel(record.status)}
         </Tag>
       ),
+      sorter: true,
     },
     {
       title: 'تاریخ',
@@ -212,6 +216,7 @@ const ComplaintsPage: React.FC = () => {
           </Space>
         </Tooltip>
       ),
+      sorter: true,
     },
     {
       title: 'جستجو',
@@ -342,7 +347,7 @@ const ComplaintsPage: React.FC = () => {
         formRef={formRef}
         rowKey="id"
         headerTitle="لیست شکایات"
-        request={async (params) => {
+        request={async (params, sort) => {
           const dateFrom = params.date_from
             ? typeof params.date_from === 'string'
               ? params.date_from
@@ -362,6 +367,10 @@ const ComplaintsPage: React.FC = () => {
             date_to: dateTo,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

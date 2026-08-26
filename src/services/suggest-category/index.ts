@@ -10,6 +10,7 @@ export async function getSuggestCategories(params?: {
   status?: API.SuggestCategoryStatus;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.SuggestCategoryItem>>

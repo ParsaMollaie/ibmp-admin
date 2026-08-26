@@ -7,6 +7,7 @@ export async function getContactUs(params?: {
   page?: number;
   page_size?: number;
   status?: string;
+  sorter?: string;
 }) {
   return request<API.ApiResponse<API.PaginatedResponse<API.ContactUsItem>>>(
     `${API_BASE}/contact-us`,

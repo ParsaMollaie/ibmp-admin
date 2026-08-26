@@ -178,6 +178,7 @@ const SuggestCategoryPage: React.FC = () => {
       fieldProps: {
         placeholder: 'عنوان را وارد کنید',
       },
+      sorter: true,
     },
     {
       title: 'توضیحات',
@@ -187,6 +188,7 @@ const SuggestCategoryPage: React.FC = () => {
       ellipsis: true,
       hideInSearch: true,
       render: (_, record) => record.description || '—',
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -203,6 +205,7 @@ const SuggestCategoryPage: React.FC = () => {
       fieldProps: {
         placeholder: 'انتخاب وضعیت',
       },
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
@@ -212,6 +215,7 @@ const SuggestCategoryPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) =>
         new Date(record.created_at).toLocaleDateString('fa-IR'),
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -223,6 +227,7 @@ const SuggestCategoryPage: React.FC = () => {
         if (!record.updated_at) return '—';
         return new Date(record.updated_at).toLocaleDateString('fa-IR');
       },
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -292,12 +297,16 @@ const SuggestCategoryPage: React.FC = () => {
             افزودن
           </Button>,
         ]}
-        request={async (params) => {
+        request={async (params, sort) => {
           const response = await getSuggestCategories({
             title: params.title,
             status: params.status,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {

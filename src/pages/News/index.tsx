@@ -33,12 +33,14 @@ const NewsPage: React.FC = () => {
       width: 70,
       search: false,
       fixed: 'left', // Fix code column for better mobile navigation
+      sorter: true,
     },
     {
       title: 'عنوان',
       dataIndex: 'title',
       ellipsis: true,
       width: 200,
+      sorter: true,
     },
     {
       title: 'تصویر',
@@ -66,12 +68,14 @@ const NewsPage: React.FC = () => {
       width: 200,
       search: false,
       render: (_, record) => <span>{stripHtml(record.summary)}</span>,
+      sorter: true,
     },
     {
       title: 'زمان مطالعه (دقیقه)',
       dataIndex: 'study_time',
       width: 120,
       search: false,
+      sorter: true,
     },
     {
       title: 'تاریخ انتشار',
@@ -85,12 +89,14 @@ const NewsPage: React.FC = () => {
           </span>
         );
       },
+      sorter: true,
     },
     {
       title: 'وضعیت',
       dataIndex: 'status',
       width: 100,
       valueType: 'select',
+      sorter: true,
       valueEnum: {
         active: { text: 'فعال', status: 'Success' },
         inactive: { text: 'غیرفعال', status: 'Default' },
@@ -108,6 +114,7 @@ const NewsPage: React.FC = () => {
       dataIndex: 'views_count',
       width: 80,
       search: false,
+      sorter: true,
     },
     {
       title: 'تاریخ ایجاد',
@@ -121,6 +128,7 @@ const NewsPage: React.FC = () => {
           </span>
         );
       },
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -135,6 +143,7 @@ const NewsPage: React.FC = () => {
           </span>
         );
       },
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -169,13 +178,17 @@ const NewsPage: React.FC = () => {
         search={{
           labelWidth: 'auto',
         }}
-        request={async (params) => {
+        request={async (params, sort) => {
           try {
             const response = await getNewsList({
               title: params.title,
               status: params.status,
               page: params.current,
               page_size: params.pageSize,
+              sorter:
+                sort && Object.keys(sort).length
+                  ? JSON.stringify(sort)
+                  : undefined,
             });
 
             return {

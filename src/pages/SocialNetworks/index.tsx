@@ -25,6 +25,7 @@ const SocialNetworkTable: React.FC = () => {
       title: 'نام شبکه',
       dataIndex: 'social',
       ellipsis: true,
+      sorter: true,
     },
     {
       title: 'وضعیت',
@@ -38,6 +39,7 @@ const SocialNetworkTable: React.FC = () => {
         { text: 'فعال', value: 'active' },
         { text: 'غیرفعال', value: 'inactive' },
       ],
+      sorter: true,
     },
     {
       title: 'لینک',
@@ -48,6 +50,7 @@ const SocialNetworkTable: React.FC = () => {
           {text}
         </a>
       ),
+      sorter: true,
     },
     {
       title: 'آیکون',
@@ -83,6 +86,7 @@ const SocialNetworkTable: React.FC = () => {
       valueType: 'dateTime',
       search: false,
       width: 150,
+      sorter: true,
     },
     {
       title: 'عملیات',
@@ -115,8 +119,11 @@ const SocialNetworkTable: React.FC = () => {
         request={async (params = {}, sort, filter) => {
           const response = await getSocialNetworks({
             ...params,
-            ...sort,
             ...filter,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
           return {
             data: response.data.list,

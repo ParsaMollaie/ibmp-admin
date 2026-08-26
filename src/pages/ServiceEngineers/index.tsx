@@ -687,6 +687,7 @@ const ServiceEngineersPage: React.FC = () => {
       width: 200,
       ellipsis: true,
       hideInSearch: true,
+      sorter: true,
     },
     {
       title: 'دسته‌بندی',
@@ -814,6 +815,7 @@ const ServiceEngineersPage: React.FC = () => {
     {
       title: 'تاریخ ثبت',
       key: 'created_at_display',
+      dataIndex: 'created_at',
       width: 120,
       hideInSearch: true,
       render: (_, record) => (
@@ -826,16 +828,19 @@ const ServiceEngineersPage: React.FC = () => {
           </Space>
         </Tooltip>
       ),
+      sorter: true,
     },
     {
       title: 'تاریخ بروزرسانی',
       key: 'updated_at_display',
+      dataIndex: 'updated_at',
       width: 120,
       hideInSearch: true,
       render: (_, record) => {
         if (!record.updated_at) return '—';
         return new Date(record.updated_at).toLocaleDateString('fa-IR');
       },
+      sorter: true,
     },
     {
       title: 'از تاریخ',
@@ -907,6 +912,7 @@ const ServiceEngineersPage: React.FC = () => {
       fieldProps: {
         placeholder: 'انتخاب وضعیت',
       },
+      sorter: true,
     },
     {
       title: 'نوع ارتقا',
@@ -923,6 +929,7 @@ const ServiceEngineersPage: React.FC = () => {
       fieldProps: {
         placeholder: 'انتخاب نوع',
       },
+      sorter: true,
     },
     {
       title: 'تگ',
@@ -942,6 +949,7 @@ const ServiceEngineersPage: React.FC = () => {
       fieldProps: {
         placeholder: 'انتخاب تگ',
       },
+      sorter: true,
     },
     {
       title: 'اولویت',
@@ -1209,7 +1217,7 @@ const ServiceEngineersPage: React.FC = () => {
             بارگذاری دسته‌بندی
           </Button>,
         ]}
-        request={async (params) => {
+        request={async (params, sort) => {
           const categoryCodeArr = params.category_code;
           const categoryCode =
             Array.isArray(categoryCodeArr) && categoryCodeArr.length > 0
@@ -1248,6 +1256,10 @@ const ServiceEngineersPage: React.FC = () => {
             ...apiParams,
             page: params.current,
             page_size: params.pageSize,
+            sorter:
+              sort && Object.keys(sort).length
+                ? JSON.stringify(sort)
+                : undefined,
           });
 
           return {
