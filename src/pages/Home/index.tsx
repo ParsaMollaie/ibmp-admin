@@ -1,4 +1,5 @@
 import { DashboardStats, getDashboardStats } from '@/services/dashboard';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import {
   BankOutlined,
   RiseOutlined,
@@ -7,7 +8,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Col, Row, Skeleton, Statistic, Typography } from 'antd';
+import { Card, Col, Row, Skeleton, Statistic, Typography, message } from 'antd';
 import { DatePicker } from 'antd-jalali';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -147,14 +148,19 @@ const HomePage: React.FC = () => {
   const fetchStats = async (start?: string, end?: string) => {
     setLoading(true);
     try {
-      const startDate = start || dateRange[0].format('YYYY-MM-DD');
-      const endDate = end || dateRange[1].format('YYYY-MM-DD');
+      const startDate =
+        start ||
+        convertFaDateToEnDate(dateRange[0].toDate()).format('YYYY-MM-DD');
+      const endDate =
+        end ||
+        convertFaDateToEnDate(dateRange[1].toDate()).format('YYYY-MM-DD');
       const response = await getDashboardStats(startDate, endDate);
       if (response.success) {
         setStats(response.data);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard stats:', error);
+      message.error('دریافت آمار داشبورد با خطا مواجه شد.');
     } finally {
       setLoading(false);
     }
@@ -169,7 +175,10 @@ const HomePage: React.FC = () => {
   ) => {
     if (dates && dates[0] && dates[1]) {
       setDateRange([dates[0], dates[1]]);
-      fetchStats(dates[0].format('YYYY-MM-DD'), dates[1].format('YYYY-MM-DD'));
+      fetchStats(
+        convertFaDateToEnDate(dates[0].toDate()).format('YYYY-MM-DD'),
+        convertFaDateToEnDate(dates[1].toDate()).format('YYYY-MM-DD'),
+      );
     }
   };
 
