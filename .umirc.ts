@@ -158,6 +158,11 @@ export default defineConfig({
           path: '/reports/service-activity',
           component: './Reports/ServiceActivity',
         },
+        {
+          name: 'گزارش ماهانه',
+          path: '/reports/monthly',
+          component: './Reports/MonthlyReport',
+        },
       ],
     },
 

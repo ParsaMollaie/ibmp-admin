@@ -1,3 +1,4 @@
+import DateRangeFilter from '@/components/DateRangeFilter';
 import { DashboardStats, getDashboardStats } from '@/services/dashboard';
 import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import {
@@ -9,7 +10,6 @@ import {
 } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Card, Col, Row, Skeleton, Statistic, Typography, message } from 'antd';
-import { DatePicker } from 'antd-jalali';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
@@ -32,23 +32,11 @@ import {
 import { history } from 'umi';
 import styles from './index.less';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
-// Color palette
-// const COLORS = [ // Was used by Order Status Pie Chart, replaced by daily_paid_amounts bar chart
-//   '#52c41a',
-//   '#faad14',
-//   '#ff4d4f',
-//   '#d9d9d9',
-//   '#1890ff',
-//   '#722ed1',
-// ];
 const TAG_COLORS = ['#d9d9d9', '#1890ff', '#52c41a'];
 const STATUS_COLORS = ['#faad14', '#52c41a', '#ff4d4f', '#d9d9d9'];
 const CHART_COLORS = {
-  users: '#1890ff',
-  companies: '#52c41a',
-  services: '#722ed1',
   revenue: '#13c2c2',
   province: '#fa8c16',
   category: '#eb2f96',
@@ -137,7 +125,6 @@ const renderLegend = (props: any, onClick?: (entry: any) => void) => {
 const HomePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  // const [activeOrderIndex, setActiveOrderIndex] = useState(0); // Replaced by daily_paid_amounts bar chart
   const [activeTagIndex, setActiveTagIndex] = useState(0);
   const [activeStatusIndex, setActiveStatusIndex] = useState(0);
   const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
@@ -170,16 +157,12 @@ const HomePage: React.FC = () => {
     fetchStats();
   }, []);
 
-  const handleDateRangeChange = (
-    dates: [Dayjs | null, Dayjs | null] | null,
-  ) => {
-    if (dates && dates[0] && dates[1]) {
-      setDateRange([dates[0], dates[1]]);
-      fetchStats(
-        convertFaDateToEnDate(dates[0].toDate()).format('YYYY-MM-DD'),
-        convertFaDateToEnDate(dates[1].toDate()).format('YYYY-MM-DD'),
-      );
-    }
+  const handleApplyDateRange = (start: Dayjs, end: Dayjs) => {
+    setDateRange([start, end]);
+    fetchStats(
+      convertFaDateToEnDate(start.toDate()).format('YYYY-MM-DD'),
+      convertFaDateToEnDate(end.toDate()).format('YYYY-MM-DD'),
+    );
   };
 
   // Quick access card configuration
@@ -236,12 +219,6 @@ const HomePage: React.FC = () => {
   };
 
   // Click handlers for charts
-  // const handleOrderStatusClick = (data: any) => { // Replaced by daily_paid_amounts bar chart
-  //   if (data?.status) {
-  //     history.push(`/order?status=${data.status}`);
-  //   }
-  // };
-
   const handleCompanyTagClick = (data: any) => {
     if (data?.tag) {
       history.push(`/services?tag=${data.tag}`);
@@ -294,23 +271,27 @@ const HomePage: React.FC = () => {
         title: 'داشبورد مدیریت',
         subTitle: 'نمای کلی از وضعیت سیستم',
       }}
-      extra={[
-        <DatePicker.RangePicker
-          key="date-range"
-          value={dateRange}
-          onChange={handleDateRangeChange as any}
-          format="YYYY/MM/DD"
-          allowClear={false}
-          style={{ direction: 'ltr' }}
-        />,
-      ]}
     >
       <div className={styles.dashboard}>
+        {/* Date Range Filter */}
+        <DateRangeFilter
+          defaultStart={dateRange[0]}
+          defaultEnd={dateRange[1]}
+          onApply={handleApplyDateRange}
+          loading={loading}
+        />
+
         {/* Quick Access Section */}
         <div className={styles.section}>
           <Title level={5} className={styles.sectionTitle}>
             <RiseOutlined /> دسترسی سریع
           </Title>
+          <Text
+            type="secondary"
+            style={{ fontSize: 12, display: 'block', marginBottom: 12 }}
+          >
+            اعداد زیر مربوط به بازه زمانی انتخاب‌شده هستند.
+          </Text>
           <Row gutter={[16, 16]}>
             {quickAccessCards.map((card, index) => (
               <Col xs={24} sm={12} lg={6} key={index}>
@@ -348,84 +329,8 @@ const HomePage: React.FC = () => {
 
         {/* Charts Section */}
         <Row gutter={[16, 16]} className={styles.chartsRow}>
-          {/* Registration Trend Chart */}
-          <Col xs={24} lg={14}>
-            <Card
-              title="روند ثبت‌نام‌ها (۶ ماه اخیر)"
-              className={styles.chartCard}
-            >
-              {loading ? (
-                <Skeleton active paragraph={{ rows: 6 }} />
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={stats?.charts.registrations_by_month || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                      wrapperStyle={{ paddingTop: 20 }}
-                      formatter={(value) => (
-                        <span style={{ color: '#666', fontSize: 12 }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="users"
-                      name="کاربران"
-                      stroke={CHART_COLORS.users}
-                      strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.users, r: 4 }}
-                      activeDot={{
-                        r: 6,
-                        cursor: 'pointer',
-                        onClick: () => history.push('/user'),
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="companies"
-                      name="شرکت‌ها"
-                      stroke={CHART_COLORS.companies}
-                      strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.companies, r: 4 }}
-                      activeDot={{
-                        r: 6,
-                        cursor: 'pointer',
-                        onClick: () => history.push('/services-company'),
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="services"
-                      name="خدمات"
-                      stroke={CHART_COLORS.services}
-                      strokeWidth={2}
-                      dot={{ fill: CHART_COLORS.services, r: 4 }}
-                      activeDot={{
-                        r: 6,
-                        cursor: 'pointer',
-                        onClick: () => history.push('/services'),
-                      }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </Card>
-          </Col>
-
-          {/* Daily Paid Amounts Bar Chart (replaced Order Status Pie Chart) */}
-          <Col xs={24} lg={10}>
+          {/* Daily Paid Amounts Bar Chart */}
+          <Col xs={24}>
             <Card title="مبالغ پرداختی سفارشات" className={styles.chartCard}>
               {loading ? (
                 <Skeleton active paragraph={{ rows: 6 }} />
@@ -523,52 +428,6 @@ const HomePage: React.FC = () => {
                       dot={{ fill: '#fa8c16', r: 3 }}
                     />
                   </LineChart>
-                </ResponsiveContainer>
-              )}
-            </Card>
-          </Col>
-
-          {/* Revenue Chart */}
-          <Col xs={24}>
-            <Card title="درآمد ماهانه (تومان)" className={styles.chartCard}>
-              {loading ? (
-                <Skeleton active paragraph={{ rows: 6 }} />
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={stats?.charts.revenue_by_month || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => formatCurrency(value)}
-                      tick={{ fontSize: 12 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      content={<CustomTooltip suffix=" تومان" />}
-                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                    />
-                    <Legend
-                      wrapperStyle={{ paddingTop: 20 }}
-                      formatter={(value) => (
-                        <span style={{ color: '#666', fontSize: 12 }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Bar
-                      dataKey="amount"
-                      name="درآمد"
-                      fill={CHART_COLORS.revenue}
-                      radius={[4, 4, 0, 0]}
-                      cursor="pointer"
-                      onClick={() => history.push('/order')}
-                    />
-                  </BarChart>
                 </ResponsiveContainer>
               )}
             </Card>

@@ -65,11 +65,8 @@ export interface DailyServiceLog {
 }
 
 export interface DashboardCharts {
-  registrations_by_month: RegistrationByMonth[];
-  // orders_by_status: OrderByStatus[]; // Replaced by daily_paid_amounts
   daily_paid_amounts: DailyPaidAmount[];
   daily_service_logs: DailyServiceLog[];
-  revenue_by_month: RevenueByMonth[];
   companies_by_province: CompanyByProvince[];
   companies_by_tag: CompanyByTag[];
   services_by_status: ServiceByStatus[];
@@ -79,6 +76,11 @@ export interface DashboardCharts {
 export interface DashboardStats {
   counts: DashboardCounts;
   charts: DashboardCharts;
+}
+
+export interface MonthlyReport {
+  registrations_by_month: RegistrationByMonth[];
+  revenue_by_month: RevenueByMonth[];
 }
 
 /**
@@ -91,6 +93,23 @@ export async function getDashboardStats(startDate?: string, endDate?: string) {
 
   return request<API.ApiResponse<DashboardStats>>(
     `${API_BASE}/dashboard/stats`,
+    {
+      method: 'GET',
+      params,
+    },
+  );
+}
+
+/**
+ * Get monthly registrations and revenue reports
+ */
+export async function getMonthlyReport(startDate?: string, endDate?: string) {
+  const params: Record<string, string> = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+
+  return request<API.ApiResponse<MonthlyReport>>(
+    `${API_BASE}/dashboard/monthly-report`,
     {
       method: 'GET',
       params,

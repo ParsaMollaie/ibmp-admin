@@ -1,0 +1,78 @@
+.page {
+  padding: 0;
+}
+
+.chartCard {
+  border-radius: 8px;
+
+  :global {
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ant-card-head-title {
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .ant-card-body {
+      padding: 16px;
+    }
+  }
+}
+
+.customTooltip {
+  background: rgba(255, 255, 255, 96%);
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 15%);
+  direction: rtl;
+  text-align: right;
+  min-width: 120px;
+}
+
+.tooltipLabel {
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.tooltipItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: #595959;
+
+  strong {
+    color: #262626;
+    margin-right: auto;
+  }
+}
+
+.tooltipDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+:global {
+  .recharts-legend-wrapper {
+    direction: rtl;
+  }
+
+  .recharts-tooltip-wrapper {
+    direction: rtl;
+  }
+
+  .recharts-default-tooltip {
+    direction: rtl;
+    text-align: right;
+  }
+}
