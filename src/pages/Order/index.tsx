@@ -7,16 +7,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import {
-  Card,
-  Col,
-  Row,
-  Select,
-  Statistic,
-  Tag,
-  Tooltip,
-  Typography,
-} from 'antd';
+import { Card, Col, Row, Select, Statistic, Tag, Typography } from 'antd';
 import { DatePicker } from 'antd-jalali';
 import jalaliMoment from 'jalali-moment';
 import React, { useEffect, useRef, useState } from 'react';
@@ -27,11 +18,6 @@ const { Text } = Typography;
 // ============================================
 // HELPERS
 // ============================================
-
-const formatJalaliDate = (dateString: string): string => {
-  if (!dateString) return '—';
-  return jalaliMoment(dateString).locale('fa').format('jYYYY/jMM/jDD');
-};
 
 const formatJalaliDateTime = (dateString: string): string => {
   if (!dateString) return '—';
@@ -307,11 +293,9 @@ const OrderPage: React.FC = () => {
         if (!record.expires_at) return <span style={{ color: '#999' }}>—</span>;
         const isExpired = new Date(record.expires_at) < new Date();
         return (
-          <Tooltip title={formatJalaliDateTime(record.expires_at)}>
-            <Tag color={isExpired ? 'red' : 'green'}>
-              {formatJalaliDate(record.expires_at)}
-            </Tag>
-          </Tooltip>
+          <Tag color={isExpired ? 'red' : 'green'}>
+            {formatJalaliDateTime(record.expires_at)}
+          </Tag>
         );
       },
       sorter: true,
@@ -320,15 +304,13 @@ const OrderPage: React.FC = () => {
       title: 'تاریخ ایجاد',
       key: 'created_at_display',
       dataIndex: 'created_at',
-      width: 120,
+      width: 150,
       hideInSearch: true,
       render: (_, record) => (
-        <Tooltip title={formatJalaliDateTime(record.created_at)}>
-          <span>
-            <CalendarOutlined style={{ color: '#8c8c8c', marginLeft: 4 }} />
-            {formatJalaliDate(record.created_at)}
-          </span>
-        </Tooltip>
+        <span>
+          <CalendarOutlined style={{ color: '#8c8c8c', marginLeft: 4 }} />
+          {formatJalaliDateTime(record.created_at)}
+        </span>
       ),
       sorter: true,
     },
@@ -336,17 +318,35 @@ const OrderPage: React.FC = () => {
       title: 'تاریخ بروزرسانی',
       key: 'updated_at_display',
       dataIndex: 'updated_at',
-      width: 120,
+      width: 150,
       hideInSearch: true,
       render: (_, record) => {
         if (!record.updated_at) return <span style={{ color: '#999' }}>—</span>;
-        return (
-          <Tooltip title={formatJalaliDateTime(record.updated_at)}>
-            <span>{formatJalaliDate(record.updated_at)}</span>
-          </Tooltip>
-        );
+        return <span>{formatJalaliDateTime(record.updated_at)}</span>;
       },
       sorter: true,
+    },
+    {
+      title: 'ایجاد شده توسط',
+      key: 'created_by',
+      dataIndex: 'created_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      key: 'updated_by',
+      dataIndex: 'updated_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'از تاریخ ایجاد',

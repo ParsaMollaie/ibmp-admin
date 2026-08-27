@@ -816,17 +816,13 @@ const ServiceEngineersPage: React.FC = () => {
       title: 'تاریخ ثبت',
       key: 'created_at_display',
       dataIndex: 'created_at',
-      width: 120,
+      width: 150,
       hideInSearch: true,
       render: (_, record) => (
-        <Tooltip title={new Date(record.created_at).toLocaleString('fa-IR')}>
-          <Space size={4}>
-            <CalendarOutlined style={{ color: '#8c8c8c' }} />
-            <span>
-              {new Date(record.created_at).toLocaleDateString('fa-IR')}
-            </span>
-          </Space>
-        </Tooltip>
+        <Space size={4}>
+          <CalendarOutlined style={{ color: '#8c8c8c' }} />
+          <span>{new Date(record.created_at).toLocaleString('fa-IR')}</span>
+        </Space>
       ),
       sorter: true,
     },
@@ -834,13 +830,35 @@ const ServiceEngineersPage: React.FC = () => {
       title: 'تاریخ بروزرسانی',
       key: 'updated_at_display',
       dataIndex: 'updated_at',
-      width: 120,
+      width: 150,
       hideInSearch: true,
       render: (_, record) => {
         if (!record.updated_at) return '—';
-        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+        return new Date(record.updated_at).toLocaleString('fa-IR');
       },
       sorter: true,
+    },
+    {
+      title: 'ایجاد شده توسط',
+      key: 'created_by',
+      dataIndex: 'created_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      key: 'updated_by',
+      dataIndex: 'updated_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'از تاریخ',

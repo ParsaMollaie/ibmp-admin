@@ -202,21 +202,50 @@ const ComplaintsPage: React.FC = () => {
       sorter: true,
     },
     {
-      title: 'تاریخ',
+      title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
       hideInSearch: true,
-      width: 120,
+      width: 150,
       render: (_, record) => (
         <Tooltip title={new Date(record.created_at).toLocaleString('fa-IR')}>
           <Space size={4}>
             <CalendarOutlined style={{ color: '#8c8c8c' }} />
-            <span>
-              {new Date(record.created_at).toLocaleDateString('fa-IR')}
-            </span>
+            <span>{new Date(record.created_at).toLocaleString('fa-IR')}</span>
           </Space>
         </Tooltip>
       ),
       sorter: true,
+    },
+    {
+      title: 'تاریخ بروزرسانی',
+      dataIndex: 'updated_at',
+      hideInSearch: true,
+      width: 150,
+      render: (_, record) => {
+        if (!record.updated_at) return '—';
+        return new Date(record.updated_at).toLocaleString('fa-IR');
+      },
+      sorter: true,
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      hideInSearch: true,
+      width: 130,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      hideInSearch: true,
+      width: 130,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'جستجو',

@@ -1,4 +1,5 @@
 import { getSliders } from '@/services/auth';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import {
   ActionType,
   FooterToolbar,
@@ -101,18 +102,40 @@ const SliderTable: React.FC = () => {
     {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
-      valueType: 'dateTime',
       sorter: true,
       search: false,
       width: 150,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.created_at).format('YYYY/MM/DD HH:mm'),
     },
     {
       title: 'تاریخ بروزرسانی',
       dataIndex: 'updated_at',
-      valueType: 'dateTime',
       search: false,
       width: 150,
       sorter: true,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.updated_at).format('YYYY/MM/DD HH:mm'),
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      search: false,
+      width: 130,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      search: false,
+      width: 130,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',

@@ -221,7 +221,7 @@ const CategoryPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (!record.created_at) return '—';
-        return new Date(record.created_at).toLocaleDateString('fa-IR');
+        return new Date(record.created_at).toLocaleString('fa-IR');
       },
       sorter: (a, b) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
@@ -234,10 +234,32 @@ const CategoryPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (!record.updated_at) return '—';
-        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+        return new Date(record.updated_at).toLocaleString('fa-IR');
       },
       sorter: (a, b) =>
         new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime(),
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      key: 'created_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      key: 'updated_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',

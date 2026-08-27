@@ -1,4 +1,5 @@
 import { getBusinessPartners } from '@/services/business-partners';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
@@ -94,18 +95,40 @@ const BusinessPartnersPage: React.FC = () => {
     {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
-      valueType: 'dateTime',
       width: 150,
       search: false,
       sorter: true,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.created_at).format('YYYY/MM/DD HH:mm'),
     },
     {
       title: 'تاریخ بروزرسانی',
       dataIndex: 'updated_at',
-      valueType: 'dateTime',
       width: 150,
       search: false,
       sorter: true,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.updated_at).format('YYYY/MM/DD HH:mm'),
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',

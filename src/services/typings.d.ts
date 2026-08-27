@@ -41,6 +41,8 @@ declare namespace API {
     job_position?: string | null;
     avatar?: string | null;
     password?: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     updated_at?: string;
     created_at?: string;
   }
@@ -61,6 +63,8 @@ declare namespace API {
     status: 'active' | 'inactive';
     image: string | null;
     alt_image: string | null;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
     parent: CategoryParent | null;
@@ -93,7 +97,8 @@ declare namespace API {
     image: string | null;
     alt_image: string;
     portrait_image: string | null;
-    created_by: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -105,7 +110,8 @@ declare namespace API {
     link: string;
     alt_icon: string;
     icon: string | null;
-    created_by: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -132,6 +138,8 @@ declare namespace API {
     image: string | null;
     portrait_image: string | null;
     alt_image: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -158,6 +166,8 @@ declare namespace API {
     link: string;
     image: string | null;
     alt_image: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -188,7 +198,8 @@ declare namespace API {
     study_time: number;
     views_count: number;
     rate: number;
-    created_by: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -223,6 +234,8 @@ declare namespace API {
     is_free_trial: boolean;
     features: PlanFeature[] | null;
     price: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -284,6 +297,8 @@ declare namespace API {
     tax: string;
     status: OrderStatus;
     expires_at: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
     user: OrderUser;
@@ -304,6 +319,8 @@ declare namespace API {
     title: string;
     description: string;
     status: ContactUsStatus;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -385,6 +402,8 @@ declare namespace API {
     status: SuggestCategoryStatus;
     can_approve?: boolean;
     can_reject?: boolean;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -550,6 +569,8 @@ declare namespace API {
     can_set_regular?: boolean;
     can_set_most_view?: boolean;
     can_set_promoted?: boolean;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -635,6 +656,8 @@ declare namespace API {
     description: string;
     status: ServiceComplaintStatus;
     admin_note: string | null;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }
@@ -672,6 +695,8 @@ declare namespace API {
     mobile: string | null;
     description: string;
     is_active: boolean;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
     replies?: ServiceCommentItem[];
@@ -747,6 +772,8 @@ declare namespace API {
     addresses: ServiceAddress[];
     user?: OrderUser;
     services_count: number;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
   }

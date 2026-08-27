@@ -214,7 +214,7 @@ const SuggestCategoryPage: React.FC = () => {
       width: 150,
       hideInSearch: true,
       render: (_, record) =>
-        new Date(record.created_at).toLocaleDateString('fa-IR'),
+        new Date(record.created_at).toLocaleString('fa-IR'),
       sorter: true,
     },
     {
@@ -225,9 +225,31 @@ const SuggestCategoryPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (!record.updated_at) return '—';
-        return new Date(record.updated_at).toLocaleDateString('fa-IR');
+        return new Date(record.updated_at).toLocaleString('fa-IR');
       },
       sorter: true,
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      key: 'created_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      key: 'updated_by',
+      width: 130,
+      hideInSearch: true,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',

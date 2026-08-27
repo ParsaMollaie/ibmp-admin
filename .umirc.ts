@@ -11,7 +11,7 @@ export default defineConfig({
   },
   proxy: {
     '/api': {
-      target: 'https://ibmp.ir',
+      target: process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir',
       changeOrigin: true,
       pathRewrite: { '^/api': '/api' },
     },

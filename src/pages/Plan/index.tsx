@@ -1,4 +1,5 @@
 import { getPlans } from '@/services/plan';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -170,8 +171,9 @@ const PlanPage: React.FC = () => {
       key: 'created_at',
       width: 150,
       search: false,
-      valueType: 'dateTime',
       sorter: true,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.created_at).format('YYYY/MM/DD HH:mm'),
     },
     {
       title: 'تاریخ بروزرسانی',
@@ -179,8 +181,31 @@ const PlanPage: React.FC = () => {
       key: 'updated_at',
       width: 150,
       search: false,
-      valueType: 'dateTime',
       sorter: true,
+      render: (_, record) =>
+        convertEnDateToFaDate(record.updated_at).format('YYYY/MM/DD HH:mm'),
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      key: 'created_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      key: 'updated_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',

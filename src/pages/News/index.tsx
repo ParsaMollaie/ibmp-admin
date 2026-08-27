@@ -124,7 +124,9 @@ const NewsPage: React.FC = () => {
       render: (_, record) => {
         return (
           <span>
-            {convertEnDateToFaDate(record.created_at).format('YYYY/MM/DD')}
+            {convertEnDateToFaDate(record.created_at).format(
+              'YYYY/MM/DD HH:mm',
+            )}
           </span>
         );
       },
@@ -139,11 +141,33 @@ const NewsPage: React.FC = () => {
         if (!record.updated_at) return '—';
         return (
           <span>
-            {convertEnDateToFaDate(record.updated_at).format('YYYY/MM/DD')}
+            {convertEnDateToFaDate(record.updated_at).format(
+              'YYYY/MM/DD HH:mm',
+            )}
           </span>
         );
       },
       sorter: true,
+    },
+    {
+      title: 'ایجاد شده توسط',
+      dataIndex: 'created_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.created_by
+          ? `${record.created_by.first_name} ${record.created_by.last_name}`
+          : '—',
+    },
+    {
+      title: 'بروزرسانی شده توسط',
+      dataIndex: 'updated_by',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.updated_by
+          ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+          : '—',
     },
     {
       title: 'عملیات',
