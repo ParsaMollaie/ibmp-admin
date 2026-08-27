@@ -97,6 +97,8 @@ declare namespace API {
     image: string | null;
     alt_image: string;
     portrait_image: string | null;
+    publish_at: string | null;
+    end_date: string | null;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
@@ -138,6 +140,8 @@ declare namespace API {
     image: string | null;
     portrait_image: string | null;
     alt_image: string;
+    publish_at: string | null;
+    end_date: string | null;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
@@ -154,6 +158,8 @@ declare namespace API {
     image?: string | null;
     portrait_image?: string | null;
     alt_image?: string | null;
+    publish_at?: string | null;
+    end_date?: string | null;
   }
 
   // Business Partner item returned from API
@@ -166,6 +172,8 @@ declare namespace API {
     link: string;
     image: string | null;
     alt_image: string;
+    publish_at: string | null;
+    end_date: string | null;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
@@ -180,6 +188,8 @@ declare namespace API {
     link: string;
     image?: string | null;
     alt_image?: string | null;
+    publish_at?: string | null;
+    end_date?: string | null;
   }
 
   // News item returned from API

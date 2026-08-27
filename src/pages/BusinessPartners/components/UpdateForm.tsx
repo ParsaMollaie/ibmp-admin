@@ -1,4 +1,5 @@
 import { updateBusinessPartner } from '@/services/business-partners';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
@@ -7,7 +8,10 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
-import { Form, Image, message, Upload } from 'antd';
+import { Col, Form, Image, message, Row, Upload } from 'antd';
+import { DatePicker } from 'antd-jalali';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
 interface UpdateFormProps {
@@ -34,6 +38,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   onSuccess,
 }) => {
   const [form] = Form.useForm();
+  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
 
   const [imageList, setImageList] = useState<UploadFile[]>([]);
 
@@ -47,6 +52,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         status: record.status,
         link: record.link,
         alt_image: record.alt_image,
+        publish_at: record.publish_at ? dayjs(record.publish_at) : undefined,
+        end_date: record.end_date ? dayjs(record.end_date) : undefined,
       });
 
       // Reset image change flag
@@ -79,6 +86,16 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         status: values.status,
         link: values.link,
         alt_image: values.alt_image || null,
+        publish_at: values.publish_at
+          ? convertFaDateToEnDate(values.publish_at.toDate()).format(
+              'YYYY-MM-DD HH:mm:ss',
+            )
+          : null,
+        end_date: values.end_date
+          ? convertFaDateToEnDate(values.end_date.toDate()).format(
+              'YYYY-MM-DD HH:mm:ss',
+            )
+          : null,
         ...(imageChanged && {
           image:
             imageList.length > 0 && imageList[0].originFileObj
@@ -162,6 +179,32 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         label="متن جایگزین تصویر (Alt)"
         placeholder="توضیح تصویر برای SEO"
       />
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item name="publish_at" label="تاریخ شروع نمایش">
+            <DatePicker
+              format="YYYY/MM/DD"
+              placeholder="تاریخ شروع نمایش"
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="end_date" label="تاریخ پایان نمایش">
+            <DatePicker
+              format="YYYY/MM/DD"
+              placeholder="تاریخ پایان نمایش"
+              style={{ width: '100%' }}
+              disabledDate={(current: Dayjs) =>
+                publishAt
+                  ? !!current && current.isBefore(publishAt, 'day')
+                  : false
+              }
+            />
+          </Form.Item>
+        </Col>
+      </Row>
 
       <Form.Item label="تصویر">
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>

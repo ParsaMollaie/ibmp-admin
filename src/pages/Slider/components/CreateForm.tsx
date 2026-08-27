@@ -1,4 +1,5 @@
 import { createSlider } from '@/services/auth';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ProForm,
@@ -6,8 +7,10 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Form, Modal, Upload, message } from 'antd';
+import { Col, Form, Modal, Row, Upload, message } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import type { RcFile, UploadProps } from 'antd/es/upload/interface';
+import type { Dayjs } from 'dayjs';
 import { useState } from 'react';
 
 const getBase64 = (file: RcFile): Promise<string> =>
@@ -24,6 +27,7 @@ const CreateForm: React.FC<{
   onSuccess: () => void;
 }> = ({ visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
+  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
 
   const [imagePreview, setImagePreview] = useState<string>('');
   const [portraitImagePreview, setPortraitImagePreview] = useState<string>('');
@@ -75,6 +79,9 @@ const CreateForm: React.FC<{
       const formData = new FormData();
 
       Object.keys(values).forEach((key) => {
+        if (key === 'publish_at' || key === 'end_date') {
+          return;
+        }
         if (values[key] !== undefined) {
           formData.append(key, values[key]);
         }
@@ -83,6 +90,24 @@ const CreateForm: React.FC<{
       formData.append('image', imagePreview);
 
       formData.append('portrait_image', portraitImagePreview);
+
+      if (values.publish_at) {
+        formData.append(
+          'publish_at',
+          convertFaDateToEnDate(values.publish_at.toDate()).format(
+            'YYYY-MM-DD HH:mm:ss',
+          ),
+        );
+      }
+
+      if (values.end_date) {
+        formData.append(
+          'end_date',
+          convertFaDateToEnDate(values.end_date.toDate()).format(
+            'YYYY-MM-DD HH:mm:ss',
+          ),
+        );
+      }
 
       await createSlider(formData);
       message.success('اسلایدر با موفقیت ایجاد شد');
@@ -172,6 +197,32 @@ const CreateForm: React.FC<{
             { required: true, message: 'لطفاً متن جایگزین تصویر را وارد کنید' },
           ]}
         />
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="publish_at" label="تاریخ شروع نمایش">
+              <DatePicker
+                format="YYYY/MM/DD"
+                placeholder="تاریخ شروع نمایش"
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="end_date" label="تاریخ پایان نمایش">
+              <DatePicker
+                format="YYYY/MM/DD"
+                placeholder="تاریخ پایان نمایش"
+                style={{ width: '100%' }}
+                disabledDate={(current: Dayjs) =>
+                  publishAt
+                    ? !!current && current.isBefore(publishAt, 'day')
+                    : false
+                }
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           name="image"

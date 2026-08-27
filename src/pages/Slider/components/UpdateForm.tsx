@@ -1,4 +1,5 @@
 import { updateSlider } from '@/services/auth';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ProForm,
@@ -6,8 +7,11 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Form, Modal, Upload, message } from 'antd';
+import { Col, Form, Modal, Row, Upload, message } from 'antd';
+import { DatePicker } from 'antd-jalali';
 import type { RcFile, UploadProps } from 'antd/es/upload/interface';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
 interface UpdateFormProps {
@@ -24,6 +28,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   initialValues,
 }) => {
   const [form] = Form.useForm();
+  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
 
   const [imagePreview, setImagePreview] = useState<string>(
     initialValues.image || '',
@@ -115,11 +120,31 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         if (
           values[key] !== undefined &&
           key !== 'image' &&
-          key !== 'portrait_image'
+          key !== 'portrait_image' &&
+          key !== 'publish_at' &&
+          key !== 'end_date'
         ) {
           formData.append(key, values[key]);
         }
       });
+
+      if (values.publish_at) {
+        formData.append(
+          'publish_at',
+          convertFaDateToEnDate(values.publish_at.toDate()).format(
+            'YYYY-MM-DD HH:mm:ss',
+          ),
+        );
+      }
+
+      if (values.end_date) {
+        formData.append(
+          'end_date',
+          convertFaDateToEnDate(values.end_date.toDate()).format(
+            'YYYY-MM-DD HH:mm:ss',
+          ),
+        );
+      }
 
       // Handle main image - only if changed
       if (imageChanged) {
@@ -173,6 +198,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           priority: initialValues.priority,
           link: initialValues.link,
           alt_image: initialValues.alt_image,
+          publish_at: initialValues.publish_at
+            ? dayjs(initialValues.publish_at)
+            : undefined,
+          end_date: initialValues.end_date
+            ? dayjs(initialValues.end_date)
+            : undefined,
         }}
         submitter={{
           searchConfig: {
@@ -238,6 +269,32 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             { required: true, message: 'لطفاً متن جایگزین تصویر را وارد کنید' },
           ]}
         />
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="publish_at" label="تاریخ شروع نمایش">
+              <DatePicker
+                format="YYYY/MM/DD"
+                placeholder="تاریخ شروع نمایش"
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="end_date" label="تاریخ پایان نمایش">
+              <DatePicker
+                format="YYYY/MM/DD"
+                placeholder="تاریخ پایان نمایش"
+                style={{ width: '100%' }}
+                disabledDate={(current: Dayjs) =>
+                  publishAt
+                    ? !!current && current.isBefore(publishAt, 'day')
+                    : false
+                }
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           label="تصویر اصلی"

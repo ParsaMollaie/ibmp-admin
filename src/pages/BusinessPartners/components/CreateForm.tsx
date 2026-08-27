@@ -1,4 +1,5 @@
 import { createBusinessPartner } from '@/services/business-partners';
+import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
@@ -7,7 +8,9 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
-import { Form, message, Upload } from 'antd';
+import { Col, Form, message, Row, Upload } from 'antd';
+import { DatePicker } from 'antd-jalali';
+import type { Dayjs } from 'dayjs';
 import React, { useState } from 'react';
 
 interface CreateFormProps {
@@ -32,6 +35,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
   onSuccess,
 }) => {
   const [form] = Form.useForm();
+  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
 
   // State for image upload
   const [imageList, setImageList] = useState<UploadFile[]>([]);
@@ -63,6 +67,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
         link: values.link,
         alt_image: values.alt_image || null,
         image: imageBase64,
+        publish_at: values.publish_at
+          ? convertFaDateToEnDate(values.publish_at.toDate()).format(
+              'YYYY-MM-DD HH:mm:ss',
+            )
+          : null,
+        end_date: values.end_date
+          ? convertFaDateToEnDate(values.end_date.toDate()).format(
+              'YYYY-MM-DD HH:mm:ss',
+            )
+          : null,
       };
 
       const res = await createBusinessPartner(payload);
@@ -140,6 +154,32 @@ const CreateForm: React.FC<CreateFormProps> = ({
         label="متن جایگزین تصویر (Alt)"
         placeholder="توضیح تصویر برای SEO"
       />
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item name="publish_at" label="تاریخ شروع نمایش">
+            <DatePicker
+              format="YYYY/MM/DD"
+              placeholder="تاریخ شروع نمایش"
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item name="end_date" label="تاریخ پایان نمایش">
+            <DatePicker
+              format="YYYY/MM/DD"
+              placeholder="تاریخ پایان نمایش"
+              style={{ width: '100%' }}
+              disabledDate={(current: Dayjs) =>
+                publishAt
+                  ? !!current && current.isBefore(publishAt, 'day')
+                  : false
+              }
+            />
+          </Form.Item>
+        </Col>
+      </Row>
 
       <Form.Item label="تصویر" name="image">
         <Upload
