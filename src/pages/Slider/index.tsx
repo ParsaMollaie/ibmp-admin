@@ -1,5 +1,6 @@
-import { getSliders } from '@/services/auth';
+import { deleteSlider, getSliders } from '@/services/auth';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
   ActionType,
   FooterToolbar,
@@ -7,7 +8,7 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Image, Tag } from 'antd';
+import { Button, Image, message, Modal, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -20,6 +21,36 @@ const SliderTable: React.FC = () => {
   const [currentSlider, setCurrentSlider] = useState<API.SliderItem | null>(
     null,
   );
+
+  const handleDelete = (record: API.SliderItem) => {
+    Modal.confirm({
+      title: 'حذف اسلایدر',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف اسلایدر زیر اطمینان دارید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.title}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteSlider(record.id);
+          if (response.success) {
+            message.success('اسلایدر با موفقیت حذف شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در حذف اسلایدر');
+          }
+        } catch (error) {
+          console.error('Delete slider error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
+  };
 
   const columns: ProColumns<API.SliderItem>[] = [
     {
@@ -150,6 +181,13 @@ const SliderTable: React.FC = () => {
           }}
         >
           ویرایش
+        </a>,
+        <a
+          key="delete"
+          style={{ color: '#ff4d4f' }}
+          onClick={() => handleDelete(record)}
+        >
+          حذف
         </a>,
       ],
     },

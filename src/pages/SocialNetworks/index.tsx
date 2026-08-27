@@ -1,5 +1,6 @@
-import { getSocialNetworks } from '@/services/auth';
+import { deleteSocialNetwork, getSocialNetworks } from '@/services/auth';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 import {
   ActionType,
   FooterToolbar,
@@ -7,7 +8,7 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Image, Tag } from 'antd';
+import { Button, Image, message, Modal, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -20,6 +21,36 @@ const SocialNetworkTable: React.FC = () => {
   const [currentItem, setCurrentItem] = useState<API.SocialNetworkItem | null>(
     null,
   );
+
+  const handleDelete = (record: API.SocialNetworkItem) => {
+    Modal.confirm({
+      title: 'حذف شبکه اجتماعی',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف شبکه اجتماعی زیر اطمینان دارید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.social}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteSocialNetwork(record.id);
+          if (response.success) {
+            message.success('شبکه اجتماعی با موفقیت حذف شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در حذف شبکه اجتماعی');
+          }
+        } catch (error) {
+          console.error('Delete social network error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
+  };
 
   const columns: ProColumns<API.SocialNetworkItem>[] = [
     {
@@ -124,6 +155,13 @@ const SocialNetworkTable: React.FC = () => {
           }}
         >
           ویرایش
+        </a>,
+        <a
+          key="delete"
+          style={{ color: '#ff4d4f' }}
+          onClick={() => handleDelete(record)}
+        >
+          حذف
         </a>,
       ],
     },

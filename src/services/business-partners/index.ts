@@ -46,3 +46,10 @@ export async function updateBusinessPartner(
     data,
   });
 }
+
+// Delete a business partner
+export async function deleteBusinessPartner(id: string) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/business-partners/${id}`, {
+    method: 'DELETE',
+  });
+}

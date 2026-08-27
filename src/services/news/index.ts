@@ -41,3 +41,10 @@ export async function updateNews(id: string, data: API.NewsPayload) {
     data,
   });
 }
+
+// Delete a news item
+export async function deleteNews(id: string) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/news/${id}`, {
+    method: 'DELETE',
+  });
+}

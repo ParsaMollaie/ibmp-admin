@@ -7,6 +7,7 @@ import {
   CalendarOutlined,
   DeleteOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
@@ -16,7 +17,6 @@ import {
   Col,
   message,
   Modal,
-  Popconfirm,
   Row,
   Space,
   Statistic,
@@ -117,20 +117,35 @@ const ServiceCommentsPage: React.FC = () => {
     setUpdateModalVisible(true);
   };
 
-  const handleDelete = async (record: API.ServiceCommentItem) => {
-    try {
-      const response = await deleteServiceComment(record.id);
-      if (response.success) {
-        message.success('نظر با موفقیت حذف شد');
-        actionRef.current?.reload();
-        fetchStats();
-      } else {
-        message.error(response.message || 'خطا در حذف نظر');
-      }
-    } catch (error) {
-      console.error('Delete comment error:', error);
-      message.error('خطا در ارتباط با سرور');
-    }
+  const handleDelete = (record: API.ServiceCommentItem) => {
+    Modal.confirm({
+      title: 'حذف نظر',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف این نظر مطمئن هستید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.description}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteServiceComment(record.id);
+          if (response.success) {
+            message.success('نظر با موفقیت حذف شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در حذف نظر');
+          }
+        } catch (error) {
+          console.error('Delete comment error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
   };
 
   const handleUpdateSuccess = () => {
@@ -351,18 +366,14 @@ const ServiceCommentsPage: React.FC = () => {
               <EditOutlined />
             </a>
           </Tooltip>
-          <Popconfirm
-            title="آیا از حذف این نظر مطمئن هستید؟"
-            onConfirm={() => handleDelete(record)}
-            okText="بله"
-            cancelText="خیر"
-          >
-            <Tooltip title="حذف">
-              <a style={{ color: '#ff4d4f' }}>
-                <DeleteOutlined />
-              </a>
-            </Tooltip>
-          </Popconfirm>
+          <Tooltip title="حذف">
+            <a
+              style={{ color: '#ff4d4f' }}
+              onClick={() => handleDelete(record)}
+            >
+              <DeleteOutlined />
+            </a>
+          </Tooltip>
         </Space>
       ),
     },

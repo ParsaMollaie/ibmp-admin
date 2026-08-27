@@ -1,9 +1,12 @@
-import { getBusinessPartners } from '@/services/business-partners';
+import {
+  deleteBusinessPartner,
+  getBusinessPartners,
+} from '@/services/business-partners';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
-import { PlusOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Image, message, Space, Tag } from 'antd';
+import { Button, Image, message, Modal, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -18,6 +21,36 @@ const BusinessPartnersPage: React.FC = () => {
 
   // Currently selected record for update
   const [currentRecord, setCurrentRecord] = useState<API.BusinessPartnerItem>();
+
+  const handleDelete = (record: API.BusinessPartnerItem) => {
+    Modal.confirm({
+      title: 'حذف شریک تجاری',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف شریک تجاری زیر اطمینان دارید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.title}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteBusinessPartner(record.id);
+          if (response.success) {
+            message.success('شریک تجاری با موفقیت حذف شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در حذف شریک تجاری');
+          }
+        } catch (error) {
+          console.error('Delete business partner error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
+  };
 
   // Define table columns
   const columns: ProColumns<API.BusinessPartnerItem>[] = [
@@ -144,6 +177,12 @@ const BusinessPartnersPage: React.FC = () => {
               }}
             >
               ویرایش
+            </a>
+            <a
+              style={{ color: '#ff4d4f' }}
+              onClick={() => handleDelete(record)}
+            >
+              حذف
             </a>
           </Space>
         );

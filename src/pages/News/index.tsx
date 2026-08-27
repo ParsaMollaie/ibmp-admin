@@ -1,9 +1,9 @@
-import { getNewsList } from '@/services/news';
+import { deleteNews, getNewsList } from '@/services/news';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
-import { PlusOutlined } from '@ant-design/icons';
+import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Image, message, Space, Tag } from 'antd';
+import { Button, Image, message, Modal, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -25,6 +25,36 @@ const NewsPage: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
   const [currentRecord, setCurrentRecord] = useState<API.NewsItem>();
+
+  const handleDelete = (record: API.NewsItem) => {
+    Modal.confirm({
+      title: 'حذف مقاله',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف مقاله زیر اطمینان دارید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.title}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteNews(record.id);
+          if (response.success) {
+            message.success('مقاله با موفقیت حذف شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در حذف مقاله');
+          }
+        } catch (error) {
+          console.error('Delete news error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
+  };
 
   const columns: ProColumns<API.NewsItem>[] = [
     {
@@ -185,6 +215,12 @@ const NewsPage: React.FC = () => {
               }}
             >
               ویرایش
+            </a>
+            <a
+              style={{ color: '#ff4d4f' }}
+              onClick={() => handleDelete(record)}
+            >
+              حذف
             </a>
           </Space>
         );

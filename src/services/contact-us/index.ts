@@ -28,3 +28,10 @@ export async function updateContactUsStatus(
     data,
   });
 }
+
+// Delete a contact-us submission
+export async function deleteContactUs(id: string) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/contact-us/${id}`, {
+    method: 'DELETE',
+  });
+}

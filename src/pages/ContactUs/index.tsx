@@ -1,8 +1,13 @@
-import { getContactUs } from '@/services/contact-us';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { deleteContactUs, getContactUs } from '@/services/contact-us';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+  EyeOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Card, Descriptions, Modal, Space, Tag } from 'antd';
+import { Button, Card, Descriptions, message, Modal, Space, Tag } from 'antd';
 import jalaliMoment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import UpdateStatusForm from './components/UpdateForm';
@@ -65,6 +70,36 @@ const ContactUsPage: React.FC = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  const handleDelete = (record: API.ContactUsItem) => {
+    Modal.confirm({
+      title: 'حذف پیام',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از حذف پیام زیر اطمینان دارید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.full_name}</p>
+        </div>
+      ),
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await deleteContactUs(record.id);
+          if (response.success) {
+            message.success('پیام با موفقیت حذف شد');
+            actionRef.current?.reload();
+          } else {
+            message.error(response.message || 'خطا در حذف پیام');
+          }
+        } catch (error) {
+          console.error('Delete contact-us error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
   };
 
   // ============================================
@@ -191,6 +226,13 @@ const ContactUsPage: React.FC = () => {
             type="text"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+          />
+          {/* Delete button */}
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
           />
         </Space>
       ),

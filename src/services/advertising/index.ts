@@ -51,3 +51,10 @@ export async function updateAdvertising(
     data,
   });
 }
+
+// Delete an advertising
+export async function deleteAdvertising(id: string) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/advertising/${id}`, {
+    method: 'DELETE',
+  });
+}

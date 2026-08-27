@@ -104,6 +104,12 @@ export async function updateSlider(id: string, data: FormData) {
   });
 }
 
+export async function deleteSlider(id: string) {
+  return request(`${API_BASE}/sliders/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 // Social Networks endpoints
 export async function getSocialNetworks(params?: any) {
   return request(`${API_BASE}/social-networks`, {
@@ -123,6 +129,12 @@ export async function updateSocialNetwork(id: string, data: FormData) {
   return request(`${API_BASE}/social-networks/${id}`, {
     method: 'PUT',
     data,
+  });
+}
+
+export async function deleteSocialNetwork(id: string) {
+  return request(`${API_BASE}/social-networks/${id}`, {
+    method: 'DELETE',
   });
 }
 
