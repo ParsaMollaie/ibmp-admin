@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   deleteServiceComment,
   getServiceComments,
@@ -84,6 +85,7 @@ const ServiceCommentsPage: React.FC = () => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] =
     useState<API.ServiceCommentItem | null>(null);
+  const [pageSize, setPageSize] = usePersistedPageSize('service-comments', 10);
 
   const fetchStats = async () => {
     setStatsLoading(true);
@@ -468,9 +470,10 @@ const ServiceCommentsPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} نظر`,
         }}

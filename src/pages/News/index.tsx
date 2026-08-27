@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteNews, getNewsList } from '@/services/news';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
@@ -25,6 +26,7 @@ const NewsPage: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
   const [currentRecord, setCurrentRecord] = useState<API.NewsItem>();
+  const [pageSize, setPageSize] = usePersistedPageSize('news', 10);
 
   const handleDelete = (record: API.NewsItem) => {
     Modal.confirm({
@@ -266,8 +268,9 @@ const NewsPage: React.FC = () => {
           }
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         // Add scroll configuration for horizontal scrolling on mobile
         scroll={{ x: 1500 }}

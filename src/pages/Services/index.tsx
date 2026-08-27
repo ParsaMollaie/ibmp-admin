@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getServices } from '@/services/service';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -67,6 +68,7 @@ const getTagLabel = (tag?: API.ServiceTag | null): string => {
 
 const ServicesScreen: React.FC = () => {
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize('services', 10);
 
   // Dashboard charts link here with query params (e.g. ?tag=most_view, ?status=approved)
   // to pre-filter the list — read them once as the ProTable form's initial values.
@@ -189,11 +191,12 @@ const ServicesScreen: React.FC = () => {
         };
       }}
       pagination={{
-        defaultPageSize: 10,
+        pageSize,
         showSizeChanger: true,
         showQuickJumper: true,
         showTotal: (total, range) =>
           `نمایش ${range[0]}-${range[1]} از ${total} خدمت`,
+        onShowSizeChange: (_current, size) => setPageSize(size),
       }}
       search={{
         layout: 'horizontal',

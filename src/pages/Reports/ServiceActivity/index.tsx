@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getServiceActivityReport } from '@/services/service';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
@@ -41,6 +42,10 @@ const serviceTypeMap: Record<string, { text: string; color: string }> = {
 
 export default function ServiceActivityReport() {
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize(
+    'reports-service-activity',
+    20,
+  );
   const [quickFilter, setQuickFilter] = useState<QuickRange>(30);
   const [dateRange, setDateRange] = useState(getDateRange(30));
 
@@ -215,9 +220,10 @@ export default function ServiceActivityReport() {
           labelWidth: 'auto',
         }}
         pagination={{
-          defaultPageSize: 20,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total) => `مجموع: ${total} خدمت`,
         }}
         options={{

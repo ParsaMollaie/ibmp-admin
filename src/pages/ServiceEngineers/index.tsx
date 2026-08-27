@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getCategoryTree } from '@/services/category';
 import { getPlans } from '@/services/plan';
 import {
@@ -254,6 +255,7 @@ const ServiceEngineersPage: React.FC = () => {
 
   const actionRef = useRef<ActionType>();
   const formRef = useRef<any>();
+  const [pageSize, setPageSize] = usePersistedPageSize('service-engineers', 10);
 
   // Status stats
   const [statusStats, setStatusStats] = useState<API.ServiceStatusStats>({
@@ -1287,9 +1289,10 @@ const ServiceEngineersPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} خدمت`,
         }}

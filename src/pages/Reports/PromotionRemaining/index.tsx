@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getServices } from '@/services/service';
 import {
   createServiceNote,
@@ -50,6 +51,10 @@ const typeLabels: Record<string, string> = {
 
 const PromotionRemainingPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize(
+    'reports-promotion-remaining',
+    20,
+  );
 
   // Quick filter preset
   const [quickFilter, setQuickFilter] = useState<number | undefined>(10);
@@ -300,8 +305,9 @@ const PromotionRemainingPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 20,
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showQuickJumper: true,
         }}
         search={{

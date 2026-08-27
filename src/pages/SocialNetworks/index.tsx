@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteSocialNetwork, getSocialNetworks } from '@/services/auth';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -21,6 +22,7 @@ const SocialNetworkTable: React.FC = () => {
   const [currentItem, setCurrentItem] = useState<API.SocialNetworkItem | null>(
     null,
   );
+  const [pageSize, setPageSize] = usePersistedPageSize('social-networks', 10);
 
   const handleDelete = (record: API.SocialNetworkItem) => {
     Modal.confirm({
@@ -206,9 +208,10 @@ const SocialNetworkTable: React.FC = () => {
           </Button>,
         ]}
         pagination={{
-          pageSize: 10,
+          pageSize,
           showSizeChanger: true,
           pageSizeOptions: ['10', '20', '50', '100'],
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         scroll={{ x: 900 }}
       />

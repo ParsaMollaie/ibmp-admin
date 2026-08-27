@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteSlider, getSliders } from '@/services/auth';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -21,6 +22,7 @@ const SliderTable: React.FC = () => {
   const [currentSlider, setCurrentSlider] = useState<API.SliderItem | null>(
     null,
   );
+  const [pageSize, setPageSize] = usePersistedPageSize('slider', 10);
 
   const handleDelete = (record: API.SliderItem) => {
     Modal.confirm({
@@ -232,9 +234,10 @@ const SliderTable: React.FC = () => {
           </Button>,
         ]}
         pagination={{
-          pageSize: 10,
+          pageSize,
           showSizeChanger: true,
           pageSizeOptions: ['10', '20', '50', '100'],
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         scroll={{ x: 1000 }}
       />

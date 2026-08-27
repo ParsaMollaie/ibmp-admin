@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   deleteBusinessPartner,
   getBusinessPartners,
@@ -21,6 +22,7 @@ const BusinessPartnersPage: React.FC = () => {
 
   // Currently selected record for update
   const [currentRecord, setCurrentRecord] = useState<API.BusinessPartnerItem>();
+  const [pageSize, setPageSize] = usePersistedPageSize('business-partners', 10);
 
   const handleDelete = (record: API.BusinessPartnerItem) => {
     Modal.confirm({
@@ -228,8 +230,9 @@ const BusinessPartnersPage: React.FC = () => {
           }
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         scroll={{ x: 1000 }}
         toolBarRender={() => [

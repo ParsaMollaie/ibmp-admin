@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   approveSuggestCategory,
   deleteSuggestCategory,
@@ -54,6 +55,7 @@ const SuggestCategoryPage: React.FC = () => {
 
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pageSize, setPageSize] = usePersistedPageSize('suggest-category', 10);
   const [currentRecord, setCurrentRecord] =
     useState<API.SuggestCategoryItem | null>(null);
 
@@ -319,9 +321,10 @@ const SuggestCategoryPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} پیشنهاد`,
         }}

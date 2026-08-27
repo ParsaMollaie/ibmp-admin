@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { generateUserToken, getUsers, updateUser } from '@/services/auth';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExportColumn, exportToExcel } from '@/utils/exportExcel';
@@ -71,6 +72,7 @@ const UserTable: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [pageSize, setPageSize] = usePersistedPageSize('user', 10);
   const actionRef = useRef<ActionType>();
 
   const handleImpersonate = async (userId: string) => {
@@ -303,7 +305,7 @@ const UserTable: React.FC = () => {
 
           try {
             const response = await getUsers({
-              ...params,
+              ...filters,
               page: params.current,
               page_size: params.pageSize,
               sorter:
@@ -329,8 +331,9 @@ const UserTable: React.FC = () => {
         columns={columns}
         scroll={{ x: 1200 }}
         pagination={{
-          pageSize: 10,
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
       />
 

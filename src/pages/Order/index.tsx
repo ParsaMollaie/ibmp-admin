@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getOrders } from '@/services/order';
 import { getPlans } from '@/services/plan';
 import {
@@ -73,6 +74,7 @@ const STATUS_CARD_CONFIG: Record<
 
 const OrderPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize('order', 10);
   const formRef = useRef<any>();
 
   // Plans list for filter
@@ -444,9 +446,10 @@ const OrderPage: React.FC = () => {
           labelWidth: 'auto',
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} سفارش`,
         }}

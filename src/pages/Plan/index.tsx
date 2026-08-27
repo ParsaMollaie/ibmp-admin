@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getPlans } from '@/services/plan';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import {
@@ -27,6 +28,7 @@ const PlanPage: React.FC = () => {
 
   // ProTable action ref - allows programmatic control of table (refresh, etc.)
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize('plan', 20);
 
   // ============================================
   // EVENT HANDLERS
@@ -275,7 +277,9 @@ const PlanPage: React.FC = () => {
         }}
         // Pagination configuration
         pagination={{
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total) => `مجموع: ${total} پلن`,
         }}
         // Horizontal scroll for responsiveness

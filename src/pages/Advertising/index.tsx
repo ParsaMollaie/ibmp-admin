@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteAdvertising, getAdvertisings } from '@/services/advertising';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
@@ -25,6 +26,7 @@ const AdvertisingPage: React.FC = () => {
 
   // Currently selected record for update
   const [currentRecord, setCurrentRecord] = useState<API.AdvertisingItem>();
+  const [pageSize, setPageSize] = usePersistedPageSize('advertising', 10);
 
   const handleDelete = (record: API.AdvertisingItem) => {
     Modal.confirm({
@@ -245,8 +247,9 @@ const AdvertisingPage: React.FC = () => {
           }
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         scroll={{ x: 1100 }}
         toolBarRender={() => [

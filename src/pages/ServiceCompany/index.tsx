@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getCategoryTree } from '@/services/category';
 import { getPlans } from '@/services/plan';
 import {
@@ -237,6 +238,7 @@ const ServiceCompanyPage: React.FC = () => {
   // ============================================
 
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize('service-company', 10);
   const formRef = useRef<any>();
 
   // Status stats
@@ -1306,9 +1308,10 @@ const ServiceCompanyPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} خدمت`,
         }}

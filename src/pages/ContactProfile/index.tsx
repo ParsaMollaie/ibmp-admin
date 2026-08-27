@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   deleteContactProfile,
   getContactProfiles,
@@ -16,6 +17,7 @@ const ContactProfilePage: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pageSize, setPageSize] = usePersistedPageSize('contact-profile', 10);
   const [currentRecord, setCurrentRecord] =
     useState<API.ContactProfileItem | null>(null);
 
@@ -214,9 +216,10 @@ const ContactProfilePage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} پروفایل`,
         }}

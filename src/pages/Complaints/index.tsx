@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getComplaints, getComplaintStats } from '@/services/complaint';
 import { CalendarOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
@@ -75,6 +76,7 @@ const ComplaintsPage: React.FC = () => {
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] =
     useState<API.ServiceComplaintItem | null>(null);
+  const [pageSize, setPageSize] = usePersistedPageSize('complaints', 10);
 
   const fetchStats = async () => {
     setStatsLoading(true);
@@ -409,9 +411,10 @@ const ComplaintsPage: React.FC = () => {
           };
         }}
         pagination={{
-          defaultPageSize: 10,
+          pageSize,
           showSizeChanger: true,
           showQuickJumper: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} شکایت`,
         }}

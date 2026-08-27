@@ -1,3 +1,4 @@
+import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteContactUs, getContactUs } from '@/services/contact-us';
 import {
   DeleteOutlined,
@@ -48,6 +49,7 @@ const ContactUsPage: React.FC = () => {
 
   // ProTable action ref
   const actionRef = useRef<ActionType>();
+  const [pageSize, setPageSize] = usePersistedPageSize('contact-us', 20);
 
   // ============================================
   // EVENT HANDLERS
@@ -282,7 +284,9 @@ const ContactUsPage: React.FC = () => {
         }}
         // Pagination configuration
         pagination={{
+          pageSize,
           showSizeChanger: true,
+          onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total) => `مجموع: ${total} پیام`,
         }}
         // Horizontal scroll for responsiveness
