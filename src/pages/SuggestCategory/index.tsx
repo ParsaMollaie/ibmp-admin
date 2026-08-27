@@ -9,13 +9,11 @@ import {
   CloseCircleOutlined,
   DeleteOutlined,
   EditOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, message, Modal, Space, Tag, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
-import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
 /**
@@ -54,7 +52,6 @@ const getStatusLabel = (status: API.SuggestCategoryStatus): string => {
 const SuggestCategoryPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
 
-  const [createModalVisible, setCreateModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [currentRecord, setCurrentRecord] =
@@ -64,12 +61,6 @@ const SuggestCategoryPage: React.FC = () => {
   const handleEdit = (record: API.SuggestCategoryItem) => {
     setCurrentRecord(record);
     setUpdateModalVisible(true);
-  };
-
-  // Handle successful create/update
-  const handleCreateSuccess = () => {
-    setCreateModalVisible(false);
-    actionRef.current?.reload();
   };
 
   const handleUpdateSuccess = () => {
@@ -309,16 +300,6 @@ const SuggestCategoryPage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalVisible(true)}
-          >
-            افزودن
-          </Button>,
-        ]}
         request={async (params, sort) => {
           const response = await getSuggestCategories({
             title: params.title,
@@ -362,13 +343,6 @@ const SuggestCategoryPage: React.FC = () => {
         scroll={{ x: 1100 }}
         dateFormatter="string"
         cardBordered
-      />
-
-      {/* Create Modal */}
-      <CreateForm
-        visible={createModalVisible}
-        onCancel={() => setCreateModalVisible(false)}
-        onSuccess={handleCreateSuccess}
       />
 
       {/* Update Modal */}

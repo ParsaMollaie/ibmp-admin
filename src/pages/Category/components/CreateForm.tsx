@@ -1,6 +1,15 @@
-import { createCategory, getCategoriesForSelect } from '@/services/category';
+import { createCategory, getCategoryTree } from '@/services/category';
 import { PlusOutlined } from '@ant-design/icons';
-import { Form, Input, InputNumber, Modal, Select, Upload, message } from 'antd';
+import {
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  TreeSelect,
+  Upload,
+  message,
+} from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import React, { useEffect, useState } from 'react';
 
@@ -22,6 +31,19 @@ const typeOptions = [
   { label: 'مهندسی', value: 'engineers' },
 ];
 
+// Mark inactive categories as disabled, recursively, so they stay visible
+// in the parent-category tree for context but can't be selected.
+const markInactiveDisabled = (
+  nodes: API.CategoryTreeItem[],
+): (API.CategoryTreeItem & { disabled: boolean })[] =>
+  nodes.map((node) => ({
+    ...node,
+    disabled: node.status !== 'active',
+    children: node.children
+      ? markInactiveDisabled(node.children)
+      : node.children,
+  }));
+
 const CreateForm: React.FC<CreateFormProps> = ({
   visible,
   onCancel,
@@ -30,10 +52,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // State for parent category dropdown options
-  const [parentOptions, setParentOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  // State for parent category tree options
+  const [parentOptions, setParentOptions] = useState<API.CategoryTreeItem[]>(
+    [],
+  );
   const [parentLoading, setParentLoading] = useState(false);
 
   // State for image upload
@@ -72,21 +94,15 @@ const CreateForm: React.FC<CreateFormProps> = ({
   // ============================================
 
   /**
-   * Fetch categories for parent dropdown
-   * We exclude categories that shouldn't be parents (optional business logic)
+   * Fetch the category tree for the parent picker.
+   * Inactive categories stay visible (for context) but are marked disabled.
    */
   const fetchParentCategories = async () => {
     setParentLoading(true);
     try {
-      const response = await getCategoriesForSelect();
-      if (response.success && response.data?.list) {
-        // Transform categories to dropdown options
-        // Format: "Parent Title > Child Title" for nested display
-        const options = response.data.list.map((cat) => ({
-          label: cat.parent ? `${cat.parent.title} > ${cat.title}` : cat.title,
-          value: cat.id,
-        }));
-        setParentOptions(options);
+      const response = await getCategoryTree();
+      if (response.success && response.data) {
+        setParentOptions(markInactiveDisabled(response.data));
       }
     } catch (error) {
       console.error('Failed to fetch parent categories:', error);
@@ -213,17 +229,15 @@ const CreateForm: React.FC<CreateFormProps> = ({
           label="دسته‌بندی والد"
           tooltip="برای ایجاد دسته‌بندی اصلی، این فیلد را خالی بگذارید"
         >
-          <Select
+          <TreeSelect
             allowClear
             showSearch
+            treeDefaultExpandAll
             placeholder="انتخاب دسته‌بندی والد (اختیاری)"
             loading={parentLoading}
-            options={parentOptions}
-            filterOption={(input, option) =>
-              (option?.label as string)
-                ?.toLowerCase()
-                .includes(input.toLowerCase())
-            }
+            treeData={parentOptions}
+            fieldNames={{ label: 'title', value: 'id', children: 'children' }}
+            treeNodeFilterProp="title"
           />
         </Form.Item>
 

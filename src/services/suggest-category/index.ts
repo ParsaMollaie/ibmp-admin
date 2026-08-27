@@ -21,16 +21,6 @@ export async function getSuggestCategories(params?: {
 }
 
 /**
- * Create a new suggest category
- */
-export async function createSuggestCategory(data: API.SuggestCategoryPayload) {
-  return request<API.ApiResponse<[]>>(`${API_BASE}/suggest-categories`, {
-    method: 'POST',
-    data,
-  });
-}
-
-/**
  * Update an existing suggest category
  */
 export async function updateSuggestCategory(

@@ -1,6 +1,15 @@
-import { getCategoriesForSelect, updateCategory } from '@/services/category';
+import { getCategoryTree, updateCategory } from '@/services/category';
 import { PlusOutlined } from '@ant-design/icons';
-import { Form, Input, InputNumber, Modal, Select, Upload, message } from 'antd';
+import {
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  TreeSelect,
+  Upload,
+  message,
+} from 'antd';
 import type { UploadFile } from 'antd/es/upload/interface';
 import React, { useEffect, useState } from 'react';
 
@@ -23,6 +32,34 @@ const typeOptions = [
   { label: 'مهندسی', value: 'engineers' },
 ];
 
+// Mark inactive categories as disabled, recursively, so they stay visible
+// in the parent-category tree for context but can't be selected.
+const markInactiveDisabled = (
+  nodes: API.CategoryTreeItem[],
+): (API.CategoryTreeItem & { disabled: boolean })[] =>
+  nodes.map((node) => ({
+    ...node,
+    disabled: node.status !== 'active',
+    children: node.children
+      ? markInactiveDisabled(node.children)
+      : node.children,
+  }));
+
+// Drop a category and its entire subtree from the tree, so an edited
+// category can't be assigned one of its own descendants as its parent.
+const excludeSubtree = (
+  nodes: API.CategoryTreeItem[],
+  excludeId: string,
+): API.CategoryTreeItem[] =>
+  nodes
+    .filter((node) => node.id !== excludeId)
+    .map((node) => ({
+      ...node,
+      children: node.children
+        ? excludeSubtree(node.children, excludeId)
+        : node.children,
+    }));
+
 const UpdateForm: React.FC<UpdateFormProps> = ({
   visible,
   onCancel,
@@ -32,10 +69,10 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // State for parent category dropdown options
-  const [parentOptions, setParentOptions] = useState<
-    { label: string; value: string }[]
-  >([]);
+  // State for parent category tree options
+  const [parentOptions, setParentOptions] = useState<API.CategoryTreeItem[]>(
+    [],
+  );
   const [parentLoading, setParentLoading] = useState(false);
 
   // State for image upload
@@ -78,25 +115,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   // ============================================
 
   /**
-   * Fetch categories for parent dropdown
-   * Filters out the current category to prevent circular references
+   * Fetch the category tree for the parent picker.
+   * Excludes the record's own subtree (can't become its own descendant's
+   * child) and marks inactive categories disabled (visible but unselectable).
    */
   const fetchParentCategories = async () => {
     setParentLoading(true);
     try {
-      const response = await getCategoriesForSelect();
-      if (response.success && response.data?.list) {
-        // Filter out the current category (can't be its own parent)
-        // Also filter out children of current category to prevent circular references
-        const filteredCategories = response.data.list.filter(
-          (cat) => cat.id !== record?.id,
-        );
-
-        const options = filteredCategories.map((cat) => ({
-          label: cat.parent ? `${cat.parent.title} > ${cat.title}` : cat.title,
-          value: cat.id,
-        }));
-        setParentOptions(options);
+      const response = await getCategoryTree();
+      if (response.success && response.data && record) {
+        const withoutOwnSubtree = excludeSubtree(response.data, record.id);
+        setParentOptions(markInactiveDisabled(withoutOwnSubtree));
       }
     } catch (error) {
       console.error('Failed to fetch parent categories:', error);
@@ -293,17 +322,15 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           label="دسته‌بندی والد"
           tooltip="برای تبدیل به دسته‌بندی اصلی، این فیلد را خالی بگذارید"
         >
-          <Select
+          <TreeSelect
             allowClear
             showSearch
+            treeDefaultExpandAll
             placeholder="انتخاب دسته‌بندی والد (اختیاری)"
             loading={parentLoading}
-            options={parentOptions}
-            filterOption={(input, option) =>
-              (option?.label as string)
-                ?.toLowerCase()
-                .includes(input.toLowerCase())
-            }
+            treeData={parentOptions}
+            fieldNames={{ label: 'title', value: 'id', children: 'children' }}
+            treeNodeFilterProp="title"
           />
         </Form.Item>
 
