@@ -331,10 +331,25 @@ declare namespace API {
     title: string;
     description: string;
     status: ContactUsStatus;
+    notes_count?: number;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
+  }
+
+  // Contact Us follow-up note item returned from API
+  interface ContactUsNoteItem {
+    id: string;
+    contact_us_id: string;
+    content: string;
+    user: OrderUser;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ContactUsNotePayload {
+    content: string;
   }
 
   // Payload for admin changing a user's password
@@ -668,7 +683,7 @@ declare namespace API {
     mobile: string;
     description: string;
     status: ServiceComplaintStatus;
-    admin_note: string | null;
+    notes_count?: number;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
@@ -677,7 +692,6 @@ declare namespace API {
 
   interface ServiceComplaintPayload {
     status: ServiceComplaintStatus;
-    admin_note?: string | null;
   }
 
   interface ServiceComplaintStats {
@@ -685,6 +699,20 @@ declare namespace API {
     in_review: number;
     resolved: number;
     rejected: number;
+  }
+
+  // Complaint follow-up note item returned from API
+  interface ServiceComplaintNoteItem {
+    id: string;
+    service_complaint_id: string;
+    content: string;
+    user: OrderUser;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ServiceComplaintNotePayload {
+    content: string;
   }
 
   // --- Service Comments ---

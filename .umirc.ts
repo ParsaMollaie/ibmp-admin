@@ -70,7 +70,7 @@ export default defineConfig({
       icon: 'ShopOutlined',
     },
     {
-      name: 'شکایات',
+      name: 'خطاها',
       path: '/complaints',
       component: './Complaints',
       icon: 'ExclamationCircleOutlined',

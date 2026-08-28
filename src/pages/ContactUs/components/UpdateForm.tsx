@@ -89,8 +89,12 @@ const UpdateStatusForm: React.FC<UpdateStatusFormProps> = ({
           <div style={{ marginBottom: 4 }}>
             <strong>موبایل:</strong> {record.mobile}
           </div>
-          <div>
+          <div style={{ marginBottom: 4 }}>
             <strong>عنوان:</strong> {record.title}
+          </div>
+          <div>
+            <strong>توضیحات:</strong>
+            <div style={{ whiteSpace: 'pre-wrap' }}>{record.description}</div>
           </div>
         </div>
       )}

@@ -1,6 +1,11 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteContactUs, getContactUs } from '@/services/contact-us';
 import {
+  createContactUsNote,
+  deleteContactUsNote,
+  getContactUsNotes,
+} from '@/services/contact-us-notes';
+import {
   DeleteOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
@@ -8,10 +13,25 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Card, Descriptions, message, Modal, Space, Tag } from 'antd';
+import {
+  Button,
+  Card,
+  Descriptions,
+  Input,
+  List,
+  message,
+  Modal,
+  Popconfirm,
+  Space,
+  Tag,
+  Typography,
+} from 'antd';
 import jalaliMoment from 'jalali-moment';
 import React, { useRef, useState } from 'react';
 import UpdateStatusForm from './components/UpdateForm';
+
+const { TextArea } = Input;
+const { Text } = Typography;
 
 // Helper function to format dates to Jalali (Persian) calendar
 const formatJalaliDate = (dateString: string): string => {
@@ -47,6 +67,16 @@ const ContactUsPage: React.FC = () => {
     null,
   );
 
+  // Notes modal state
+  const [notesModalVisible, setNotesModalVisible] = useState(false);
+  const [notesRecord, setNotesRecord] = useState<API.ContactUsItem | null>(
+    null,
+  );
+  const [notes, setNotes] = useState<API.ContactUsNoteItem[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [submittingNote, setSubmittingNote] = useState(false);
+
   // ProTable action ref
   const actionRef = useRef<ActionType>();
   const [pageSize, setPageSize] = usePersistedPageSize('contact-us', 20);
@@ -72,6 +102,65 @@ const ContactUsPage: React.FC = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  // ============================================
+  // NOTES HANDLERS
+  // ============================================
+
+  const fetchNotes = async (contactUsId: string) => {
+    setNotesLoading(true);
+    try {
+      const res = await getContactUsNotes(contactUsId);
+      if (res.success) {
+        setNotes(res.data || []);
+      }
+    } catch {
+      message.error('خطا در دریافت یادداشت‌ها');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const openNotesModal = async (record: API.ContactUsItem) => {
+    setNotesRecord(record);
+    setNotesModalVisible(true);
+    setNewNoteContent('');
+    await fetchNotes(record.id);
+  };
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim() || !notesRecord) return;
+    setSubmittingNote(true);
+    try {
+      const res = await createContactUsNote(notesRecord.id, {
+        content: newNoteContent.trim(),
+      });
+      if (res.success) {
+        message.success('یادداشت اضافه شد');
+        setNewNoteContent('');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در ایجاد یادداشت');
+    } finally {
+      setSubmittingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!notesRecord) return;
+    try {
+      const res = await deleteContactUsNote(noteId);
+      if (res.success) {
+        message.success('یادداشت حذف شد');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در حذف یادداشت');
+    }
   };
 
   const handleDelete = (record: API.ContactUsItem) => {
@@ -208,6 +297,19 @@ const ContactUsPage: React.FC = () => {
         record.updated_by
           ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
           : '—',
+    },
+    {
+      title: 'یادداشت‌ها',
+      key: 'notes',
+      width: 110,
+      search: false,
+      render: (_, record) => (
+        <Button type="link" size="small" onClick={() => openNotesModal(record)}>
+          {(record.notes_count ?? 0) > 0
+            ? `${record.notes_count} یادداشت`
+            : 'افزودن'}
+        </Button>
+      ),
     },
     {
       title: 'عملیات',
@@ -355,6 +457,79 @@ const ContactUsPage: React.FC = () => {
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Modal>
+
+      {/* Notes Modal */}
+      <Modal
+        title={`یادداشت‌های پیام: ${notesRecord?.full_name || ''}`}
+        open={notesModalVisible}
+        onCancel={() => {
+          setNotesModalVisible(false);
+          setNotesRecord(null);
+          setNotes([]);
+        }}
+        footer={null}
+        width={600}
+      >
+        {/* Add new note */}
+        <div style={{ marginBottom: 16 }}>
+          <TextArea
+            rows={3}
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            placeholder="یادداشت جدید..."
+            maxLength={5000}
+          />
+          <Button
+            type="primary"
+            style={{ marginTop: 8 }}
+            onClick={handleAddNote}
+            loading={submittingNote}
+            disabled={!newNoteContent.trim()}
+          >
+            ثبت یادداشت
+          </Button>
+        </div>
+
+        {/* Notes list */}
+        <List
+          loading={notesLoading}
+          dataSource={notes}
+          locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
+          renderItem={(note) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title="آیا از حذف این یادداشت مطمئنید؟"
+                  onConfirm={() => handleDeleteNote(note.id)}
+                  okText="بله"
+                  cancelText="خیر"
+                >
+                  <Button type="link" danger size="small">
+                    حذف
+                  </Button>
+                </Popconfirm>,
+              ]}
+            >
+              <List.Item.Meta
+                title={
+                  <Space>
+                    <Text strong>
+                      {note.user?.first_name} {note.user?.last_name}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {formatJalaliDate(note.created_at)}
+                    </Text>
+                  </Space>
+                }
+                description={
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{note.content}</div>
+                }
+              />
+            </List.Item>
+          )}
+        />
       </Modal>
     </Card>
   );

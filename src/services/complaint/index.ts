@@ -36,7 +36,7 @@ export async function getComplaint(id: string) {
 }
 
 /**
- * Update complaint status and admin note
+ * Update complaint status
  */
 export async function updateComplaint(
   id: string,
@@ -46,6 +46,22 @@ export async function updateComplaint(
     method: 'PUT',
     data,
   });
+}
+
+/**
+ * Update complaint description
+ */
+export async function updateComplaintDescription(
+  id: string,
+  description: string,
+) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/service-complaints/${id}/update-description`,
+    {
+      method: 'PUT',
+      data: { description },
+    },
+  );
 }
 
 /**

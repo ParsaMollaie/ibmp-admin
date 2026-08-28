@@ -1,13 +1,28 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getComplaints, getComplaintStats } from '@/services/complaint';
-import { CalendarOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import {
+  createServiceComplaintNote,
+  deleteServiceComplaintNote,
+  getServiceComplaintNotes,
+} from '@/services/service-complaint-notes';
+import {
+  CalendarOutlined,
+  EditOutlined,
+  EyeOutlined,
+  FileTextOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import {
+  Button,
   Card,
   Col,
   Descriptions,
+  Input,
+  List,
+  message,
   Modal,
+  Popconfirm,
   Row,
   Space,
   Statistic,
@@ -18,9 +33,11 @@ import {
 import { DatePicker } from 'antd-jalali';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
+import UpdateDescriptionForm from './components/UpdateDescriptionForm';
 import UpdateForm from './components/UpdateForm';
 
 const { Text } = Typography;
+const { TextArea } = Input;
 
 // ============================================
 // HELPERS
@@ -74,9 +91,19 @@ const ComplaintsPage: React.FC = () => {
   // Modals
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [descriptionModalVisible, setDescriptionModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] =
     useState<API.ServiceComplaintItem | null>(null);
   const [pageSize, setPageSize] = usePersistedPageSize('complaints', 10);
+
+  // Notes modal state
+  const [notesModalVisible, setNotesModalVisible] = useState(false);
+  const [notesRecord, setNotesRecord] =
+    useState<API.ServiceComplaintItem | null>(null);
+  const [notes, setNotes] = useState<API.ServiceComplaintNoteItem[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [submittingNote, setSubmittingNote] = useState(false);
 
   const fetchStats = async () => {
     setStatsLoading(true);
@@ -117,9 +144,79 @@ const ComplaintsPage: React.FC = () => {
     fetchStats();
   };
 
+  const handleEditDescription = (record: API.ServiceComplaintItem) => {
+    setCurrentRecord(record);
+    setDescriptionModalVisible(true);
+  };
+
+  const handleDescriptionUpdateSuccess = () => {
+    setDescriptionModalVisible(false);
+    setCurrentRecord(null);
+    actionRef.current?.reload();
+  };
+
   const handleStatusCardClick = (status: API.ServiceComplaintStatus) => {
     formRef.current?.setFieldsValue({ status });
     formRef.current?.submit();
+  };
+
+  // ============================================
+  // NOTES HANDLERS
+  // ============================================
+
+  const fetchNotes = async (complaintId: string) => {
+    setNotesLoading(true);
+    try {
+      const res = await getServiceComplaintNotes(complaintId);
+      if (res.success) {
+        setNotes(res.data || []);
+      }
+    } catch {
+      message.error('خطا در دریافت یادداشت‌ها');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const openNotesModal = async (record: API.ServiceComplaintItem) => {
+    setNotesRecord(record);
+    setNotesModalVisible(true);
+    setNewNoteContent('');
+    await fetchNotes(record.id);
+  };
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim() || !notesRecord) return;
+    setSubmittingNote(true);
+    try {
+      const res = await createServiceComplaintNote(notesRecord.id, {
+        content: newNoteContent.trim(),
+      });
+      if (res.success) {
+        message.success('یادداشت اضافه شد');
+        setNewNoteContent('');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در ایجاد یادداشت');
+    } finally {
+      setSubmittingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!notesRecord) return;
+    try {
+      const res = await deleteServiceComplaintNote(noteId);
+      if (res.success) {
+        message.success('یادداشت حذف شد');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در حذف یادداشت');
+    }
   };
 
   // ============================================
@@ -280,9 +377,22 @@ const ComplaintsPage: React.FC = () => {
       ),
     },
     {
+      title: 'یادداشت‌ها',
+      key: 'notes',
+      hideInSearch: true,
+      width: 110,
+      render: (_, record) => (
+        <Button type="link" size="small" onClick={() => openNotesModal(record)}>
+          {(record.notes_count ?? 0) > 0
+            ? `${record.notes_count} یادداشت`
+            : 'افزودن'}
+        </Button>
+      ),
+    },
+    {
       title: 'عملیات',
       valueType: 'option',
-      width: 120,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space>
@@ -294,6 +404,11 @@ const ComplaintsPage: React.FC = () => {
           <Tooltip title="بروزرسانی">
             <a onClick={() => handleEdit(record)}>
               <EditOutlined />
+            </a>
+          </Tooltip>
+          <Tooltip title="ویرایش متن خطا">
+            <a onClick={() => handleEditDescription(record)}>
+              <FileTextOutlined />
             </a>
           </Tooltip>
         </Space>
@@ -373,7 +488,7 @@ const ComplaintsPage: React.FC = () => {
         actionRef={actionRef}
         formRef={formRef}
         rowKey="id"
-        headerTitle="لیست شکایات"
+        headerTitle="لیست خطاها"
         request={async (params, sort) => {
           const dateFrom = params.date_from
             ? typeof params.date_from === 'string'
@@ -412,7 +527,7 @@ const ComplaintsPage: React.FC = () => {
           showQuickJumper: true,
           onShowSizeChange: (_current, size) => setPageSize(size),
           showTotal: (total, range) =>
-            `نمایش ${range[0]}-${range[1]} از ${total} شکایت`,
+            `نمایش ${range[0]}-${range[1]} از ${total} خطا`,
         }}
         search={{
           layout: 'horizontal',
@@ -436,7 +551,7 @@ const ComplaintsPage: React.FC = () => {
 
       {/* Detail Modal */}
       <Modal
-        title="جزئیات شکایت"
+        title="جزئیات خطا"
         open={detailModalVisible}
         onCancel={() => {
           setDetailModalVisible(false);
@@ -447,7 +562,7 @@ const ComplaintsPage: React.FC = () => {
       >
         {currentRecord && (
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="کد شکایت">
+            <Descriptions.Item label="کد خطا">
               {currentRecord.code}
             </Descriptions.Item>
             <Descriptions.Item label="نام شاکی">
@@ -456,7 +571,7 @@ const ComplaintsPage: React.FC = () => {
             <Descriptions.Item label="شماره موبایل">
               <span dir="ltr">{currentRecord.mobile}</span>
             </Descriptions.Item>
-            <Descriptions.Item label="شرح شکایت">
+            <Descriptions.Item label="شرح خطا">
               {currentRecord.description}
             </Descriptions.Item>
             <Descriptions.Item label="وضعیت">
@@ -476,11 +591,6 @@ const ComplaintsPage: React.FC = () => {
                   {getServiceTypeLabel(currentRecord.service.type)}
                 </Descriptions.Item>
               </>
-            )}
-            {currentRecord.admin_note && (
-              <Descriptions.Item label="یادداشت مدیر">
-                {currentRecord.admin_note}
-              </Descriptions.Item>
             )}
             <Descriptions.Item label="تاریخ ثبت">
               {new Date(currentRecord.created_at).toLocaleString('fa-IR')}
@@ -502,6 +612,92 @@ const ComplaintsPage: React.FC = () => {
         onSuccess={handleUpdateSuccess}
         record={currentRecord}
       />
+
+      {/* Update Description Modal */}
+      <UpdateDescriptionForm
+        visible={descriptionModalVisible}
+        onCancel={() => {
+          setDescriptionModalVisible(false);
+          setCurrentRecord(null);
+        }}
+        onSuccess={handleDescriptionUpdateSuccess}
+        record={currentRecord}
+      />
+
+      {/* Notes Modal */}
+      <Modal
+        title={`یادداشت‌های خطا: ${notesRecord?.first_name || ''} ${
+          notesRecord?.last_name || ''
+        }`}
+        open={notesModalVisible}
+        onCancel={() => {
+          setNotesModalVisible(false);
+          setNotesRecord(null);
+          setNotes([]);
+        }}
+        footer={null}
+        width={600}
+      >
+        {/* Add new note */}
+        <div style={{ marginBottom: 16 }}>
+          <TextArea
+            rows={3}
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            placeholder="یادداشت جدید..."
+            maxLength={5000}
+          />
+          <Button
+            type="primary"
+            style={{ marginTop: 8 }}
+            onClick={handleAddNote}
+            loading={submittingNote}
+            disabled={!newNoteContent.trim()}
+          >
+            ثبت یادداشت
+          </Button>
+        </div>
+
+        {/* Notes list */}
+        <List
+          loading={notesLoading}
+          dataSource={notes}
+          locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
+          renderItem={(note) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title="آیا از حذف این یادداشت مطمئنید؟"
+                  onConfirm={() => handleDeleteNote(note.id)}
+                  okText="بله"
+                  cancelText="خیر"
+                >
+                  <Button type="link" danger size="small">
+                    حذف
+                  </Button>
+                </Popconfirm>,
+              ]}
+            >
+              <List.Item.Meta
+                title={
+                  <Space>
+                    <Text strong>
+                      {note.user?.first_name} {note.user?.last_name}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {new Date(note.created_at).toLocaleString('fa-IR')}
+                    </Text>
+                  </Space>
+                }
+                description={
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{note.content}</div>
+                }
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
     </>
   );
 };

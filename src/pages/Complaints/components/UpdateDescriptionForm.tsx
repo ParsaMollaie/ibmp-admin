@@ -1,22 +1,17 @@
-import { updateComplaint } from '@/services/complaint';
-import { Form, Modal, Select, message } from 'antd';
+import { updateComplaintDescription } from '@/services/complaint';
+import { Form, Input, Modal, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 
-interface UpdateFormProps {
+const { TextArea } = Input;
+
+interface UpdateDescriptionFormProps {
   visible: boolean;
   onCancel: () => void;
   onSuccess: () => void;
   record: API.ServiceComplaintItem | null;
 }
 
-const statusOptions: { label: string; value: API.ServiceComplaintStatus }[] = [
-  { label: 'در انتظار بررسی', value: 'pending' },
-  { label: 'در حال بررسی', value: 'in_review' },
-  { label: 'حل شده', value: 'resolved' },
-  { label: 'رد شده', value: 'rejected' },
-];
-
-const UpdateForm: React.FC<UpdateFormProps> = ({
+const UpdateDescriptionForm: React.FC<UpdateDescriptionFormProps> = ({
   visible,
   onCancel,
   onSuccess,
@@ -28,7 +23,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   useEffect(() => {
     if (record && visible) {
       form.setFieldsValue({
-        status: record.status,
+        description: record.description,
       });
     }
   }, [record, visible, form]);
@@ -40,19 +35,20 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      const response = await updateComplaint(record.id, {
-        status: values.status,
-      });
+      const response = await updateComplaintDescription(
+        record.id,
+        values.description,
+      );
 
       if (response.success) {
         form.resetFields();
-        message.success('خطا با موفقیت بروزرسانی شد');
+        message.success('متن خطا با موفقیت بروزرسانی شد');
         onSuccess();
       } else {
-        message.error(response.message || 'خطا در بروزرسانی خطا');
+        message.error(response.message || 'خطا در بروزرسانی متن خطا');
       }
     } catch (error) {
-      console.error('Update complaint error:', error);
+      console.error('Update complaint description error:', error);
       message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
@@ -66,7 +62,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   return (
     <Modal
-      title="بروزرسانی خطا"
+      title="ویرایش متن خطا"
       open={visible}
       onOk={handleSubmit}
       onCancel={handleCancel}
@@ -87,33 +83,21 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <div style={{ fontWeight: 600 }}>
             {record.first_name} {record.last_name}
           </div>
-          <div style={{ fontSize: 12, color: '#666' }}>
-            موبایل: {record.mobile}
-          </div>
-          {record.service && (
-            <div style={{ fontSize: 12, color: '#666' }}>
-              خدمت: {record.service.title} (کد: {record.service.code})
-            </div>
-          )}
+          <div style={{ fontSize: 12, color: '#666' }}>کد: {record.code}</div>
         </div>
       )}
 
       <Form form={form} layout="vertical">
         <Form.Item
-          name="status"
-          label="وضعیت"
-          rules={[{ required: true, message: 'لطفاً وضعیت را انتخاب کنید' }]}
+          name="description"
+          label="متن خطا"
+          rules={[{ required: true, message: 'لطفاً متن خطا را وارد کنید' }]}
         >
-          <Select
-            options={statusOptions.map((opt) => ({
-              label: opt.label,
-              value: opt.value,
-            }))}
-          />
+          <TextArea rows={4} maxLength={2000} showCount />
         </Form.Item>
       </Form>
     </Modal>
   );
 };
 
-export default UpdateForm;
+export default UpdateDescriptionForm;
