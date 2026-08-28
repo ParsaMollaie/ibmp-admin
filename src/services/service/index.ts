@@ -14,6 +14,7 @@ export async function getServices(params?: {
   tag?: API.ServiceTag;
   user_search?: string;
   category_code?: string;
+  category_codes?: string[];
   plan_id?: string;
   has_active_plan?: string;
   expires_within_days?: number;
@@ -118,6 +119,19 @@ export async function updateServiceStatus(
 }
 
 /**
+ * Update the priority of a service
+ */
+export async function updateServicePriority(id: string, priority: number) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${id}/update-priority`,
+    {
+      method: 'PUT',
+      data: { priority },
+    },
+  );
+}
+
+/**
  * Update service tag (regular, most_view, promoted)
  * Note: API endpoint uses 'most-view' (hyphen) for most_view
  */
@@ -130,9 +144,10 @@ export async function updateServiceTag(id: string, tag: API.ServiceTag) {
 }
 
 /**
- * Get service statistics (status + tag counts), filtered by type
+ * Get service statistics (status + tag counts), optionally filtered by type.
+ * Omitting `type` returns combined stats across both service types.
  */
-export async function getServiceStats(type: API.ServiceType) {
+export async function getServiceStats(type?: API.ServiceType) {
   return request<API.ApiResponse<API.ServiceStats>>(
     `${API_BASE}/services/stats`,
     {
@@ -145,21 +160,6 @@ export async function getServiceStats(type: API.ServiceType) {
 // Old separate functions — replaced by getServiceStats(type) which returns both status & tag stats
 // export async function getServiceStatusStats() { ... }
 // export async function getServiceTagStats() { ... }
-
-/**
- * Bulk update service categories from Excel import
- */
-export async function bulkUpdateServiceCategories(
-  items: { id: string; category_id: string }[],
-) {
-  return request<API.ApiResponse<{ updated_count: number }>>(
-    `${API_BASE}/services/bulk-update-categories`,
-    {
-      method: 'PUT',
-      data: { items },
-    },
-  );
-}
 
 /**
  * Get service activity report (aggregated log counts per service)

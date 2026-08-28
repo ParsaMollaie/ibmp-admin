@@ -64,21 +64,10 @@ export default defineConfig({
       icon: 'ContactsOutlined',
     },
     {
-      name: 'خدمات شرکت‌ها',
-      path: '/services-company',
-      component: './ServiceCompany',
-      icon: 'ShopOutlined',
-    },
-    {
-      name: 'خدمات مهندسان و مجریان',
-      path: '/services-engineers',
-      component: './ServiceEngineers',
-      icon: 'ToolOutlined',
-    },
-    {
+      name: 'خدمات شرکت',
       path: '/services',
       component: './Services',
-      hideInMenu: true,
+      icon: 'ShopOutlined',
     },
     {
       name: 'شکایات',

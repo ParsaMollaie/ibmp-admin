@@ -14,6 +14,7 @@ import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, message, Modal, Space, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
+import { history } from 'umi';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
@@ -126,9 +127,23 @@ const ContactProfilePage: React.FC = () => {
       width: 180,
       hideInSearch: true,
       render: (_, record) =>
-        record.user
-          ? `${record.user.first_name} ${record.user.last_name}`
-          : '—',
+        record.user ? (
+          <div
+            style={{ cursor: 'pointer', color: '#1890ff' }}
+            onClick={() =>
+              history.push(`/user?username=${record.user!.username}`)
+            }
+          >
+            <div style={{ fontWeight: 500 }}>
+              {record.user.first_name} {record.user.last_name}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
+              {record.user.username}
+            </div>
+          </div>
+        ) : (
+          <span style={{ color: '#999' }}>—</span>
+        ),
     },
     {
       title: 'تعداد خدمات',

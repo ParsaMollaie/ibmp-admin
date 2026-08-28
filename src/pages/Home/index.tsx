@@ -181,7 +181,7 @@ const HomePage: React.FC = () => {
       icon: <BankOutlined style={{ fontSize: 32, color: '#52c41a' }} />,
       color: '#f6ffed',
       borderColor: '#52c41a',
-      path: '/services-company',
+      path: '/services?type=company',
     },
     {
       title: 'خدمات',

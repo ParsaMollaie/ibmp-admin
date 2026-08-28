@@ -174,7 +174,7 @@ const MonthlyReportPage: React.FC = () => {
                       activeDot={{
                         r: 6,
                         cursor: 'pointer',
-                        onClick: () => history.push('/services-company'),
+                        onClick: () => history.push('/services?type=company'),
                       }}
                     />
                     <Line

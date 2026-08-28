@@ -500,19 +500,20 @@ declare namespace API {
   }
 
   /**
-   * Category with recursive child chain (root → child → child)
-   * Unlike CompanyServiceCategory which uses parent chain
+   * The assigned (leaf) category with a recursive parent chain
+   * ({title, parent: {title, parent: {title: root}}}) — leaf-first, reverse
+   * to read root → leaf.
    */
   interface ServiceCategoryChild {
     id: string;
     title: string;
-    child: ServiceCategoryChild | null;
+    parent: ServiceCategoryChild | null;
   }
 
   interface ServiceCategory {
     id: string;
     title: string;
-    child: ServiceCategoryChild | null;
+    parent: ServiceCategoryChild | null;
   }
 
   interface ServiceProduct {

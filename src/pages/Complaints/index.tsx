@@ -141,10 +141,6 @@ const ComplaintsPage: React.FC = () => {
       width: 200,
       render: (_, record) => {
         if (!record.service) return '—';
-        const serviceRoute =
-          record.service.type === 'company'
-            ? '/services-company'
-            : '/services-engineers';
         return (
           <Space
             direction="vertical"
@@ -152,9 +148,9 @@ const ComplaintsPage: React.FC = () => {
             style={{ cursor: 'pointer' }}
             onClick={() =>
               history.push(
-                `${serviceRoute}?search=${encodeURIComponent(
-                  record.service!.title,
-                )}`,
+                `/services?type=${
+                  record.service!.type
+                }&search=${encodeURIComponent(record.service!.title)}`,
               )
             }
           >

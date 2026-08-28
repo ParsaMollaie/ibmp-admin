@@ -11,23 +11,25 @@ interface UpdateCategoryFormProps {
 }
 
 /**
- * Build category chain by walking the child references (root → child → child)
+ * Build category chain (root → leaf) by walking the leaf-first parent
+ * references the API returns ({title, parent: {title, parent: ...}}),
+ * reversed to read root → leaf.
  */
 const buildCategoryChain = (category: API.ServiceCategory | null): string[] => {
   if (!category) return [];
   const parts: string[] = [category.title];
 
-  let current: API.ServiceCategoryChild | null = category.child;
+  let current: API.ServiceCategoryChild | null = category.parent;
   while (current) {
     parts.push(current.title);
-    current = current.child;
+    current = current.parent;
   }
 
-  return parts;
+  return parts.reverse();
 };
 
 /**
- * Walk the child chain to collect IDs from root to leaf
+ * Walk the parent chain to collect IDs, reversed to read root → leaf.
  */
 const buildCategoryIdChain = (
   category: API.ServiceCategory | null,
@@ -35,13 +37,13 @@ const buildCategoryIdChain = (
   if (!category) return [];
   const ids: string[] = [category.id];
 
-  let current: API.ServiceCategoryChild | null = category.child;
+  let current: API.ServiceCategoryChild | null = category.parent;
   while (current) {
     ids.push(current.id);
-    current = current.child;
+    current = current.parent;
   }
 
-  return ids;
+  return ids.reverse();
 };
 
 const UpdateCategoryForm: React.FC<UpdateCategoryFormProps> = ({

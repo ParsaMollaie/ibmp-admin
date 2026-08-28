@@ -1,7 +1,7 @@
 import { getCategories } from '@/services/category';
 import { getContactProfiles } from '@/services/contact-profile';
 import { getCities, getProvinces } from '@/services/location';
-import { updateServiceEngineers } from '@/services/service';
+import { updateServiceCompany } from '@/services/service';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import {
@@ -11,6 +11,7 @@ import {
   Divider,
   Form,
   Input,
+  InputNumber,
   Modal,
   Row,
   Select,
@@ -43,7 +44,7 @@ const socialMediaTypeOptions = [
   { label: 'وب‌سایت', value: 'website' },
 ];
 
-const UpdateForm: React.FC<UpdateFormProps> = ({
+const UpdateFormCompany: React.FC<UpdateFormProps> = ({
   visible,
   onCancel,
   onSuccess,
@@ -64,17 +65,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     Record<number, boolean>
   >({});
 
-  /**
-   * Avatar image
-   */
-  const [avatarFile, setAvatarFile] = useState<UploadFile[]>([]);
-
-  /**
-   * Work sample images - keyed by index
-   */
-  const [workSampleImages, setWorkSampleImages] = useState<
+  const [productImages, setProductImages] = useState<
     Record<number, UploadFile[]>
   >({});
+
+  const [logoFile, setLogoFile] = useState<UploadFile[]>([]);
+  const [catalogFile, setCatalogFile] = useState<UploadFile[]>([]);
 
   // Contact profile state
   const [contactProfiles, setContactProfiles] = useState<
@@ -103,6 +99,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     }
   };
 
+  // Fetch dropdown data
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
@@ -165,19 +162,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   useEffect(() => {
     if (record && visible && categories.length > 0) {
-      // Find the leaf category ID by walking the parent chain (API returns leaf→root via parent)
-      // or child chain (root→leaf) depending on the resource
-      let categoryId = record.category?.id;
-      if (record.category?.child) {
-        let current: API.ServiceCategoryChild | null = record.category.child;
-        while (current) {
-          categoryId = current.id;
-          current = current.child;
-        }
-      } else if ((record.category as any)?.parent) {
-        // IndentedCategoryResource returns parent chain (leaf is the category itself)
-        categoryId = record.category?.id;
-      }
+      // The API returns the assigned category (already the leaf) with a
+      // parent chain pointing toward the root — no traversal needed here.
+      const categoryId = record.category?.id;
 
       // Build addresses from record
       const addresses =
@@ -192,7 +179,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               {
                 province_id: record.province.id,
                 city_id: record.city?.id,
-                address: '',
+                address: record.company?.address || '',
               },
             ]
           : [{ province_id: undefined, city_id: undefined, address: '' }];
@@ -212,12 +199,15 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         contact_profile_id: cpId,
         // province_id: record.province?.id, // deprecated — use addresses
         // city_id: record.city?.id, // deprecated — use addresses
+        // address: record.company?.address, // deprecated — use addresses
         addresses,
         contact_numbers: record.contact_numbers || [],
         social_medias: record.social_media || [],
-        work_samples:
-          record.work_samples?.map((ws) => ({
-            title: ws.title || '',
+        products:
+          record.products?.map((p) => ({
+            name: p.name,
+            minimum_price: p.minimum_price,
+            maximum_price: p.maximum_price,
           })) || [],
       });
 
@@ -228,35 +218,45 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         }
       });
 
-      // Set avatar image
-      if (record.avatar) {
-        setAvatarFile([
+      // Set logo preview
+      if (record.company?.logo) {
+        setLogoFile([
           {
-            uid: '-avatar',
-            name: 'avatar',
+            uid: '-logo',
+            name: 'logo',
             status: 'done',
-            url: record.avatar,
+            url: record.company.logo,
           },
         ]);
-      } else {
-        setAvatarFile([]);
       }
 
-      // Set work sample images
+      // Set catalog preview
+      if (record.company?.catalog) {
+        setCatalogFile([
+          {
+            uid: '-catalog',
+            name: 'catalog',
+            status: 'done',
+            url: record.company.catalog,
+          },
+        ]);
+      }
+
+      // Set product images
       const images: Record<number, UploadFile[]> = {};
-      record.work_samples?.forEach((sample, index) => {
-        if (sample.image) {
+      record.products?.forEach((product, index) => {
+        if (product.image) {
           images[index] = [
             {
               uid: `-${index}`,
-              name: `sample-${index}`,
+              name: `product-${index}`,
               status: 'done',
-              url: sample.image,
+              url: product.image,
             },
           ];
         }
       });
-      setWorkSampleImages(images);
+      setProductImages(images);
     }
   }, [record, visible, categories, form]);
 
@@ -269,37 +269,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     });
   };
 
-  const getAvatarUploadProps = (): UploadProps => ({
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('فقط فایل‌های تصویری مجاز هستند');
-        return Upload.LIST_IGNORE;
-      }
-      const isLt500K = file.size / 1024 < 500;
-      if (!isLt500K) {
-        message.error('حجم تصویر باید کمتر از 500 کیلوبایت باشد');
-        return Upload.LIST_IGNORE;
-      }
-      return false;
-    },
-    onChange: (info) => setAvatarFile(info.fileList),
-    fileList: avatarFile,
-    listType: 'picture-card',
-    maxCount: 1,
-  });
-
-  const handleWorkSampleImageChange = (
+  const handleProductImageChange = (
     index: number,
     info: { fileList: UploadFile[] },
   ) => {
-    setWorkSampleImages((prev) => ({
+    setProductImages((prev) => ({
       ...prev,
       [index]: info.fileList,
     }));
   };
 
-  const getWorkSampleUploadProps = (index: number): UploadProps => ({
+  const getProductUploadProps = (index: number): UploadProps => ({
     beforeUpload: (file) => {
       const isImage = file.type.startsWith('image/');
       if (!isImage) {
@@ -313,16 +293,51 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       }
       return false;
     },
-    onChange: (info) => handleWorkSampleImageChange(index, info),
-    fileList: workSampleImages[index] || [],
+    onChange: (info) => handleProductImageChange(index, info),
+    fileList: productImages[index] || [],
     listType: 'picture-card',
+    maxCount: 1,
+  });
+
+  const getLogoUploadProps = (): UploadProps => ({
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('فقط فایل‌های تصویری مجاز هستند');
+        return Upload.LIST_IGNORE;
+      }
+      return false;
+    },
+    onChange: (info) => setLogoFile(info.fileList),
+    fileList: logoFile,
+    listType: 'picture-card',
+    maxCount: 1,
+  });
+
+  const getCatalogUploadProps = (): UploadProps => ({
+    beforeUpload: (file) => {
+      const isAllowed =
+        file.type === 'application/pdf' ||
+        file.type === 'application/msword' ||
+        file.type ===
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type.startsWith('image/');
+      if (!isAllowed) {
+        message.error('فقط فایل‌های PDF، Word و تصویری مجاز هستند');
+        return Upload.LIST_IGNORE;
+      }
+      return false;
+    },
+    onChange: (info) => setCatalogFile(info.fileList),
+    fileList: catalogFile,
     maxCount: 1,
   });
 
   const resetForm = () => {
     form.resetFields();
-    setAvatarFile([]);
-    setWorkSampleImages({});
+    setProductImages({});
+    setLogoFile([]);
+    setCatalogFile([]);
     setCitiesMap({});
     setContactProfiles([]);
     setSelectedContactProfileId(null);
@@ -335,13 +350,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      // Process work samples with images
-      const processedWorkSamples: API.ServiceWorkSamplePayload[] = [];
-
-      for (let i = 0; i < (values.work_samples?.length || 0); i++) {
-        const sample = values.work_samples[i];
-        const imageFiles = workSampleImages[i] || [];
-
+      // Process products with images
+      const processedProducts: API.ServiceProductPayload[] = [];
+      for (let i = 0; i < (values.products?.length || 0); i++) {
+        const product = values.products[i];
+        const imageFiles = productImages[i] || [];
         let imageValue = '';
 
         if (imageFiles.length > 0) {
@@ -353,46 +366,61 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           }
         }
 
-        processedWorkSamples.push({
-          title: sample.title || '',
+        processedProducts.push({
+          name: product.name,
           image: imageValue,
+          minimum_price: product.minimum_price || 0,
+          maximum_price: product.maximum_price || 0,
         });
       }
 
-      // Process avatar
-      let avatarValue: string | null = null;
-      if (avatarFile.length > 0) {
-        const file = avatarFile[0];
+      // Process logo
+      let logoValue: string | null = null;
+      if (logoFile.length > 0) {
+        const file = logoFile[0];
         if (file.originFileObj) {
-          avatarValue = await getBase64(file.originFileObj);
+          logoValue = await getBase64(file.originFileObj);
         } else if (file.url) {
-          avatarValue = file.url;
+          logoValue = file.url;
         }
       }
 
-      const payload: API.ServiceEngineersPayload = {
+      // Process catalog
+      let catalogValue: string | null = null;
+      if (catalogFile.length > 0) {
+        const file = catalogFile[0];
+        if (file.originFileObj) {
+          catalogValue = await getBase64(file.originFileObj);
+        } else if (file.url) {
+          catalogValue = file.url;
+        }
+      }
+
+      const payload: API.ServiceCompanyPayload = {
         title: values.title,
         summary: values.summary,
         description: values.description,
         email: values.email,
         website: values.website || undefined,
         video: values.video || null,
-        avatar: avatarValue,
         category_id: values.category_id,
         contact_profile_id: values.contact_profile_id || null,
         // province_id: values.province_id, // deprecated — use addresses
         // city_id: values.city_id, // deprecated — use addresses
+        // address: values.address, // deprecated — use addresses
         addresses: (values.addresses || []).map((a: any) => ({
           province_id: a.province_id,
           city_id: a.city_id,
           address: a.address || undefined,
         })),
+        logo: logoValue,
+        catalog: catalogValue,
         contact_numbers: values.contact_numbers || [],
         social_medias: values.social_medias || [],
-        work_samples: processedWorkSamples,
+        products: processedProducts,
       };
 
-      const response = await updateServiceEngineers(record.id, payload);
+      const response = await updateServiceCompany(record.id, payload);
 
       if (response.success) {
         message.success('خدمت با موفقیت ویرایش شد');
@@ -414,11 +442,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     onCancel();
   };
 
-  const handleRemoveWorkSample = (
+  const handleRemoveProduct = (
     index: number,
     remove: (index: number) => void,
   ) => {
-    setWorkSampleImages((prev) => {
+    setProductImages((prev) => {
       const newImages = { ...prev };
       delete newImages[index];
       const reindexed: Record<number, UploadFile[]> = {};
@@ -452,7 +480,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   return (
     <Modal
-      title="ویرایش خدمت مهندسی"
+      title="ویرایش خدمت شرکت"
       open={visible}
       onOk={handleSubmit}
       onCancel={handleCancel}
@@ -555,7 +583,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                     }}
                   >
                     <Row gutter={16} align="middle">
-                      <Col span={8}>
+                      <Col span={7}>
                         <Form.Item
                           {...restField}
                           name={[name, 'province_id']}
@@ -580,7 +608,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={8}>
+                      <Col span={7}>
                         <Form.Item
                           {...restField}
                           name={[name, 'city_id']}
@@ -605,11 +633,11 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
+                      <Col span={8}>
                         <Form.Item
                           {...restField}
                           name={[name, 'address']}
-                          label="آدرس (اختیاری)"
+                          label="آدرس"
                         >
                           <Input
                             placeholder="آدرس"
@@ -649,6 +677,46 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               </>
             )}
           </Form.List>
+        </Card>
+
+        {/* Video */}
+        <Card size="small" title="ویدئو معرفی" style={{ marginBottom: 16 }}>
+          <Form.Item
+            name="video"
+            label="لینک ویدئو"
+            extra="لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)"
+          >
+            <TextArea
+              rows={2}
+              placeholder="لینک embed ویدئو را وارد کنید"
+              style={{ direction: 'ltr' }}
+            />
+          </Form.Item>
+        </Card>
+
+        {/* Logo & Catalog */}
+        <Card size="small" title="لوگو و کاتالوگ" style={{ marginBottom: 16 }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="لوگو">
+                <Upload {...getLogoUploadProps()}>
+                  {logoFile.length === 0 && (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>آپلود لوگو</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="کاتالوگ (PDF, Word, تصویر)">
+                <Upload {...getCatalogUploadProps()}>
+                  <Button icon={<PlusOutlined />}>آپلود کاتالوگ</Button>
+                </Upload>
+              </Form.Item>
+            </Col>
+          </Row>
         </Card>
 
         {/* Contact Profile Selector */}
@@ -815,85 +883,100 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           </Form.List>
         </Card>
 
-        {/* Video */}
-        <Card size="small" title="ویدئو معرفی" style={{ marginBottom: 16 }}>
-          <Form.Item
-            name="video"
-            label="لینک ویدئو"
-            extra="لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)"
-          >
-            <TextArea
-              rows={2}
-              placeholder="لینک embed ویدئو را وارد کنید"
-              style={{ direction: 'ltr' }}
-            />
-          </Form.Item>
-        </Card>
-
-        {/* Avatar */}
-        <Card size="small" title="آواتار" style={{ marginBottom: 16 }}>
-          <Form.Item label="تصویر">
-            <Upload {...getAvatarUploadProps()}>
-              {avatarFile.length === 0 && (
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>آپلود</div>
-                </div>
-              )}
-            </Upload>
-          </Form.Item>
-        </Card>
-
-        {/* Work Samples */}
-        <Card size="small" title="نمونه کارها">
-          <Form.List name="work_samples">
+        {/* Products */}
+        <Card size="small" title="محصولات">
+          <Form.List name="products">
             {(fields, { add, remove }) => (
               <>
                 {fields.map(({ key, name, ...restField }, index) => (
                   <div key={key}>
                     {index > 0 && <Divider />}
                     <Row gutter={16} align="middle">
-                      <Col span={10}>
+                      <Col span={12}>
                         <Form.Item
                           {...restField}
-                          name={[name, 'title']}
-                          label="عنوان نمونه کار"
+                          name={[name, 'name']}
+                          label="نام محصول"
+                          rules={[
+                            {
+                              required: true,
+                              message: 'نام محصول را وارد کنید',
+                            },
+                          ]}
                         >
-                          <Input placeholder="عنوان (اختیاری)" />
+                          <Input placeholder="نام محصول" />
                         </Form.Item>
                       </Col>
                       <Col span={6}>
-                        {record?.work_samples?.[index]?.status && (
+                        {record?.products?.[index]?.status && (
                           <Tag
                             color={
-                              record.work_samples[index].status === 'active'
+                              record.products[index].status === 'active'
                                 ? 'green'
                                 : 'red'
                             }
                           >
-                            {record.work_samples[index].status === 'active'
+                            {record.products[index].status === 'active'
                               ? 'فعال'
                               : 'غیرفعال'}
                           </Tag>
                         )}
                       </Col>
-                      <Col span={8} style={{ textAlign: 'left' }}>
+                      <Col span={6} style={{ textAlign: 'left' }}>
                         <Button
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          onClick={() => handleRemoveWorkSample(index, remove)}
+                          onClick={() => handleRemoveProduct(index, remove)}
                         >
-                          حذف نمونه کار
+                          حذف محصول
                         </Button>
                       </Col>
                     </Row>
 
                     <Row gutter={16}>
                       <Col span={8}>
-                        <Form.Item label="تصویر نمونه کار">
-                          <Upload {...getWorkSampleUploadProps(index)}>
-                            {(workSampleImages[index]?.length || 0) === 0 && (
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'minimum_price']}
+                          label="حداقل قیمت (تومان)"
+                        >
+                          <InputNumber<number>
+                            min={0}
+                            style={{ width: '100%' }}
+                            formatter={(value) =>
+                              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            }
+                            parser={(value) =>
+                              value?.replace(/,/g, '') as unknown as number
+                            }
+                            placeholder="0"
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'maximum_price']}
+                          label="حداکثر قیمت (تومان)"
+                        >
+                          <InputNumber<number>
+                            min={0}
+                            style={{ width: '100%' }}
+                            formatter={(value) =>
+                              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            }
+                            parser={(value) =>
+                              value?.replace(/,/g, '') as unknown as number
+                            }
+                            placeholder="0"
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item label="تصویر محصول">
+                          <Upload {...getProductUploadProps(index)}>
+                            {(productImages[index]?.length || 0) === 0 && (
                               <div>
                                 <PlusOutlined />
                                 <div style={{ marginTop: 8 }}>آپلود</div>
@@ -907,12 +990,14 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
                 ))}
                 <Button
                   type="dashed"
-                  onClick={() => add({ title: '' })}
+                  onClick={() =>
+                    add({ name: '', minimum_price: 0, maximum_price: 0 })
+                  }
                   block
                   icon={<PlusOutlined />}
                   style={{ marginTop: 16 }}
                 >
-                  افزودن نمونه کار
+                  افزودن محصول
                 </Button>
               </>
             )}
@@ -923,4 +1008,4 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   );
 };
 
-export default UpdateForm;
+export default UpdateFormCompany;
