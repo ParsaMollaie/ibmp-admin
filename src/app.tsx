@@ -63,7 +63,7 @@ export async function getInitialState(): Promise<{
 }
 
 export const request: RequestConfig = {
-  timeout: 30000,
+  timeout: 45000,
   errorConfig: {
     errorHandler: (error: any) => {
       const { response } = error;

@@ -1,5 +1,5 @@
 import { createSlider } from '@/services/auth';
-import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
+import { combineFaDateAndTimeToEnDateTime } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ProForm,
@@ -7,11 +7,21 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Col, Form, Modal, Row, Upload, message } from 'antd';
-import { DatePicker } from 'antd-jalali';
+import {
+  Col,
+  Form,
+  InputNumber,
+  Modal,
+  Row,
+  Space,
+  Upload,
+  message,
+} from 'antd';
 import type { RcFile, UploadProps } from 'antd/es/upload/interface';
-import type { Dayjs } from 'dayjs';
 import { useState } from 'react';
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import DatePicker, { DateObject } from 'react-multi-date-picker';
 
 const getBase64 = (file: RcFile): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -27,7 +37,7 @@ const CreateForm: React.FC<{
   onSuccess: () => void;
 }> = ({ visible, onCancel, onSuccess }) => {
   const [form] = Form.useForm();
-  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
+  const publishAt: DateObject | undefined = Form.useWatch('publish_at', form);
 
   const [imagePreview, setImagePreview] = useState<string>('');
   const [portraitImagePreview, setPortraitImagePreview] = useState<string>('');
@@ -78,8 +88,19 @@ const CreateForm: React.FC<{
     try {
       const formData = new FormData();
 
+      const dateFieldKeys = [
+        'publish_at',
+        'publish_at_hour',
+        'publish_at_minute',
+        'publish_at_second',
+        'end_date',
+        'end_date_hour',
+        'end_date_minute',
+        'end_date_second',
+      ];
+
       Object.keys(values).forEach((key) => {
-        if (key === 'publish_at' || key === 'end_date') {
+        if (dateFieldKeys.includes(key)) {
           return;
         }
         if (values[key] !== undefined) {
@@ -92,21 +113,27 @@ const CreateForm: React.FC<{
       formData.append('portrait_image', portraitImagePreview);
 
       if (values.publish_at) {
-        formData.append(
-          'publish_at',
-          convertFaDateToEnDate(values.publish_at.toDate()).format(
-            'YYYY-MM-DD HH:mm:ss',
-          ),
+        const publishAtValue = combineFaDateAndTimeToEnDateTime(
+          values.publish_at,
+          values.publish_at_hour,
+          values.publish_at_minute,
+          values.publish_at_second,
         );
+        if (publishAtValue) {
+          formData.append('publish_at', publishAtValue);
+        }
       }
 
       if (values.end_date) {
-        formData.append(
-          'end_date',
-          convertFaDateToEnDate(values.end_date.toDate()).format(
-            'YYYY-MM-DD HH:mm:ss',
-          ),
+        const endDateValue = combineFaDateAndTimeToEnDateTime(
+          values.end_date,
+          values.end_date_hour,
+          values.end_date_minute,
+          values.end_date_second,
         );
+        if (endDateValue) {
+          formData.append('end_date', endDateValue);
+        }
       }
 
       await createSlider(formData);
@@ -117,6 +144,7 @@ const CreateForm: React.FC<{
       setPortraitImagePreview('');
       onSuccess();
     } catch (error) {
+      console.error('Create slider error:', error);
       message.error('خطا در ایجاد اسلایدر');
     }
   };
@@ -202,26 +230,80 @@ const CreateForm: React.FC<{
           <Col span={12}>
             <Form.Item name="publish_at" label="تاریخ شروع نمایش">
               <DatePicker
-                format="YYYY/MM/DD HH:mm:ss"
-                showTime={{ format: 'HH:mm:ss' }}
+                calendar={persian}
+                locale={persian_fa}
+                format="YYYY/MM/DD"
                 placeholder="تاریخ شروع نمایش"
                 style={{ width: '100%' }}
               />
+            </Form.Item>
+            <Form.Item label="ساعت شروع نمایش">
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="publish_at_hour" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={23}
+                    placeholder="ساعت"
+                    style={{ width: '34%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="publish_at_minute" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="دقیقه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="publish_at_second" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="ثانیه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+              </Space.Compact>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="end_date" label="تاریخ پایان نمایش">
               <DatePicker
-                format="YYYY/MM/DD HH:mm:ss"
-                showTime={{ format: 'HH:mm:ss' }}
+                calendar={persian}
+                locale={persian_fa}
+                format="YYYY/MM/DD"
                 placeholder="تاریخ پایان نمایش"
                 style={{ width: '100%' }}
-                disabledDate={(current: Dayjs) =>
-                  publishAt
-                    ? !!current && current.isBefore(publishAt, 'day')
-                    : false
-                }
+                minDate={publishAt}
               />
+            </Form.Item>
+            <Form.Item label="ساعت پایان نمایش">
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="end_date_hour" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={23}
+                    placeholder="ساعت"
+                    style={{ width: '34%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="end_date_minute" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="دقیقه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="end_date_second" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="ثانیه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+              </Space.Compact>
             </Form.Item>
           </Col>
         </Row>

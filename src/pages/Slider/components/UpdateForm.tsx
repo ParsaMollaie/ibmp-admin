@@ -1,5 +1,6 @@
 import { updateSlider } from '@/services/auth';
-import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
+import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
+import { combineFaDateAndTimeToEnDateTime } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ProForm,
@@ -7,12 +8,21 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-import { Col, Form, Modal, Row, Upload, message } from 'antd';
-import { DatePicker } from 'antd-jalali';
+import {
+  Col,
+  Form,
+  InputNumber,
+  Modal,
+  Row,
+  Space,
+  Upload,
+  message,
+} from 'antd';
 import type { RcFile, UploadProps } from 'antd/es/upload/interface';
-import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import DatePicker, { DateObject } from 'react-multi-date-picker';
 
 interface UpdateFormProps {
   visible: boolean;
@@ -28,7 +38,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   initialValues,
 }) => {
   const [form] = Form.useForm();
-  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
+  const publishAt: DateObject | undefined = Form.useWatch('publish_at', form);
 
   const [imagePreview, setImagePreview] = useState<string>(
     initialValues.image || '',
@@ -122,28 +132,40 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           key !== 'image' &&
           key !== 'portrait_image' &&
           key !== 'publish_at' &&
-          key !== 'end_date'
+          key !== 'publish_at_hour' &&
+          key !== 'publish_at_minute' &&
+          key !== 'publish_at_second' &&
+          key !== 'end_date' &&
+          key !== 'end_date_hour' &&
+          key !== 'end_date_minute' &&
+          key !== 'end_date_second'
         ) {
           formData.append(key, values[key]);
         }
       });
 
       if (values.publish_at) {
-        formData.append(
-          'publish_at',
-          convertFaDateToEnDate(values.publish_at.toDate()).format(
-            'YYYY-MM-DD HH:mm:ss',
-          ),
+        const publishAtValue = combineFaDateAndTimeToEnDateTime(
+          values.publish_at,
+          values.publish_at_hour,
+          values.publish_at_minute,
+          values.publish_at_second,
         );
+        if (publishAtValue) {
+          formData.append('publish_at', publishAtValue);
+        }
       }
 
       if (values.end_date) {
-        formData.append(
-          'end_date',
-          convertFaDateToEnDate(values.end_date.toDate()).format(
-            'YYYY-MM-DD HH:mm:ss',
-          ),
+        const endDateValue = combineFaDateAndTimeToEnDateTime(
+          values.end_date,
+          values.end_date_hour,
+          values.end_date_minute,
+          values.end_date_second,
         );
+        if (endDateValue) {
+          formData.append('end_date', endDateValue);
+        }
       }
 
       // Handle main image - only if changed
@@ -199,10 +221,28 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           link: initialValues.link,
           alt_image: initialValues.alt_image,
           publish_at: initialValues.publish_at
-            ? dayjs(initialValues.publish_at)
+            ? convertEnDateToFaDate(initialValues.publish_at)
+            : undefined,
+          publish_at_hour: initialValues.publish_at
+            ? new Date(initialValues.publish_at).getHours()
+            : undefined,
+          publish_at_minute: initialValues.publish_at
+            ? new Date(initialValues.publish_at).getMinutes()
+            : undefined,
+          publish_at_second: initialValues.publish_at
+            ? new Date(initialValues.publish_at).getSeconds()
             : undefined,
           end_date: initialValues.end_date
-            ? dayjs(initialValues.end_date)
+            ? convertEnDateToFaDate(initialValues.end_date)
+            : undefined,
+          end_date_hour: initialValues.end_date
+            ? new Date(initialValues.end_date).getHours()
+            : undefined,
+          end_date_minute: initialValues.end_date
+            ? new Date(initialValues.end_date).getMinutes()
+            : undefined,
+          end_date_second: initialValues.end_date
+            ? new Date(initialValues.end_date).getSeconds()
             : undefined,
         }}
         submitter={{
@@ -274,26 +314,80 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <Col span={12}>
             <Form.Item name="publish_at" label="تاریخ شروع نمایش">
               <DatePicker
-                format="YYYY/MM/DD HH:mm:ss"
-                showTime={{ format: 'HH:mm:ss' }}
+                calendar={persian}
+                locale={persian_fa}
+                format="YYYY/MM/DD"
                 placeholder="تاریخ شروع نمایش"
                 style={{ width: '100%' }}
               />
+            </Form.Item>
+            <Form.Item label="ساعت شروع نمایش">
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="publish_at_hour" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={23}
+                    placeholder="ساعت"
+                    style={{ width: '34%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="publish_at_minute" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="دقیقه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="publish_at_second" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="ثانیه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+              </Space.Compact>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="end_date" label="تاریخ پایان نمایش">
               <DatePicker
-                format="YYYY/MM/DD HH:mm:ss"
-                showTime={{ format: 'HH:mm:ss' }}
+                calendar={persian}
+                locale={persian_fa}
+                format="YYYY/MM/DD"
                 placeholder="تاریخ پایان نمایش"
                 style={{ width: '100%' }}
-                disabledDate={(current: Dayjs) =>
-                  publishAt
-                    ? !!current && current.isBefore(publishAt, 'day')
-                    : false
-                }
+                minDate={publishAt}
               />
+            </Form.Item>
+            <Form.Item label="ساعت پایان نمایش">
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="end_date_hour" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={23}
+                    placeholder="ساعت"
+                    style={{ width: '34%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="end_date_minute" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="دقیقه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+                <Form.Item name="end_date_second" noStyle>
+                  <InputNumber
+                    min={0}
+                    max={59}
+                    placeholder="ثانیه"
+                    style={{ width: '33%' }}
+                  />
+                </Form.Item>
+              </Space.Compact>
             </Form.Item>
           </Col>
         </Row>

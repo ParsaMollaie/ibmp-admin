@@ -1,5 +1,5 @@
 import { createAdvertising } from '@/services/advertising';
-import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
+import { combineFaDateAndTimeToEnDateTime } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
@@ -8,10 +8,11 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
-import { Col, Form, message, Row, Upload } from 'antd';
-import { DatePicker } from 'antd-jalali';
-import type { Dayjs } from 'dayjs';
+import { Col, Form, InputNumber, message, Row, Space, Upload } from 'antd';
 import React, { useState } from 'react';
+import persian from 'react-date-object/calendars/persian';
+import persian_fa from 'react-date-object/locales/persian_fa';
+import DatePicker, { DateObject } from 'react-multi-date-picker';
 
 interface CreateFormProps {
   open: boolean;
@@ -35,7 +36,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
   onSuccess,
 }) => {
   const [form] = Form.useForm();
-  const publishAt: Dayjs | undefined = Form.useWatch('publish_at', form);
+  const publishAt: DateObject | undefined = Form.useWatch('publish_at', form);
 
   // State for image uploads (we store the file list for display, but send base64 to API)
   const [imageList, setImageList] = useState<UploadFile[]>([]);
@@ -77,13 +78,19 @@ const CreateForm: React.FC<CreateFormProps> = ({
         image: imageBase64,
         portrait_image: portraitImageBase64,
         publish_at: values.publish_at
-          ? convertFaDateToEnDate(values.publish_at.toDate()).format(
-              'YYYY-MM-DD HH:mm:ss',
+          ? combineFaDateAndTimeToEnDateTime(
+              values.publish_at,
+              values.publish_at_hour,
+              values.publish_at_minute,
+              values.publish_at_second,
             )
           : null,
         end_date: values.end_date
-          ? convertFaDateToEnDate(values.end_date.toDate()).format(
-              'YYYY-MM-DD HH:mm:ss',
+          ? combineFaDateAndTimeToEnDateTime(
+              values.end_date,
+              values.end_date_hour,
+              values.end_date_minute,
+              values.end_date_second,
             )
           : null,
       };
@@ -97,6 +104,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
         message.error(res.message || 'خطا در ایجاد تبلیغ');
       }
     } catch (error) {
+      console.error('Create advertising error:', error);
       message.error('خطا در ایجاد تبلیغ');
     }
   };
@@ -179,26 +187,80 @@ const CreateForm: React.FC<CreateFormProps> = ({
         <Col span={12}>
           <Form.Item name="publish_at" label="تاریخ شروع نمایش">
             <DatePicker
-              format="YYYY/MM/DD HH:mm:ss"
-              showTime={{ format: 'HH:mm:ss' }}
+              calendar={persian}
+              locale={persian_fa}
+              format="YYYY/MM/DD"
               placeholder="تاریخ شروع نمایش"
               style={{ width: '100%' }}
             />
+          </Form.Item>
+          <Form.Item label="ساعت شروع نمایش">
+            <Space.Compact style={{ width: '100%' }}>
+              <Form.Item name="publish_at_hour" noStyle>
+                <InputNumber
+                  min={0}
+                  max={23}
+                  placeholder="ساعت"
+                  style={{ width: '34%' }}
+                />
+              </Form.Item>
+              <Form.Item name="publish_at_minute" noStyle>
+                <InputNumber
+                  min={0}
+                  max={59}
+                  placeholder="دقیقه"
+                  style={{ width: '33%' }}
+                />
+              </Form.Item>
+              <Form.Item name="publish_at_second" noStyle>
+                <InputNumber
+                  min={0}
+                  max={59}
+                  placeholder="ثانیه"
+                  style={{ width: '33%' }}
+                />
+              </Form.Item>
+            </Space.Compact>
           </Form.Item>
         </Col>
         <Col span={12}>
           <Form.Item name="end_date" label="تاریخ پایان نمایش">
             <DatePicker
-              format="YYYY/MM/DD HH:mm:ss"
-              showTime={{ format: 'HH:mm:ss' }}
+              calendar={persian}
+              locale={persian_fa}
+              format="YYYY/MM/DD"
               placeholder="تاریخ پایان نمایش"
               style={{ width: '100%' }}
-              disabledDate={(current: Dayjs) =>
-                publishAt
-                  ? !!current && current.isBefore(publishAt, 'day')
-                  : false
-              }
+              minDate={publishAt}
             />
+          </Form.Item>
+          <Form.Item label="ساعت پایان نمایش">
+            <Space.Compact style={{ width: '100%' }}>
+              <Form.Item name="end_date_hour" noStyle>
+                <InputNumber
+                  min={0}
+                  max={23}
+                  placeholder="ساعت"
+                  style={{ width: '34%' }}
+                />
+              </Form.Item>
+              <Form.Item name="end_date_minute" noStyle>
+                <InputNumber
+                  min={0}
+                  max={59}
+                  placeholder="دقیقه"
+                  style={{ width: '33%' }}
+                />
+              </Form.Item>
+              <Form.Item name="end_date_second" noStyle>
+                <InputNumber
+                  min={0}
+                  max={59}
+                  placeholder="ثانیه"
+                  style={{ width: '33%' }}
+                />
+              </Form.Item>
+            </Space.Compact>
           </Form.Item>
         </Col>
       </Row>
