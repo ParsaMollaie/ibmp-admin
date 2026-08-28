@@ -41,6 +41,8 @@ declare namespace API {
     job_position?: string | null;
     avatar?: string | null;
     password?: string;
+    services_count?: number;
+    services?: string[];
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     updated_at?: string;

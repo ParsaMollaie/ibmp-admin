@@ -45,7 +45,7 @@ export default defineConfig({
     },
 
     {
-      name: 'شرکای تجاری',
+      name: 'برندهای معتبر',
       path: '/business-partners',
       component: './BusinessPartners',
       icon: 'TeamOutlined',
@@ -58,7 +58,7 @@ export default defineConfig({
       icon: 'UserOutlined',
     },
     {
-      name: 'پروفایل‌های تماس',
+      name: 'اطلاعات تماس',
       path: '/contact-profiles',
       component: './ContactProfile',
       icon: 'ContactsOutlined',

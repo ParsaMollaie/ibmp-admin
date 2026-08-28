@@ -26,11 +26,11 @@ const BusinessPartnersPage: React.FC = () => {
 
   const handleDelete = (record: API.BusinessPartnerItem) => {
     Modal.confirm({
-      title: 'حذف شریک تجاری',
+      title: 'حذف برند معتبر',
       icon: <ExclamationCircleOutlined />,
       content: (
         <div>
-          <p>آیا از حذف شریک تجاری زیر اطمینان دارید؟</p>
+          <p>آیا از حذف برند معتبر زیر اطمینان دارید؟</p>
           <p style={{ fontWeight: 600 }}>{record.title}</p>
         </div>
       ),
@@ -41,10 +41,10 @@ const BusinessPartnersPage: React.FC = () => {
         try {
           const response = await deleteBusinessPartner(record.id);
           if (response.success) {
-            message.success('شریک تجاری با موفقیت حذف شد');
+            message.success('برند معتبر با موفقیت حذف شد');
             actionRef.current?.reload();
           } else {
-            message.error(response.message || 'خطا در حذف شریک تجاری');
+            message.error(response.message || 'خطا در حذف برند معتبر');
           }
         } catch (error) {
           console.error('Delete business partner error:', error);
@@ -128,6 +128,28 @@ const BusinessPartnersPage: React.FC = () => {
       sorter: true,
     },
     {
+      title: 'تاریخ شروع نمایش',
+      dataIndex: 'publish_at',
+      search: false,
+      sorter: true,
+      width: 150,
+      render: (_, record) =>
+        record.publish_at
+          ? convertEnDateToFaDate(record.publish_at).format('YYYY/MM/DD HH:mm')
+          : '—',
+    },
+    {
+      title: 'تاریخ پایان نمایش',
+      dataIndex: 'end_date',
+      search: false,
+      sorter: true,
+      width: 150,
+      render: (_, record) =>
+        record.end_date
+          ? convertEnDateToFaDate(record.end_date).format('YYYY/MM/DD HH:mm')
+          : '—',
+    },
+    {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
       width: 150,
@@ -193,9 +215,9 @@ const BusinessPartnersPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: 'مدیریت شرکای تجاری' }}>
+    <PageContainer header={{ title: 'مدیریت برندهای معتبر' }}>
       <ProTable<API.BusinessPartnerItem>
-        headerTitle="لیست شرکای تجاری"
+        headerTitle="لیست برندهای معتبر"
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
@@ -242,7 +264,7 @@ const BusinessPartnersPage: React.FC = () => {
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
           >
-            افزودن شریک تجاری
+            افزودن برند معتبر
           </Button>,
         ]}
       />

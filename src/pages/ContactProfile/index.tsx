@@ -1,15 +1,23 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
+import { generateUserToken } from '@/services/auth';
 import {
   deleteContactProfile,
   getContactProfiles,
 } from '@/services/contact-profile';
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  LoginOutlined,
+  PlusOutlined,
+} from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { Button, message, Modal, Space, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
+
+const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
 
 const ContactProfilePage: React.FC = () => {
   const actionRef = useRef<ActionType>();
@@ -37,6 +45,28 @@ const ContactProfilePage: React.FC = () => {
     setUpdateModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  // Handle impersonate (login as the client linked to this profile)
+  const handleImpersonate = async (userId: string) => {
+    const hide = message.loading('در حال دریافت توکن...');
+    try {
+      const response = await generateUserToken(userId);
+      hide();
+      if (response.success && response.data?.access_token) {
+        window.open(
+          `${CLIENT_APP_URL}/impersonate?token=${encodeURIComponent(
+            response.data.access_token,
+          )}`,
+          '_blank',
+        );
+      } else {
+        message.error('خطا در دریافت توکن کاربر');
+      }
+    } catch (error) {
+      hide();
+      message.error('خطا در ورود به حساب کاربر');
+    }
   };
 
   // Handle delete action with confirmation
@@ -168,6 +198,16 @@ const ContactProfilePage: React.FC = () => {
             />
           </Tooltip>
 
+          {record.user?.user_type === 'client' && (
+            <Tooltip title="ورود به حساب">
+              <Button
+                type="text"
+                icon={<LoginOutlined />}
+                onClick={() => handleImpersonate(record.user!.id)}
+              />
+            </Tooltip>
+          )}
+
           <Tooltip title="حذف">
             <Button
               type="text"
@@ -184,7 +224,7 @@ const ContactProfilePage: React.FC = () => {
   return (
     <>
       <ProTable<API.ContactProfileItem>
-        headerTitle="مدیریت پروفایل‌های تماس"
+        headerTitle="مدیریت اطلاعات تماس"
         actionRef={actionRef}
         rowKey="id"
         columns={columns}

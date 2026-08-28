@@ -108,14 +108,14 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       hide();
 
       if (res.success) {
-        message.success('شریک تجاری با موفقیت بروزرسانی شد');
+        message.success('برند معتبر با موفقیت بروزرسانی شد');
         onSuccess();
       } else {
-        message.error(res.message || 'خطا در بروزرسانی شریک تجاری');
+        message.error(res.message || 'خطا در بروزرسانی برند معتبر');
       }
     } catch (error) {
       hide();
-      message.error('خطا در بروزرسانی شریک تجاری');
+      message.error('خطا در بروزرسانی برند معتبر');
     }
   };
 
@@ -128,7 +128,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
   return (
     <ModalForm
-      title="ویرایش شریک تجاری"
+      title="ویرایش برند معتبر"
       form={form}
       open={open}
       onOpenChange={handleOpenChange}
@@ -141,7 +141,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       <ProFormText
         name="title"
         label="عنوان"
-        placeholder="عنوان شریک تجاری را وارد کنید"
+        placeholder="عنوان برند معتبر را وارد کنید"
         rules={[{ required: true, message: 'عنوان الزامی است' }]}
       />
 
@@ -184,7 +184,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         <Col span={12}>
           <Form.Item name="publish_at" label="تاریخ شروع نمایش">
             <DatePicker
-              format="YYYY/MM/DD"
+              format="YYYY/MM/DD HH:mm:ss"
+              showTime={{ format: 'HH:mm:ss' }}
               placeholder="تاریخ شروع نمایش"
               style={{ width: '100%' }}
             />
@@ -193,7 +194,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         <Col span={12}>
           <Form.Item name="end_date" label="تاریخ پایان نمایش">
             <DatePicker
-              format="YYYY/MM/DD"
+              format="YYYY/MM/DD HH:mm:ss"
+              showTime={{ format: 'HH:mm:ss' }}
               placeholder="تاریخ پایان نمایش"
               style={{ width: '100%' }}
               disabledDate={(current: Dayjs) =>

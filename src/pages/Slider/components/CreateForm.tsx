@@ -202,7 +202,8 @@ const CreateForm: React.FC<{
           <Col span={12}>
             <Form.Item name="publish_at" label="تاریخ شروع نمایش">
               <DatePicker
-                format="YYYY/MM/DD"
+                format="YYYY/MM/DD HH:mm:ss"
+                showTime={{ format: 'HH:mm:ss' }}
                 placeholder="تاریخ شروع نمایش"
                 style={{ width: '100%' }}
               />
@@ -211,7 +212,8 @@ const CreateForm: React.FC<{
           <Col span={12}>
             <Form.Item name="end_date" label="تاریخ پایان نمایش">
               <DatePicker
-                format="YYYY/MM/DD"
+                format="YYYY/MM/DD HH:mm:ss"
+                showTime={{ format: 'HH:mm:ss' }}
                 placeholder="تاریخ پایان نمایش"
                 style={{ width: '100%' }}
                 disabledDate={(current: Dayjs) =>

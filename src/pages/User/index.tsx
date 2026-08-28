@@ -6,6 +6,7 @@ import {
   DownloadOutlined,
   KeyOutlined,
   LoginOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import {
   ActionType,
@@ -16,6 +17,7 @@ import {
 import { Button, message, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import ChangePasswordForm from './components/ChangePasswordForm';
+import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
 
 const handleUpdate = async (fields: FormValueType) => {
@@ -51,15 +53,23 @@ const handleUpdate = async (fields: FormValueType) => {
 
 // Export column definitions with Persian headers
 const exportColumns: ExportColumn[] = [
+  { title: 'کد', dataIndex: 'code' },
   { title: 'نام کاربری', dataIndex: 'username' },
   { title: 'نام', dataIndex: 'first_name' },
   { title: 'نام خانوادگی', dataIndex: 'last_name' },
   { title: 'ایمیل', dataIndex: 'email' },
+  { title: 'سمت شغلی', dataIndex: 'job_position' },
   {
     title: 'نوع کاربر',
     dataIndex: 'user_type',
     render: (value) => (value === 'admin' ? 'ادمین' : 'کاربر'),
   },
+  {
+    title: 'شرکت‌ها و خدمات',
+    dataIndex: 'services',
+    render: (value) => (value ?? []).join('، '),
+  },
+  { title: 'تعداد شرکت/خدمات', dataIndex: 'services_count' },
 ];
 
 const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
@@ -72,6 +82,7 @@ const UserTable: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
   const [pageSize, setPageSize] = usePersistedPageSize('user', 10);
   const actionRef = useRef<ActionType>();
 
@@ -169,6 +180,14 @@ const UserTable: React.FC = () => {
       fieldProps: {
         placeholder: 'سمت شغلی را وارد کنید',
       },
+      sorter: true,
+    },
+    {
+      title: 'تعداد شرکت/خدمات',
+      dataIndex: 'services_count',
+      key: 'services_count',
+      width: 130,
+      hideInSearch: true,
       sorter: true,
     },
     {
@@ -286,6 +305,14 @@ const UserTable: React.FC = () => {
         }}
         toolBarRender={() => [
           <Button
+            key="create"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalVisible(true)}
+          >
+            افزودن کاربر
+          </Button>,
+          <Button
             key="export"
             icon={<DownloadOutlined />}
             onClick={handleExport}
@@ -368,6 +395,15 @@ const UserTable: React.FC = () => {
           actionRef.current?.reload();
         }}
         userId={passwordUserId}
+      />
+
+      <CreateForm
+        visible={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        onSuccess={() => {
+          setCreateModalVisible(false);
+          actionRef.current?.reload();
+        }}
       />
     </PageContainer>
   );

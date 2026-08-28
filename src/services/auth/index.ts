@@ -39,6 +39,7 @@ export async function addUser(data: {
   first_name: string;
   last_name: string;
   avatar?: string | null;
+  job_position?: string;
 }) {
   return request(`${API_BASE}/users`, {
     method: 'POST',

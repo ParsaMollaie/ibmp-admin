@@ -146,6 +146,28 @@ const AdvertisingPage: React.FC = () => {
       sorter: true,
     },
     {
+      title: 'تاریخ شروع نمایش',
+      dataIndex: 'publish_at',
+      search: false,
+      sorter: true,
+      width: 150,
+      render: (_, record) =>
+        record.publish_at
+          ? convertEnDateToFaDate(record.publish_at).format('YYYY/MM/DD HH:mm')
+          : '—',
+    },
+    {
+      title: 'تاریخ پایان نمایش',
+      dataIndex: 'end_date',
+      search: false,
+      sorter: true,
+      width: 150,
+      render: (_, record) =>
+        record.end_date
+          ? convertEnDateToFaDate(record.end_date).format('YYYY/MM/DD HH:mm')
+          : '—',
+    },
+    {
       title: 'تاریخ ایجاد',
       dataIndex: 'created_at',
       width: 150,
