@@ -8,6 +8,13 @@ interface DateRangeFilterProps {
   defaultEnd: Dayjs;
   onApply: (start: Dayjs, end: Dayjs) => void;
   loading?: boolean;
+  /** Fired on every date change, in addition to (not instead of) onApply — lets a
+   * parent track the currently-picked-but-not-yet-applied values, e.g. to combine
+   * them with other filters behind a single external "apply" button. */
+  onChange?: (start: Dayjs | null, end: Dayjs | null) => void;
+  /** Hides this component's own "اعمال" button — use when a parent provides a
+   * single unified apply button covering this date range plus other filters. */
+  hideApplyButton?: boolean;
 }
 
 const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
@@ -15,6 +22,8 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   defaultEnd,
   onApply,
   loading,
+  onChange,
+  hideApplyButton,
 }) => {
   const [pendingStartDate, setPendingStartDate] = useState<Dayjs | null>(
     defaultStart,
@@ -35,6 +44,16 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
     onApply(pendingStartDate, pendingEndDate);
   };
 
+  const handleStartChange = (date: Dayjs | null) => {
+    setPendingStartDate(date);
+    onChange?.(date, pendingEndDate);
+  };
+
+  const handleEndChange = (date: Dayjs | null) => {
+    setPendingEndDate(date);
+    onChange?.(pendingStartDate, date);
+  };
+
   return (
     <Card style={{ marginBottom: 16 }} bodyStyle={{ padding: 16 }}>
       <Space size="large" wrap align="end">
@@ -44,7 +63,7 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
           </div>
           <DatePicker
             value={pendingStartDate}
-            onChange={(date: Dayjs | null) => setPendingStartDate(date)}
+            onChange={handleStartChange}
             format="YYYY/MM/DD"
             allowClear={false}
             style={{ width: 160 }}
@@ -56,15 +75,17 @@ const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
           </div>
           <DatePicker
             value={pendingEndDate}
-            onChange={(date: Dayjs | null) => setPendingEndDate(date)}
+            onChange={handleEndChange}
             format="YYYY/MM/DD"
             allowClear={false}
             style={{ width: 160 }}
           />
         </div>
-        <Button type="primary" onClick={handleApply} loading={loading}>
-          اعمال
-        </Button>
+        {!hideApplyButton && (
+          <Button type="primary" onClick={handleApply} loading={loading}>
+            اعمال
+          </Button>
+        )}
       </Space>
     </Card>
   );

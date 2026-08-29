@@ -817,6 +817,11 @@ declare namespace API {
     total_count: number;
   }
 
+  interface PromotionRemainingTrendPoint {
+    date: string;
+    total_count: number;
+  }
+
   /**
    * Payload for updating an engineers-type service
    */

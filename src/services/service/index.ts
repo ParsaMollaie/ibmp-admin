@@ -20,6 +20,8 @@ export async function getServices(params?: {
   expires_within_days?: number;
   created_from?: string;
   created_to?: string;
+  expires_from?: string;
+  expires_to?: string;
   page?: number;
   page_size?: number;
   sorter?: string;
@@ -190,6 +192,23 @@ export async function getServiceActivityTrend(params?: {
 }) {
   return request<API.ApiResponse<API.ServiceActivityTrendPoint[]>>(
     `${API_BASE}/services/activity-trend`,
+    {
+      method: 'GET',
+      params,
+    },
+  );
+}
+
+/**
+ * Get promotion-remaining trend (count of promoted services' active plans expiring per day)
+ */
+export async function getPromotionRemainingTrend(params?: {
+  start_date?: string;
+  end_date?: string;
+  type?: API.ServiceType;
+}) {
+  return request<API.ApiResponse<API.PromotionRemainingTrendPoint[]>>(
+    `${API_BASE}/services/promotion-remaining-trend`,
     {
       method: 'GET',
       params,
