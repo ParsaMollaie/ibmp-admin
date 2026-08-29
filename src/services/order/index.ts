@@ -10,6 +10,7 @@ export async function getOrders(params?: {
   status?: string;
   user_search?: string;
   service_search?: string;
+  service_type?: string;
   plan_id?: string;
   created_from?: string;
   created_to?: string;

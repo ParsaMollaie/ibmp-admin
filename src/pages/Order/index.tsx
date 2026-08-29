@@ -1,14 +1,26 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getOrders } from '@/services/order';
 import { getPlans } from '@/services/plan';
+import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   CalendarOutlined,
   CrownOutlined,
+  DownloadOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Card, Col, Row, Select, Statistic, Tag, Typography } from 'antd';
+import {
+  Button,
+  Card,
+  Col,
+  message,
+  Row,
+  Select,
+  Statistic,
+  Tag,
+  Typography,
+} from 'antd';
 import { DatePicker } from 'antd-jalali';
 import jalaliMoment from 'jalali-moment';
 import React, { useEffect, useRef, useState } from 'react';
@@ -68,6 +80,79 @@ const STATUS_CARD_CONFIG: Record<
   },
 };
 
+// Excel export column definitions
+const exportColumns: ExportColumn[] = [
+  { title: 'کد سفارش', dataIndex: 'code' },
+  {
+    title: 'کاربر',
+    dataIndex: 'user',
+    render: (_, record) =>
+      record.user
+        ? `${record.user.first_name} ${record.user.last_name} (${record.user.username})`
+        : '—',
+  },
+  {
+    title: 'خدمات/شرکت ها',
+    dataIndex: 'service',
+    render: (_, record) => getServiceTitle(record),
+  },
+  {
+    title: 'پلن',
+    dataIndex: 'plan',
+    render: (_, record) =>
+      record.plan ? `${record.plan.name} (${record.plan.month} ماهه)` : '—',
+  },
+  {
+    title: 'مبلغ (تومان)',
+    dataIndex: 'price',
+    render: (_, record) => parseFloat(record.price).toLocaleString('fa-IR'),
+  },
+  {
+    title: 'مالیات (تومان)',
+    dataIndex: 'tax',
+    render: (_, record) =>
+      record.tax ? parseFloat(record.tax).toLocaleString('fa-IR') : '—',
+  },
+  {
+    title: 'وضعیت',
+    dataIndex: 'status',
+    render: (_, record) => getStatusConfig(record.status).label,
+  },
+  {
+    title: 'تاریخ انقضا',
+    dataIndex: 'expires_at',
+    render: (_, record) =>
+      record.expires_at ? formatJalaliDateTime(record.expires_at) : '—',
+  },
+  {
+    title: 'تاریخ ایجاد',
+    dataIndex: 'created_at',
+    render: (_, record) => formatJalaliDateTime(record.created_at),
+  },
+  {
+    title: 'تاریخ بروزرسانی',
+    dataIndex: 'updated_at',
+    render: (_, record) =>
+      record.updated_at ? formatJalaliDateTime(record.updated_at) : '—',
+  },
+  {
+    title: 'ایجاد شده توسط',
+    dataIndex: 'created_by',
+    render: (_, record) =>
+      record.created_by
+        ? `${record.created_by.first_name} ${record.created_by.last_name}`
+        : '—',
+  },
+  {
+    title: 'بروزرسانی شده توسط',
+    dataIndex: 'updated_by',
+    render: (_, record) =>
+      record.updated_by
+        ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
+        : '—',
+  },
+];
+
 // ============================================
 // PAGE COMPONENT
 // ============================================
@@ -88,6 +173,10 @@ const OrderPage: React.FC = () => {
     expired: 0,
   });
   const [statsLoading, setStatsLoading] = useState(false);
+
+  // Export state
+  const [filterParams, setFilterParams] = useState<Record<string, any>>({});
+  const [exporting, setExporting] = useState(false);
 
   const fetchPlans = async () => {
     try {
@@ -133,6 +222,49 @@ const OrderPage: React.FC = () => {
     formRef.current?.submit();
   };
 
+  const handleExport = async () => {
+    setExporting(true);
+    const messageKey = 'export-progress';
+    message.loading({
+      content: 'در حال دانلود...',
+      key: messageKey,
+      duration: 0,
+    });
+
+    try {
+      const result = await exportAllToExcel(
+        (params) => getOrders(params),
+        filterParams,
+        exportColumns,
+        'orders',
+        500,
+        (loaded, total) => {
+          message.loading({
+            content: `در حال دانلود... ${loaded} از ${total}`,
+            key: messageKey,
+            duration: 0,
+          });
+        },
+      );
+
+      if (result.success) {
+        message.success({
+          content: `${result.count} رکورد با موفقیت دانلود شد`,
+          key: messageKey,
+        });
+      } else {
+        message.warning({
+          content: 'داده‌ای برای دانلود وجود ندارد',
+          key: messageKey,
+        });
+      }
+    } catch (error) {
+      message.error({ content: 'خطا در دانلود فایل اکسل', key: messageKey });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // ============================================
   // COLUMNS
   // ============================================
@@ -151,8 +283,10 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'کاربر',
+      dataIndex: 'user_search',
       key: 'user_search',
       width: 180,
+      sorter: true,
       render: (_, record) =>
         record.user ? (
           <div
@@ -176,16 +310,33 @@ const OrderPage: React.FC = () => {
       },
     },
     {
-      title: 'سرویس',
+      title: 'خدمات/شرکت ها',
+      dataIndex: 'service_search',
       key: 'service_search',
       width: 160,
       ellipsis: true,
+      sorter: true,
       render: (_, record) => {
         const title = getServiceTitle(record);
         const serviceType = record.service?.type;
         return (
           <div>
-            <div>{title}</div>
+            {record.service ? (
+              <div
+                style={{ cursor: 'pointer', color: '#1890ff' }}
+                onClick={() =>
+                  history.push(
+                    `/services?type=${serviceType}&search=${encodeURIComponent(
+                      title,
+                    )}`,
+                  )
+                }
+              >
+                {title}
+              </div>
+            ) : (
+              <div>{title}</div>
+            )}
             {serviceType && (
               <Tag
                 color={serviceType === 'company' ? 'blue' : 'green'}
@@ -198,14 +349,16 @@ const OrderPage: React.FC = () => {
         );
       },
       fieldProps: {
-        placeholder: 'عنوان یا کد سرویس',
+        placeholder: 'عنوان یا کد خدمات/شرکت',
       },
     },
     {
       title: 'پلن',
-      key: 'plan_display',
+      dataIndex: 'plan_name',
+      key: 'plan_name',
       width: 130,
       hideInSearch: true,
+      sorter: true,
       render: (_, record) =>
         record.plan ? (
           <div>
@@ -233,6 +386,22 @@ const OrderPage: React.FC = () => {
             value: p.id,
             label: `${p.name} (${p.month} ماهه)`,
           }))}
+        />
+      ),
+    },
+    {
+      title: 'نوع خدمت',
+      dataIndex: 'service_type',
+      key: 'service_type',
+      hideInTable: true,
+      renderFormItem: () => (
+        <Select
+          allowClear
+          placeholder="نوع خدمت"
+          options={[
+            { value: 'company', label: 'شرکت' },
+            { value: 'engineers', label: 'مهندسی' },
+          ]}
         />
       ),
     },
@@ -330,10 +499,11 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'ایجاد شده توسط',
-      key: 'created_by',
-      dataIndex: 'created_by',
+      key: 'created_by_name',
+      dataIndex: 'created_by_name',
       width: 130,
       hideInSearch: true,
+      sorter: true,
       render: (_, record) =>
         record.created_by
           ? `${record.created_by.first_name} ${record.created_by.last_name}`
@@ -341,10 +511,11 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'بروزرسانی شده توسط',
-      key: 'updated_by',
-      dataIndex: 'updated_by',
+      key: 'updated_by_name',
+      dataIndex: 'updated_by_name',
       width: 130,
       hideInSearch: true,
+      sorter: true,
       render: (_, record) =>
         record.updated_by
           ? `${record.updated_by.first_name} ${record.updated_by.last_name}`
@@ -402,6 +573,16 @@ const OrderPage: React.FC = () => {
         columns={columns}
         actionRef={actionRef}
         formRef={formRef}
+        toolBarRender={() => [
+          <Button
+            key="export"
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exporting}
+          >
+            دانلود اکسل
+          </Button>,
+        ]}
         request={async (params, sort) => {
           // Format date params
           const createdFrom = params.created_from
@@ -415,14 +596,21 @@ const OrderPage: React.FC = () => {
               : params.created_to.format?.('YYYY-MM-DD')
             : undefined;
 
-          const response = await getOrders({
+          const apiParams = {
             code: params.code ? Number(params.code) : undefined,
             status: params.status || undefined,
             user_search: params.user_search || undefined,
             service_search: params.service_search || undefined,
+            service_type: params.service_type || undefined,
             plan_id: params.plan_id || undefined,
             created_from: createdFrom,
             created_to: createdTo,
+          };
+
+          setFilterParams(apiParams);
+
+          const response = await getOrders({
+            ...apiParams,
             page: params.current,
             page_size: params.pageSize,
             sorter:
