@@ -194,6 +194,12 @@ declare namespace API {
     end_date?: string | null;
   }
 
+  // Category reference nested on a news item
+  interface NewsCategory {
+    id: string;
+    title: string;
+  }
+
   // News item returned from API
   interface NewsItem {
     id: string;
@@ -204,16 +210,48 @@ declare namespace API {
     portrait_image: string;
     preview_image: string;
     alt_image: string;
-    publish_at: string;
     code: number;
     status: 'active' | 'inactive';
-    study_time: number;
+    categories: NewsCategory[];
     views_count: number;
     rate: number;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
     updated_at: string;
+  }
+
+  // Article reference nested on a news comment
+  interface NewsCommentArticle {
+    id: string;
+    code: number;
+    title: string;
+  }
+
+  type NewsCommentStatus = 'pending' | 'approved' | 'rejected';
+
+  // News comment item returned from API (admin, cross-article list)
+  interface NewsCommentItem {
+    id: string;
+    news: NewsCommentArticle | null;
+    user: OrderUser | null;
+    content: string;
+    status: NewsCommentStatus;
+    reply: string | null;
+    created_by?: string | null;
+    updated_by?: string | null;
+    created_at: string;
+    updated_at: string;
+  }
+
+  // Payload for approving/rejecting a news comment
+  interface NewsCommentStatusPayload {
+    status: 'approved' | 'rejected';
+  }
+
+  // Payload for writing/updating a news comment's admin reply
+  interface NewsCommentReplyPayload {
+    reply: string;
   }
 
   // Payload for creating/updating news
@@ -225,10 +263,9 @@ declare namespace API {
     portrait_image: string; // Required - base64
     preview_image: string; // Required - base64
     alt_image: string;
-    publish_at: string;
     author_id?: string | null;
     status: 'active' | 'inactive';
-    study_time: number;
+    category_ids?: string[];
   }
 
   interface PlanFeature {

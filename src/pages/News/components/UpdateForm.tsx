@@ -1,20 +1,15 @@
 import RichTextEditor from '@/components/RichTextEditor';
+import { getCategoryTree } from '@/services/category';
 import { updateNews } from '@/services/news';
-import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
-import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
   ModalForm,
-  ProFormDigit,
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
-import { Form, Image, message, Spin, Upload } from 'antd';
+import { Form, Image, message, Spin, TreeSelect, Upload } from 'antd';
 import React, { useEffect, useState } from 'react';
-import persian from 'react-date-object/calendars/persian';
-import persian_fa from 'react-date-object/locales/persian_fa';
-import DatePicker from 'react-multi-date-picker';
 
 interface UpdateFormProps {
   open: boolean;
@@ -22,6 +17,20 @@ interface UpdateFormProps {
   record?: API.NewsItem;
   onSuccess: () => void;
 }
+
+const buildTreeSelectOptions = (
+  items: API.CategoryTreeItem[],
+): { title: string; value: string; key: string; children?: any[] }[] => {
+  return items.map((item) => ({
+    title: item.title,
+    value: item.id,
+    key: item.id,
+    children:
+      item.children && item.children.length > 0
+        ? buildTreeSelectOptions(item.children)
+        : undefined,
+  }));
+};
 
 // Helper function to convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -53,21 +62,26 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   // Loading state for form submission
   const [submitting, setSubmitting] = useState(false);
 
+  const [categoryOptions, setCategoryOptions] = useState<
+    { title: string; value: string; key: string; children?: any[] }[]
+  >([]);
+
+  useEffect(() => {
+    getCategoryTree().then((res) => {
+      setCategoryOptions(buildTreeSelectOptions(res.data || []));
+    });
+  }, []);
+
   // When record changes, populate the form
   useEffect(() => {
     if (record && open) {
-      // Pass dayjs object — JalaliLocaleListener ensures it renders as Jalali
-
-      const jalaliDate = convertEnDateToFaDate(record.publish_at);
-
       form.setFieldsValue({
         title: record.title,
         summary: record.summary,
         content: record.content,
-        publish_at: jalaliDate,
-        study_time: record.study_time,
         status: record.status,
         alt_image: record.alt_image,
+        category_ids: record.categories?.map((category) => category.id) ?? [],
       });
 
       // Reset image change flags
@@ -102,21 +116,15 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     const hide = message.loading('در حال بروزرسانی...');
 
     try {
-      // Convert Jalali date to Gregorian for API
-      const publishDate = convertFaDateToEnDate(values.publish_at).format(
-        'YYYY-MM-DD HH:mm:ss',
-      );
-
       // Start with required fields
       const payload: Partial<API.NewsPayload> = {
         title: values.title,
         content: values.content,
         summary: values.summary,
         alt_image: values.alt_image || '',
-        publish_at: publishDate,
         author_id: null,
         status: values.status,
-        study_time: values.study_time,
+        category_ids: values.category_ids || [],
       };
 
       // Handle main image
@@ -244,27 +252,18 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <RichTextEditor placeholder="محتوای کامل خبر را وارد کنید" />
         </Form.Item>
 
-        <Form.Item
-          name="publish_at"
-          label="تاریخ انتشار"
-          rules={[{ required: true, message: 'تاریخ انتشار الزامی است' }]}
-        >
-          <DatePicker
-            calendar={persian}
-            locale={persian_fa}
-            format="YYYY/MM/DD"
-            placeholder="تاریخ انتشار را انتخاب کنید"
+        <Form.Item name="category_ids" label="دسته‌بندی">
+          <TreeSelect
+            treeData={categoryOptions}
+            treeCheckable
+            showCheckedStrategy={TreeSelect.SHOW_CHILD}
+            showSearch
+            treeNodeFilterProp="title"
+            placeholder="انتخاب دسته‌بندی (چند انتخابی)"
             style={{ width: '100%' }}
+            maxTagCount="responsive"
           />
         </Form.Item>
-
-        <ProFormDigit
-          name="study_time"
-          label="زمان مطالعه (دقیقه)"
-          placeholder="زمان تقریبی مطالعه"
-          min={1}
-          rules={[{ required: true, message: 'زمان مطالعه الزامی است' }]}
-        />
 
         <ProFormSelect
           name="status"

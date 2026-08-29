@@ -6,6 +6,7 @@ const API_BASE = '/api/v1/admin';
 export async function getNewsList(params?: {
   title?: string;
   status?: string;
+  category_codes?: string[];
   page?: number;
   page_size?: number;
   sorter?: string;

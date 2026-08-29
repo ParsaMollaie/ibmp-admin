@@ -94,10 +94,16 @@ export default defineConfig({
       icon: 'TeamOutlined',
     },
     {
-      name: 'مقالات',
+      name: 'مقالات و دانلود ها',
       path: '/News',
       component: './News',
       icon: 'ReadOutlined',
+    },
+    {
+      name: 'نظرات مقالات',
+      path: '/news-comments',
+      component: './NewsComments',
+      icon: 'CommentOutlined',
     },
     {
       name: 'پلن‌ها',

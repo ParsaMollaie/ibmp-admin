@@ -1,13 +1,29 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
+import { getCategoryTree } from '@/services/category';
 import { deleteNews, getNewsList } from '@/services/news';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
-import { Button, Image, message, Modal, Space, Tag } from 'antd';
-import React, { useRef, useState } from 'react';
+import { Button, Image, message, Modal, Space, Tag, TreeSelect } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
+
+const buildTreeSelectOptions = (
+  items: API.CategoryTreeItem[],
+): { title: string; value: string; key: string; children?: any[] }[] => {
+  return items.map((item) => ({
+    title: item.title,
+    value: String(item.code),
+    key: String(item.code),
+    children:
+      item.children && item.children.length > 0
+        ? buildTreeSelectOptions(item.children)
+        : undefined,
+  }));
+};
 
 // Strip HTML tags for plain-text display
 const stripHtml = (html: string): string => {
@@ -22,11 +38,29 @@ const stripHtml = (html: string): string => {
 
 const NewsPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
+  const formRef = useRef<any>();
 
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
   const [currentRecord, setCurrentRecord] = useState<API.NewsItem>();
   const [pageSize, setPageSize] = usePersistedPageSize('news', 10);
+  const [categoryOptions, setCategoryOptions] = useState<
+    { title: string; value: string; key: string; children?: any[] }[]
+  >([]);
+
+  useEffect(() => {
+    getCategoryTree().then((res) => {
+      setCategoryOptions(buildTreeSelectOptions(res.data || []));
+    });
+
+    // Read title query param from URL (e.g. navigated from news-comments page)
+    const params = new URLSearchParams(history.location.search);
+    const titleParam = params.get('title');
+    if (titleParam) {
+      formRef.current?.setFieldsValue({ title: titleParam });
+      formRef.current?.submit();
+    }
+  }, []);
 
   const handleDelete = (record: API.NewsItem) => {
     Modal.confirm({
@@ -103,25 +137,38 @@ const NewsPage: React.FC = () => {
       sorter: true,
     },
     {
-      title: 'زمان مطالعه (دقیقه)',
-      dataIndex: 'study_time',
-      width: 120,
+      title: 'دسته‌بندی',
+      dataIndex: 'categories',
+      width: 200,
       search: false,
-      sorter: true,
+      render: (_, record) =>
+        record.categories && record.categories.length > 0 ? (
+          <Space size={[0, 4]} wrap>
+            {record.categories.map((category) => (
+              <Tag key={category.id}>{category.title}</Tag>
+            ))}
+          </Space>
+        ) : (
+          '—'
+        ),
     },
     {
-      title: 'تاریخ انتشار',
-      dataIndex: 'publish_at',
-      width: 130,
-      search: false,
-      render: (_, record) => {
-        return (
-          <span>
-            {convertEnDateToFaDate(record.publish_at).format('YYYY/MM/DD')}
-          </span>
-        );
-      },
-      sorter: true,
+      title: 'دسته‌بندی',
+      dataIndex: 'category_codes',
+      key: 'category_codes',
+      hideInTable: true,
+      renderFormItem: () => (
+        <TreeSelect
+          treeData={categoryOptions}
+          treeCheckable
+          showCheckedStrategy={TreeSelect.SHOW_CHILD}
+          showSearch
+          treeNodeFilterProp="title"
+          placeholder="انتخاب دسته‌بندی (چند انتخابی)"
+          style={{ width: '100%' }}
+          maxTagCount="responsive"
+        />
+      ),
     },
     {
       title: 'وضعیت',
@@ -231,10 +278,11 @@ const NewsPage: React.FC = () => {
   ];
 
   return (
-    <PageContainer header={{ title: 'مدیریت مقالات' }}>
+    <PageContainer header={{ title: 'مدیریت مقالات و دانلود ها' }}>
       <ProTable<API.NewsItem>
         headerTitle="لیست مقالات"
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="id"
         columns={columns}
         search={{
@@ -242,9 +290,14 @@ const NewsPage: React.FC = () => {
         }}
         request={async (params, sort) => {
           try {
+            const categoryCodes = Array.isArray(params.category_codes)
+              ? params.category_codes
+              : undefined;
+
             const response = await getNewsList({
               title: params.title,
               status: params.status,
+              category_codes: categoryCodes,
               page: params.current,
               page_size: params.pageSize,
               sorter:
