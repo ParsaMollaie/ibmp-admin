@@ -9,6 +9,11 @@ import {
   rejectService,
   updateServiceTag,
 } from '@/services/service';
+import {
+  createServiceNote,
+  deleteServiceNote,
+  getServiceNotes,
+} from '@/services/service-notes';
 import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   AppstoreOutlined,
@@ -20,6 +25,7 @@ import {
   EditOutlined,
   EyeOutlined,
   FileImageOutlined,
+  FileTextOutlined,
   LinkOutlined,
   MoreOutlined,
   OrderedListOutlined,
@@ -39,8 +45,11 @@ import {
   Divider,
   Dropdown,
   Image,
+  Input,
+  List,
   message,
   Modal,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -52,6 +61,7 @@ import {
   Typography,
 } from 'antd';
 import { DatePicker } from 'antd-jalali';
+import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import AssignPlanForm from './components/AssignPlanForm';
@@ -62,6 +72,7 @@ import UpdatePriorityForm from './components/UpdatePriorityForm';
 import UpdateStatusForm from './components/UpdateStatusForm';
 
 const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
 
 // ============================================
 // CONFIGURATION
@@ -461,6 +472,14 @@ const ServicesPage: React.FC = () => {
   const [priorityModalVisible, setPriorityModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Notes modal state
+  const [notesModalVisible, setNotesModalVisible] = useState(false);
+  const [notesRecord, setNotesRecord] = useState<API.ServiceItem | null>(null);
+  const [notes, setNotes] = useState<API.ServiceNoteItem[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [submittingNote, setSubmittingNote] = useState(false);
+
   // Currently selected record
   const [currentRecord, setCurrentRecord] = useState<API.ServiceItem | null>(
     null,
@@ -558,6 +577,65 @@ const ServicesPage: React.FC = () => {
     setPriorityModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  // ============================================
+  // NOTES HANDLERS
+  // ============================================
+
+  const fetchNotes = async (serviceId: string) => {
+    setNotesLoading(true);
+    try {
+      const res = await getServiceNotes(serviceId);
+      if (res.success) {
+        setNotes(res.data || []);
+      }
+    } catch {
+      message.error('خطا در دریافت یادداشت‌ها');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const openNotesModal = async (record: API.ServiceItem) => {
+    setNotesRecord(record);
+    setNotesModalVisible(true);
+    setNewNoteContent('');
+    await fetchNotes(record.id);
+  };
+
+  const handleAddNote = async () => {
+    if (!newNoteContent.trim() || !notesRecord) return;
+    setSubmittingNote(true);
+    try {
+      const res = await createServiceNote(notesRecord.id, {
+        content: newNoteContent.trim(),
+      });
+      if (res.success) {
+        message.success('یادداشت اضافه شد');
+        setNewNoteContent('');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در ایجاد یادداشت');
+    } finally {
+      setSubmittingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!notesRecord) return;
+    try {
+      const res = await deleteServiceNote(noteId);
+      if (res.success) {
+        message.success('یادداشت حذف شد');
+        await fetchNotes(notesRecord.id);
+        actionRef.current?.reload();
+      }
+    } catch {
+      message.error('خطا در حذف یادداشت');
+    }
   };
 
   const handleStatusUpdateSuccess = () => {
@@ -1075,6 +1153,15 @@ const ServicesPage: React.FC = () => {
             label: 'تغییر اولویت',
             onClick: () => handleChangePriority(record),
           },
+          {
+            key: 'notes',
+            icon: <FileTextOutlined />,
+            label:
+              (record.notes_count ?? 0) > 0
+                ? `یادداشت‌ها (${record.notes_count})`
+                : 'یادداشت‌ها',
+            onClick: () => openNotesModal(record),
+          },
           ...(record.can_set_regular
             ? [
                 {
@@ -1427,6 +1514,79 @@ const ServicesPage: React.FC = () => {
         onSuccess={handlePriorityUpdateSuccess}
         record={currentRecord}
       />
+
+      {/* Notes Modal */}
+      <Modal
+        title={`یادداشت‌های خدمت: ${notesRecord?.title || ''}`}
+        open={notesModalVisible}
+        onCancel={() => {
+          setNotesModalVisible(false);
+          setNotesRecord(null);
+          setNotes([]);
+        }}
+        footer={null}
+        width={600}
+      >
+        {/* Add new note */}
+        <div style={{ marginBottom: 16 }}>
+          <TextArea
+            rows={3}
+            value={newNoteContent}
+            onChange={(e) => setNewNoteContent(e.target.value)}
+            placeholder="یادداشت جدید..."
+            maxLength={5000}
+          />
+          <Button
+            type="primary"
+            style={{ marginTop: 8 }}
+            onClick={handleAddNote}
+            loading={submittingNote}
+            disabled={!newNoteContent.trim()}
+          >
+            ثبت یادداشت
+          </Button>
+        </div>
+
+        {/* Notes list */}
+        <List
+          loading={notesLoading}
+          dataSource={notes}
+          locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
+          renderItem={(note) => (
+            <List.Item
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title="آیا از حذف این یادداشت مطمئنید؟"
+                  onConfirm={() => handleDeleteNote(note.id)}
+                  okText="بله"
+                  cancelText="خیر"
+                >
+                  <Button type="link" danger size="small">
+                    حذف
+                  </Button>
+                </Popconfirm>,
+              ]}
+            >
+              <List.Item.Meta
+                title={
+                  <Space>
+                    <Text strong>
+                      {note.user?.first_name} {note.user?.last_name}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {dayjs(note.created_at).format('YYYY/MM/DD HH:mm')}
+                    </Text>
+                  </Space>
+                }
+                description={
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{note.content}</div>
+                }
+              />
+            </List.Item>
+          )}
+        />
+      </Modal>
 
       {/* Assign Plan Modal */}
       <AssignPlanForm

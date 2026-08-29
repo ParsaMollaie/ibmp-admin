@@ -170,6 +170,7 @@ export async function getServiceActivityReport(params?: {
   type?: API.ServiceType;
   page?: number;
   page_size?: number;
+  sorter?: string;
 }) {
   return request<
     API.ApiResponse<API.PaginatedResponse<API.ServiceActivityItem>>
@@ -177,6 +178,23 @@ export async function getServiceActivityReport(params?: {
     method: 'GET',
     params,
   });
+}
+
+/**
+ * Get service activity trend (total activity per day within a date range)
+ */
+export async function getServiceActivityTrend(params?: {
+  start_date?: string;
+  end_date?: string;
+  type?: API.ServiceType;
+}) {
+  return request<API.ApiResponse<API.ServiceActivityTrendPoint[]>>(
+    `${API_BASE}/services/activity-trend`,
+    {
+      method: 'GET',
+      params,
+    },
+  );
 }
 
 /**

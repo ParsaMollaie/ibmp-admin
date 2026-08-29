@@ -764,12 +764,19 @@ declare namespace API {
     status: ServiceStatus;
     category_title: string | null;
     user_name: string | null;
+    username: string | null;
     view_count: number;
     call_click_count: number;
     website_click_count: number;
     catalog_download_count: number;
     social_click_count: number;
     share_click_count: number;
+    total_count: number;
+    notes_count?: number;
+  }
+
+  interface ServiceActivityTrendPoint {
+    date: string;
     total_count: number;
   }
 
