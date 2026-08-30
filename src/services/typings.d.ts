@@ -338,6 +338,9 @@ declare namespace API {
   // Order status options
   type OrderStatus = 'paid' | 'pending' | 'cancelled' | 'expired';
 
+  // Order source options — who created the order
+  type OrderSource = 'client' | 'admin';
+
   // Order item returned from API
   interface OrderItem {
     id: string;
@@ -345,6 +348,7 @@ declare namespace API {
     price: string;
     tax: string;
     status: OrderStatus;
+    source: OrderSource;
     expires_at: string;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;

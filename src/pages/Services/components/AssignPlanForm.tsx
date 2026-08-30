@@ -1,6 +1,6 @@
 import { getPlans } from '@/services/plan';
 import { assignServicePlan } from '@/services/service';
-import { Form, Modal, Select, message } from 'antd';
+import { Form, InputNumber, Modal, Select, Switch, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 interface AssignPlanFormProps {
@@ -47,7 +47,11 @@ const AssignPlanForm: React.FC<AssignPlanFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      const response = await assignServicePlan(record.id, values.plan_id);
+      const response = await assignServicePlan(record.id, {
+        plan_id: values.plan_id,
+        paid: values.paid || false,
+        months: values.months || undefined,
+      });
 
       if (response.success) {
         form.resetFields();
@@ -107,7 +111,34 @@ const AssignPlanForm: React.FC<AssignPlanFormProps> = ({
               label: `${plan.name} — ${plan.month} ماه — ${plan.price} تومان`,
               value: plan.id,
             }))}
+            onChange={(planId) => {
+              const plan = plans.find((p) => p.id === planId);
+              if (plan) {
+                form.setFieldValue('months', plan.month);
+              }
+            }}
           />
+        </Form.Item>
+
+        <Form.Item
+          name="months"
+          label="تعداد ماه (اختیاری)"
+          tooltip="در صورت خالی بودن، مدت زمان خود پلن اعمال می‌شود"
+        >
+          <InputNumber
+            min={1}
+            style={{ width: '100%' }}
+            placeholder="تعداد ماه"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="paid"
+          label="پرداخت شده توسط کاربر"
+          valuePropName="checked"
+          initialValue={false}
+        >
+          <Switch checkedChildren="بله" unCheckedChildren="خیر" />
         </Form.Item>
       </Form>
     </Modal>

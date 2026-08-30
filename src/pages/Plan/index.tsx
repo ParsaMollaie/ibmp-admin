@@ -1,5 +1,5 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
-import { getPlans } from '@/services/plan';
+import { getPlans, updatePlan } from '@/services/plan';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import {
   CheckCircleOutlined,
@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
-import { Button, Card, message, Space, Tag } from 'antd';
+import { Button, Card, message, Popover, Space, Switch, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
@@ -29,6 +29,9 @@ const PlanPage: React.FC = () => {
   // ProTable action ref - allows programmatic control of table (refresh, etc.)
   const actionRef = useRef<ActionType>();
   const [pageSize, setPageSize] = usePersistedPageSize('plan', 20);
+
+  // Tracks which plan's status switch is currently toggling
+  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
 
   // ============================================
   // EVENT HANDLERS
@@ -50,6 +53,28 @@ const PlanPage: React.FC = () => {
     setCreateModalVisible(false);
     message.success('پلن با موفقیت ایجاد شد');
     actionRef.current?.reload();
+  };
+
+  // Toggle a plan's active/inactive status inline, resending the full record
+  const handleToggleStatus = async (record: API.PlanItem, checked: boolean) => {
+    setTogglingStatusId(record.id);
+    try {
+      await updatePlan(record.id, {
+        name: record.name,
+        status: checked ? 'active' : 'inactive',
+        month: record.month,
+        attributes: record.attributes,
+        is_free_trial: record.is_free_trial,
+        features: record.features,
+        price: Number(record.price),
+      });
+      message.success(checked ? 'پلن فعال شد' : 'پلن غیرفعال شد');
+      actionRef.current?.reload();
+    } catch (error) {
+      message.error('خطا در تغییر وضعیت پلن');
+    } finally {
+      setTogglingStatusId(null);
+    }
   };
 
   // Success callback for update operation
@@ -77,6 +102,8 @@ const PlanPage: React.FC = () => {
       title: 'نام پلن',
       dataIndex: 'name',
       key: 'name',
+      width: 180,
+      ellipsis: true,
       // ProTable automatically adds search for this field
       sorter: true,
     },
@@ -122,9 +149,13 @@ const PlanPage: React.FC = () => {
       width: 100,
       search: false,
       render: (_, record) => (
-        <Tag color={record.status === 'active' ? 'success' : 'error'}>
-          {record.status === 'active' ? 'فعال' : 'غیرفعال'}
-        </Tag>
+        <Switch
+          checked={record.status === 'active'}
+          checkedChildren="فعال"
+          unCheckedChildren="غیرفعال"
+          loading={togglingStatusId === record.id}
+          onChange={(checked) => handleToggleStatus(record, checked)}
+        />
       ),
       sorter: true,
     },
@@ -140,29 +171,46 @@ const PlanPage: React.FC = () => {
           // return record.attributes || <span style={{ color: '#999' }}>—</span>;
           return <span style={{ color: '#999' }}>—</span>;
         }
+
+        const renderFeature = (feature: API.PlanFeature, index: number) => (
+          <span key={index}>
+            {feature.included ? (
+              <CheckCircleOutlined
+                style={{ color: '#52c41a', marginLeft: 4 }}
+              />
+            ) : (
+              <CloseCircleOutlined style={{ color: '#999', marginLeft: 4 }} />
+            )}
+            <span
+              style={{
+                color: feature.included ? undefined : '#999',
+                textDecoration: feature.included ? 'none' : 'line-through',
+              }}
+            >
+              {feature.title}
+            </span>
+          </span>
+        );
+
+        const VISIBLE_COUNT = 3;
+        const visibleFeatures = record.features.slice(0, VISIBLE_COUNT);
+        const remainingCount = record.features.length - VISIBLE_COUNT;
+
         return (
           <Space direction="vertical" size={2}>
-            {record.features.map((feature, index) => (
-              <span key={index}>
-                {feature.included ? (
-                  <CheckCircleOutlined
-                    style={{ color: '#52c41a', marginLeft: 4 }}
-                  />
-                ) : (
-                  <CloseCircleOutlined
-                    style={{ color: '#999', marginLeft: 4 }}
-                  />
-                )}
-                <span
-                  style={{
-                    color: feature.included ? undefined : '#999',
-                    textDecoration: feature.included ? 'none' : 'line-through',
-                  }}
-                >
-                  {feature.title}
-                </span>
-              </span>
-            ))}
+            {visibleFeatures.map(renderFeature)}
+            {remainingCount > 0 && (
+              <Popover
+                title="همه ویژگی‌ها"
+                content={
+                  <Space direction="vertical" size={2}>
+                    {record.features.map(renderFeature)}
+                  </Space>
+                }
+              >
+                <a style={{ fontSize: 12 }}>+{remainingCount} مورد دیگر</a>
+              </Popover>
+            )}
           </Space>
         );
       },
@@ -283,7 +331,7 @@ const PlanPage: React.FC = () => {
           showTotal: (total) => `مجموع: ${total} پلن`,
         }}
         // Horizontal scroll for responsiveness
-        scroll={{ x: 1200 }}
+        scroll={{ x: 1650 }}
         // Date formatting
         dateFormatter="string"
         // Header title (optional, since we use toolbar.title)

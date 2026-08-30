@@ -219,12 +219,15 @@ export async function getPromotionRemainingTrend(params?: {
 /**
  * Assign a plan to a service (admin-granted subscription)
  */
-export async function assignServicePlan(serviceId: string, planId: string) {
+export async function assignServicePlan(
+  serviceId: string,
+  data: { plan_id: string; paid?: boolean; months?: number },
+) {
   return request<API.ApiResponse<[]>>(
     `${API_BASE}/services/${serviceId}/assign-plan`,
     {
       method: 'POST',
-      data: { plan_id: planId },
+      data,
     },
   );
 }

@@ -119,6 +119,11 @@ const exportColumns: ExportColumn[] = [
     render: (_, record) => getStatusConfig(record.status).label,
   },
   {
+    title: 'منبع',
+    dataIndex: 'source',
+    render: (_, record) => (record.source === 'admin' ? 'ادمین' : 'کاربر'),
+  },
+  {
     title: 'تاریخ انقضا',
     dataIndex: 'expires_at',
     render: (_, record) =>
@@ -455,6 +460,26 @@ const OrderPage: React.FC = () => {
       sorter: true,
     },
     {
+      title: 'منبع',
+      dataIndex: 'source',
+      key: 'source',
+      width: 110,
+      valueType: 'select',
+      valueEnum: {
+        client: { text: 'کاربر', status: 'Default' },
+        admin: { text: 'ادمین', status: 'Processing' },
+      },
+      render: (_, record) => (
+        <Tag color={record.source === 'admin' ? 'purple' : 'default'}>
+          {record.source === 'admin' ? 'ادمین' : 'کاربر'}
+        </Tag>
+      ),
+      fieldProps: {
+        placeholder: 'منبع سفارش',
+      },
+      sorter: true,
+    },
+    {
       title: 'تاریخ انقضا',
       key: 'expires_at_display',
       dataIndex: 'expires_at',
@@ -599,6 +624,7 @@ const OrderPage: React.FC = () => {
           const apiParams = {
             code: params.code ? Number(params.code) : undefined,
             status: params.status || undefined,
+            source: params.source || undefined,
             user_search: params.user_search || undefined,
             service_search: params.service_search || undefined,
             service_type: params.service_type || undefined,
