@@ -10,7 +10,7 @@ import { StyleSheetManager } from 'styled-components';
 import rtlPlugin from 'stylis-plugin-rtl';
 import type { RuntimeConfig } from 'umi';
 import { history } from 'umi';
-import logo from './assets/images/logo.svg';
+import logo from './assets/images/logo.png';
 import UserAvatar from './components/UserAvatar';
 import './global.less';
 

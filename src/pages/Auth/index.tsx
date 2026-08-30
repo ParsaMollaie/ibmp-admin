@@ -2,7 +2,7 @@ import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import { Button, Card, Form, Input, Typography, message } from 'antd';
 import React, { useEffect } from 'react';
-import logo from '../../assets/images/logo.svg';
+import logo from '../../assets/images/logo.png';
 import styles from './index.less';
 
 const { Text } = Typography;
