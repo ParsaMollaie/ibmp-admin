@@ -58,7 +58,7 @@ export default function useUserModel(): UseUserModelReturn {
           throw new Error(response.message || 'Login failed');
         }
 
-        Cookies.set('token', response.data.access_token, { expires: 30 });
+        Cookies.set('admin_token', response.data.access_token, { expires: 30 });
         await fetchUserProfile();
         history.push('/');
       } finally {
@@ -75,7 +75,7 @@ export default function useUserModel(): UseUserModelReturn {
     } catch {
       message.error('خطا در ارتباط با سرور');
     } finally {
-      Cookies.remove('token');
+      Cookies.remove('admin_token');
       setCurrentUser(null);
       await refresh();
       history.replace('/auth');

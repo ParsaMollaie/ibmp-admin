@@ -29,7 +29,7 @@ const PUBLIC_PATHS = ['/auth'];
 export async function getInitialState(): Promise<{
   currentUser?: API.UserInfo;
 }> {
-  const token = Cookies.get('token');
+  const token = Cookies.get('admin_token');
   const currentPath = history.location.pathname;
 
   // If no token and not on a public page, redirect to auth
@@ -47,14 +47,14 @@ export async function getInitialState(): Promise<{
       return { currentUser: response.data };
     }
     // If profile fetch fails (e.g., invalid token), clear and redirect
-    Cookies.remove('token');
+    Cookies.remove('admin_token');
     if (!PUBLIC_PATHS.includes(currentPath)) {
       history.push('/auth');
     }
     return { currentUser: undefined };
   } catch (error) {
     // Network error or server error - clear token and redirect
-    Cookies.remove('token');
+    Cookies.remove('admin_token');
     if (!PUBLIC_PATHS.includes(currentPath)) {
       history.push('/auth');
     }
@@ -68,7 +68,7 @@ export const request: RequestConfig = {
     errorHandler: (error: any) => {
       const { response } = error;
       if (response && response.status === 401) {
-        Cookies.remove('token');
+        Cookies.remove('admin_token');
         window.location.href = '/auth';
       }
       throw error;
@@ -76,7 +76,7 @@ export const request: RequestConfig = {
   },
   requestInterceptors: [
     (url, options) => {
-      const token = Cookies.get('token');
+      const token = Cookies.get('admin_token');
       if (token) {
         options.headers = {
           ...options.headers,
