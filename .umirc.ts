@@ -1,7 +1,11 @@
 import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
-  links: [{ rel: 'icon', href: '/favicon.ico' }],
+  // Versioned query string so browsers that cached the pre-rebrand favicon
+  // (favicons are cached very aggressively per-origin) fetch the new icon
+  // instead of continuing to show the stale one. Bump the version if the
+  // icon is ever replaced again.
+  links: [{ rel: 'icon', href: '/favicon.ico?v=2' }],
   antd: {},
   access: {},
   model: {},
