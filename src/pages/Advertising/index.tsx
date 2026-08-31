@@ -14,6 +14,7 @@ const sectionLabels: Record<string, string> = {
   main_page_first_section: 'بخش اول صفحه اصلی',
   main_page_second_section: 'بخش دوم صفحه اصلی',
   main_page_third_section: 'بخش سوم صفحه اصلی',
+  main_page_fourth_section: 'بخش چهارم صفحه اصلی',
 };
 
 const AdvertisingPage: React.FC = () => {
@@ -100,6 +101,7 @@ const AdvertisingPage: React.FC = () => {
         main_page_first_section: { text: 'بخش اول صفحه اصلی' },
         main_page_second_section: { text: 'بخش دوم صفحه اصلی' },
         main_page_third_section: { text: 'بخش سوم صفحه اصلی' },
+        main_page_fourth_section: { text: 'بخش چهارم صفحه اصلی' },
       },
       render: (_, record) => {
         return sectionLabels[record.section] || record.section;

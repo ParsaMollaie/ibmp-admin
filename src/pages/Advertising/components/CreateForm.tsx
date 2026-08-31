@@ -145,6 +145,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
           { label: 'بخش اول صفحه اصلی', value: 'main_page_first_section' },
           { label: 'بخش دوم صفحه اصلی', value: 'main_page_second_section' },
           { label: 'بخش سوم صفحه اصلی', value: 'main_page_third_section' },
+          { label: 'بخش چهارم صفحه اصلی', value: 'main_page_fourth_section' },
         ]}
       />
 

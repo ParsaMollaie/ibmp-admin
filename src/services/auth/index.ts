@@ -99,8 +99,12 @@ export async function createSlider(data: FormData) {
 }
 
 export async function updateSlider(id: string, data: FormData) {
+  // PHP does not populate $_FILES for PUT/PATCH requests with a multipart
+  // body, so file uploads silently get dropped on a literal PUT — send as
+  // POST with Laravel's _method override instead (its standard workaround).
+  data.append('_method', 'PUT');
   return request(`${API_BASE}/sliders/${id}`, {
-    method: 'PUT',
+    method: 'POST',
     data,
   });
 }
@@ -127,8 +131,10 @@ export async function createSocialNetwork(data: FormData) {
 }
 
 export async function updateSocialNetwork(id: string, data: FormData) {
+  // Same PHP PUT/PATCH + multipart limitation as updateSlider above.
+  data.append('_method', 'PUT');
   return request(`${API_BASE}/social-networks/${id}`, {
-    method: 'PUT',
+    method: 'POST',
     data,
   });
 }
@@ -144,19 +150,5 @@ export async function getNewsList(params?: any) {
   return request(`${API_BASE}/news`, {
     method: 'GET',
     params,
-  });
-}
-
-export async function createNews(data: FormData) {
-  return request(`${API_BASE}/news`, {
-    method: 'POST',
-    data,
-  });
-}
-
-export async function updateNews(id: string, data: FormData) {
-  return request(`${API_BASE}/news/${id}`, {
-    method: 'PUT',
-    data,
   });
 }
