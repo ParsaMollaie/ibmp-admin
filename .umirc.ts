@@ -80,7 +80,7 @@ export default defineConfig({
       icon: 'ExclamationCircleOutlined',
     },
     {
-      name: 'نظرات',
+      name: 'نظرات شرکت ها/خدمات',
       path: '/service-comments',
       component: './ServiceComments',
       icon: 'CommentOutlined',

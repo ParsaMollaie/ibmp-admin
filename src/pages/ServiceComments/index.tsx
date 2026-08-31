@@ -431,7 +431,7 @@ const ServiceCommentsPage: React.FC = () => {
         actionRef={actionRef}
         formRef={formRef}
         rowKey="id"
-        headerTitle="لیست نظرات"
+        headerTitle="لیست نظرات شرکت ها/خدمات"
         request={async (params, sort) => {
           const dateFrom = params.date_from
             ? typeof params.date_from === 'string'
