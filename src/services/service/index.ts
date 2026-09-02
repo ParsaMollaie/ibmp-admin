@@ -17,6 +17,7 @@ export async function getServices(params?: {
   category_codes?: string[];
   plan_id?: string;
   has_active_plan?: string;
+  has_pending_revision?: string;
   expires_within_days?: number;
   created_from?: string;
   created_to?: string;
@@ -89,6 +90,32 @@ export async function rejectService(id: string) {
   return request<API.ApiResponse<[]>>(`${API_BASE}/services/${id}/reject`, {
     method: 'PUT',
   });
+}
+
+/**
+ * Approve a service's pending edit revision — applies the submitted changes onto the
+ * live record; the service itself stays approved/public the whole time (see status
+ * field, unaffected by revision approval).
+ */
+export async function approveServiceRevision(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${id}/revision/approve`,
+    {
+      method: 'PUT',
+    },
+  );
+}
+
+/**
+ * Reject a service's pending edit revision — the live record is left untouched.
+ */
+export async function rejectServiceRevision(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${id}/revision/reject`,
+    {
+      method: 'PUT',
+    },
+  );
 }
 
 /**
@@ -245,6 +272,7 @@ export async function getServicesForExport(params?: {
   category_code?: string;
   plan_id?: string;
   has_active_plan?: string;
+  has_pending_revision?: string;
   created_from?: string;
   created_to?: string;
   page?: number;

@@ -3,10 +3,12 @@ import { getCategoryTree } from '@/services/category';
 import { getPlans } from '@/services/plan';
 import {
   approveService,
+  approveServiceRevision,
   getServices,
   getServicesForExport,
   getServiceStats,
   rejectService,
+  rejectServiceRevision,
   updateServiceTag,
 } from '@/services/service';
 import {
@@ -24,7 +26,9 @@ import {
   DownloadOutlined,
   EditOutlined,
   EyeOutlined,
+  FileExclamationOutlined,
   FileImageOutlined,
+  FileSyncOutlined,
   FileTextOutlined,
   LinkOutlined,
   MoreOutlined,
@@ -225,23 +229,19 @@ const exportColumns: ExportColumn[] = [
     title: 'استان',
     dataIndex: 'addresses',
     render: (_, record) =>
-      record.addresses?.length > 0
-        ? record.addresses
-            .map((a) => a.province?.name)
-            .filter(Boolean)
-            .join('، ')
-        : record.province?.name || '—',
+      record.addresses
+        ?.map((a) => a.province?.name)
+        .filter(Boolean)
+        .join('، ') || '—',
   },
   {
     title: 'شهر',
     dataIndex: 'addresses',
     render: (_, record) =>
-      record.addresses?.length > 0
-        ? record.addresses
-            .map((a) => a.city?.name)
-            .filter(Boolean)
-            .join('، ')
-        : record.city?.name || '—',
+      record.addresses
+        ?.map((a) => a.city?.name)
+        .filter(Boolean)
+        .join('، ') || '—',
   },
   {
     title: 'آدرس',
@@ -379,6 +379,16 @@ const ServicesPage: React.FC = () => {
   });
   const [tagStatsLoading, setTagStatsLoading] = useState(false);
 
+  // Pending-revision stat (services with an update awaiting admin approval)
+  const [pendingRevisionCount, setPendingRevisionCount] = useState(0);
+  const [pendingRevisionStatsLoading, setPendingRevisionStatsLoading] =
+    useState(false);
+  // Drives the table's request via ProTable's `params` prop (not the search
+  // form) so the filter reliably triggers a refetch regardless of the search
+  // form's field-registration timing.
+  const [pendingRevisionQuickFilter, setPendingRevisionQuickFilter] =
+    useState(false);
+
   // Category tree for the category filter
   const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
 
@@ -388,17 +398,20 @@ const ServicesPage: React.FC = () => {
   const fetchStats = async () => {
     setStatusStatsLoading(true);
     setTagStatsLoading(true);
+    setPendingRevisionStatsLoading(true);
     try {
       const response = await getServiceStats();
       if (response.success && response.data) {
         setStatusStats(response.data.status);
         setTagStats(response.data.tag);
+        setPendingRevisionCount(response.data.pending_revision_count || 0);
       }
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     } finally {
       setStatusStatsLoading(false);
       setTagStatsLoading(false);
+      setPendingRevisionStatsLoading(false);
     }
   };
 
@@ -711,6 +724,60 @@ const ServicesPage: React.FC = () => {
     });
   };
 
+  const handleApproveRevision = (record: API.ServiceItem) => {
+    Modal.confirm({
+      title: 'تایید ویرایش',
+      content: `آیا از تایید ویرایش در انتظار تایید خدمت "${record.title}" اطمینان دارید؟ تغییرات ثبت‌شده روی نسخه زنده اعمال می‌شود.`,
+      okText: 'بله، ویرایش تایید شود',
+      cancelText: 'انصراف',
+      okType: 'primary',
+      onOk: async () => {
+        setActionLoading(`${record.id}-revision`);
+        try {
+          const response = await approveServiceRevision(record.id);
+          if (response.success) {
+            message.success('ویرایش با موفقیت تایید و اعمال شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در تایید ویرایش');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
+  const handleRejectRevision = (record: API.ServiceItem) => {
+    Modal.confirm({
+      title: 'رد ویرایش',
+      content: `آیا از رد ویرایش در انتظار تایید خدمت "${record.title}" اطمینان دارید؟ نسخه زنده بدون تغییر باقی می‌ماند.`,
+      okText: 'بله، ویرایش رد شود',
+      cancelText: 'انصراف',
+      okType: 'danger',
+      onOk: async () => {
+        setActionLoading(`${record.id}-revision`);
+        try {
+          const response = await rejectServiceRevision(record.id);
+          if (response.success) {
+            message.success('ویرایش با موفقیت رد شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در رد ویرایش');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
   // Tag actions
   const handleSetRegular = async (record: API.ServiceItem) => {
     try {
@@ -916,6 +983,20 @@ const ServicesPage: React.FC = () => {
       },
     },
     {
+      title: 'به‌روزرسانی در انتظار تایید',
+      dataIndex: 'has_pending_revision',
+      key: 'has_pending_revision',
+      hideInTable: true,
+      valueType: 'select',
+      valueEnum: {
+        yes: { text: 'دارای به‌روزرسانی در انتظار تایید' },
+        no: { text: 'بدون به‌روزرسانی در انتظار تایید' },
+      },
+      fieldProps: {
+        placeholder: 'به‌روزرسانی در انتظار تایید',
+      },
+    },
+    {
       title: 'انقضای پلن',
       dataIndex: 'plan_expires_at',
       key: 'plan_expires_at',
@@ -1042,21 +1123,19 @@ const ServicesPage: React.FC = () => {
       hideInSearch: true,
       render: (_, record) => {
         if (record.type !== 'engineers') return '—';
-        if (record.addresses?.length > 0) {
-          const names = record.addresses
-            .map((a) => a.province?.name)
-            .filter(Boolean);
-          return names.length > 1 ? (
-            <Tooltip title={names.join('، ')}>
-              <span>
-                {names[0]} (+{names.length - 1})
-              </span>
-            </Tooltip>
-          ) : (
-            <span>{names[0] || '—'}</span>
-          );
-        }
-        return record.province?.name || '—';
+        const names = (record.addresses || [])
+          .map((a) => a.province?.name)
+          .filter(Boolean);
+        if (names.length === 0) return '—';
+        return names.length > 1 ? (
+          <Tooltip title={names.join('، ')}>
+            <span>
+              {names[0]} (+{names.length - 1})
+            </span>
+          </Tooltip>
+        ) : (
+          <span>{names[0]}</span>
+        );
       },
     },
     {
@@ -1067,9 +1146,14 @@ const ServicesPage: React.FC = () => {
       valueType: 'select',
       valueEnum: statusEnum,
       render: (_, record) => (
-        <Tag color={getStatusColor(record.status)}>
-          {getStatusLabel(record.status)}
-        </Tag>
+        <Space direction="vertical" size={4}>
+          <Tag color={getStatusColor(record.status)}>
+            {getStatusLabel(record.status)}
+          </Tag>
+          {record.pending_revision && (
+            <Tag color="gold">ویرایش در انتظار تایید</Tag>
+          )}
+        </Space>
       ),
       fieldProps: {
         placeholder: 'انتخاب وضعیت',
@@ -1218,6 +1302,30 @@ const ServicesPage: React.FC = () => {
               </Tooltip>
             )}
 
+            {record.can_approve_revision && (
+              <Tooltip title="تایید ویرایش در انتظار تایید">
+                <Button
+                  type="text"
+                  icon={<FileSyncOutlined style={{ color: '#1677ff' }} />}
+                  onClick={() => handleApproveRevision(record)}
+                  loading={actionLoading === `${record.id}-revision`}
+                />
+              </Tooltip>
+            )}
+
+            {record.can_reject_revision && (
+              <Tooltip title="رد ویرایش در انتظار تایید">
+                <Button
+                  type="text"
+                  icon={
+                    <FileExclamationOutlined style={{ color: '#ff4d4f' }} />
+                  }
+                  onClick={() => handleRejectRevision(record)}
+                  loading={actionLoading === `${record.id}-revision`}
+                />
+              </Tooltip>
+            )}
+
             <Tooltip title="مشاهده جزئیات">
               <Button
                 type="text"
@@ -1247,12 +1355,22 @@ const ServicesPage: React.FC = () => {
   // RENDER
   // ============================================
 
+  const handlePendingRevisionCardClick = () => {
+    // Keep the search form's dropdown in sync for display purposes, but the
+    // actual filtering is driven by `pendingRevisionQuickFilter` via the
+    // ProTable `params` prop below (guaranteed to trigger a refetch).
+    formRef.current?.setFieldsValue({ has_pending_revision: 'yes' });
+    setPendingRevisionQuickFilter(true);
+  };
+
   const handleStatusCardClick = (status: API.ServiceStatus) => {
+    setPendingRevisionQuickFilter(false);
     formRef.current?.setFieldsValue({ status });
     formRef.current?.submit();
   };
 
   const handleTagCardClick = (tag: API.ServiceTag) => {
+    setPendingRevisionQuickFilter(false);
     formRef.current?.setFieldsValue({ tag });
     formRef.current?.submit();
   };
@@ -1321,7 +1439,7 @@ const ServicesPage: React.FC = () => {
 
       {/* Tag Stat Cards */}
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={8}>
+        <Col span={6}>
           <Card
             hoverable
             onClick={() => handleTagCardClick('regular')}
@@ -1335,7 +1453,7 @@ const ServicesPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col span={6}>
           <Card
             hoverable
             onClick={() => handleTagCardClick('most_view')}
@@ -1349,7 +1467,7 @@ const ServicesPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col span={6}>
           <Card
             hoverable
             onClick={() => handleTagCardClick('promoted')}
@@ -1363,6 +1481,20 @@ const ServicesPage: React.FC = () => {
             />
           </Card>
         </Col>
+        <Col span={6}>
+          <Card
+            hoverable
+            onClick={handlePendingRevisionCardClick}
+            style={{ borderTop: '3px solid #faad14' }}
+          >
+            <Statistic
+              title="به‌روزرسانی در انتظار تایید ادمین"
+              value={pendingRevisionCount}
+              loading={pendingRevisionStatsLoading}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
       </Row>
 
       <ProTable<API.ServiceItem>
@@ -1372,6 +1504,7 @@ const ServicesPage: React.FC = () => {
         rowKey="id"
         columns={columns}
         form={{ initialValues }}
+        params={{ pendingRevisionQuickFilter }}
         toolBarRender={() => [
           <Button
             key="export"
@@ -1409,6 +1542,9 @@ const ServicesPage: React.FC = () => {
             category_codes: categoryCodes,
             plan_id: params.plan_id,
             has_active_plan: params.has_active_plan,
+            has_pending_revision: pendingRevisionQuickFilter
+              ? 'yes'
+              : params.has_pending_revision,
             created_from: createdFrom,
             created_to: createdTo,
           };
@@ -1445,6 +1581,11 @@ const ServicesPage: React.FC = () => {
           searchText: 'جستجو',
           resetText: 'پاک کردن',
           labelWidth: 'auto',
+          // onReset is supported at runtime by the underlying QueryFilter but
+          // missing from this pro-components version's SearchConfig type
+          // (same class of gap as the `syncToUrl` prop in User/index.tsx).
+          // @ts-expect-error
+          onReset: () => setPendingRevisionQuickFilter(false),
         }}
         options={{
           density: true,
@@ -1706,24 +1847,9 @@ const ServicesPage: React.FC = () => {
                 </Descriptions>
               ))
             ) : (
-              <Descriptions bordered column={2} size="small">
-                {currentRecord.province && (
-                  <Descriptions.Item label="استان">
-                    {currentRecord.province.name}
-                  </Descriptions.Item>
-                )}
-                {currentRecord.city && (
-                  <Descriptions.Item label="شهرستان">
-                    {currentRecord.city.name}
-                  </Descriptions.Item>
-                )}
-                {currentRecord.type === 'company' &&
-                  currentRecord.company?.address && (
-                    <Descriptions.Item label="آدرس" span={2}>
-                      {currentRecord.company.address}
-                    </Descriptions.Item>
-                  )}
-              </Descriptions>
+              <Paragraph type="secondary">
+                آدرسی برای این خدمت ثبت نشده است
+              </Paragraph>
             )}
             <Descriptions
               bordered
@@ -1801,7 +1927,7 @@ const ServicesPage: React.FC = () => {
 
             {/* Products (company services) */}
             {currentRecord.type === 'company' &&
-              currentRecord.products.length > 0 && (
+              (currentRecord.products?.length || 0) > 0 && (
                 <>
                   <Divider orientation="right">محصولات</Divider>
                   <Table
@@ -1816,7 +1942,7 @@ const ServicesPage: React.FC = () => {
 
             {/* Work Samples (engineer services) */}
             {currentRecord.type === 'engineers' &&
-              currentRecord.work_samples.length > 0 && (
+              (currentRecord.work_samples?.length || 0) > 0 && (
                 <>
                   <Divider orientation="right">نمونه کارها</Divider>
                   <Row gutter={[16, 16]}>

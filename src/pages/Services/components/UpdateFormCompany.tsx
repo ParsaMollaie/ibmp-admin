@@ -174,14 +174,6 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
               city_id: a.city?.id,
               address: a.address || '',
             }))
-          : record.province?.id
-          ? [
-              {
-                province_id: record.province.id,
-                city_id: record.city?.id,
-                address: record.company?.address || '',
-              },
-            ]
           : [{ province_id: undefined, city_id: undefined, address: '' }];
 
       // Set initial contact profile selection
@@ -194,12 +186,9 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
         description: record.description,
         email: record.email,
         website: record.website,
-        video: record.video || '',
+        videos: record.videos || [],
         category_id: categoryId,
         contact_profile_id: cpId,
-        // province_id: record.province?.id, // deprecated — use addresses
-        // city_id: record.city?.id, // deprecated — use addresses
-        // address: record.company?.address, // deprecated — use addresses
         addresses,
         contact_numbers: record.contact_numbers || [],
         social_medias: record.social_media || [],
@@ -402,12 +391,9 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
         description: values.description,
         email: values.email,
         website: values.website || undefined,
-        video: values.video || null,
+        videos: (values.videos || []).filter((v: string) => !!v),
         category_id: values.category_id,
         contact_profile_id: values.contact_profile_id || null,
-        // province_id: values.province_id, // deprecated — use addresses
-        // city_id: values.city_id, // deprecated — use addresses
-        // address: values.address, // deprecated — use addresses
         addresses: (values.addresses || []).map((a: any) => ({
           province_id: a.province_id,
           city_id: a.city_id,
@@ -679,19 +665,52 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
           </Form.List>
         </Card>
 
-        {/* Video */}
-        <Card size="small" title="ویدئو معرفی" style={{ marginBottom: 16 }}>
-          <Form.Item
-            name="video"
-            label="لینک ویدئو"
-            extra="لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)"
-          >
-            <TextArea
-              rows={2}
-              placeholder="لینک embed ویدئو را وارد کنید"
-              style={{ direction: 'ltr' }}
-            />
-          </Form.Item>
+        {/* Videos */}
+        <Card size="small" title="ویدئوهای معرفی" style={{ marginBottom: 16 }}>
+          <Form.List name="videos">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Row key={key} gutter={16} align="middle">
+                    <Col span={20}>
+                      <Form.Item
+                        {...restField}
+                        name={name}
+                        extra={
+                          fields[0]?.key === key
+                            ? 'لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)'
+                            : undefined
+                        }
+                      >
+                        <Input
+                          placeholder="لینک embed ویدئو را وارد کنید"
+                          style={{ direction: 'ltr' }}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={4}>
+                      <Form.Item>
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => remove(name)}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                ))}
+                <Button
+                  type="dashed"
+                  onClick={() => add('')}
+                  block
+                  icon={<PlusOutlined />}
+                >
+                  افزودن ویدئو
+                </Button>
+              </>
+            )}
+          </Form.List>
         </Card>
 
         {/* Logo & Catalog */}

@@ -510,6 +510,7 @@ declare namespace API {
   interface ServiceStats {
     status: ServiceStatusStats;
     tag: ServiceTagStats;
+    pending_revision_count: number;
   }
 
   interface ServiceProvince {
@@ -613,14 +614,12 @@ declare namespace API {
     website: string | null;
     avatar?: string | null;
     avatar_path?: string | null;
-    video?: string | null;
+    videos?: string[];
     type: ServiceType;
     promotion_type: ServicePromotionType;
     tag: ServiceTag;
     status: ServiceStatus;
     priority: number;
-    province: ServiceProvince | null; // deprecated — use addresses
-    city: ServiceCity | null; // deprecated — use addresses
     addresses: ServiceAddress[];
     company: ServiceCompany | null;
     category: ServiceCategory;
@@ -633,6 +632,13 @@ declare namespace API {
     notes_count?: number;
     can_approve?: boolean;
     can_reject?: boolean;
+    pending_revision?: {
+      id: string;
+      payload: Record<string, any>;
+      created_at: string;
+    } | null;
+    can_approve_revision?: boolean;
+    can_reject_revision?: boolean;
     contact_profile_id?: string | null;
     contact_profile_title?: string | null;
     can_set_regular?: boolean;
@@ -684,11 +690,8 @@ declare namespace API {
     description: string;
     email?: string;
     website?: string;
-    video?: string | null;
+    videos?: string[];
     category_id: string;
-    // province_id?: string; // deprecated — use addresses
-    // city_id?: string; // deprecated — use addresses
-    // address?: string; // deprecated — use addresses
     addresses?: ServiceAddressPayload[];
     logo?: string | null;
     catalog?: string | null;
@@ -840,11 +843,9 @@ declare namespace API {
     description: string;
     email?: string;
     website?: string;
-    video?: string | null;
+    videos?: string[];
     avatar?: string | null;
     category_id: string;
-    // province_id?: string; // deprecated — use addresses
-    // city_id?: string; // deprecated — use addresses
     addresses?: ServiceAddressPayload[];
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
