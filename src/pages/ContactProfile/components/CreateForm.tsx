@@ -1,3 +1,5 @@
+import MapPicker from '@/components/MapPicker';
+import { socialMediaTypeOptions } from '@/constants/serviceSocialMedia';
 import { getUsers } from '@/services/auth';
 import { createContactProfile } from '@/services/contact-profile';
 import { getCities, getProvinces } from '@/services/location';
@@ -24,15 +26,6 @@ interface CreateFormProps {
 const contactTypeOptions = [
   { label: 'تلفن', value: 'phone' },
   { label: 'موبایل', value: 'mobile' },
-];
-
-const socialMediaTypeOptions = [
-  { label: 'اینستاگرام', value: 'instagram' },
-  { label: 'تلگرام', value: 'telegram' },
-  { label: 'ایتا', value: 'eita' },
-  { label: 'بله', value: 'bale' },
-  { label: 'واتساپ', value: 'whatsapp' },
-  { label: 'وب‌سایت', value: 'website' },
 ];
 
 const CreateForm: React.FC<CreateFormProps> = ({
@@ -133,6 +126,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
     }
   };
 
+  const handleAddressPositionChange = (
+    rowIndex: number,
+    latitude: number,
+    longitude: number,
+  ) => {
+    const addresses = form.getFieldValue('addresses') || [];
+    addresses[rowIndex] = { ...addresses[rowIndex], latitude, longitude };
+    form.setFieldsValue({ addresses });
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -151,6 +154,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
             province_id: a.province_id,
             city_id: a.city_id,
             address: a.address || undefined,
+            label: a.label || undefined,
+            latitude: typeof a.latitude === 'number' ? a.latitude : undefined,
+            longitude:
+              typeof a.longitude === 'number' ? a.longitude : undefined,
           })),
       };
 
@@ -386,7 +393,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
                     }}
                   >
                     <Row gutter={16} align="middle">
-                      <Col span={7}>
+                      <Col span={6}>
                         <Form.Item
                           {...restField}
                           name={[name, 'province_id']}
@@ -410,7 +417,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={7}>
+                      <Col span={6}>
                         <Form.Item
                           {...restField}
                           name={[name, 'city_id']}
@@ -434,13 +441,22 @@ const CreateForm: React.FC<CreateFormProps> = ({
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={8}>
+                      <Col span={5}>
                         <Form.Item
                           {...restField}
                           name={[name, 'address']}
                           label="آدرس (اختیاری)"
                         >
                           <Input placeholder="آدرس" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={5}>
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'label']}
+                          label="برچسب"
+                        >
+                          <Input placeholder="مثلاً دفتر مرکزی" />
                         </Form.Item>
                       </Col>
                       <Col span={2}>
@@ -452,6 +468,41 @@ const CreateForm: React.FC<CreateFormProps> = ({
                         />
                       </Col>
                     </Row>
+                    <Form.Item
+                      label="موقعیت روی نقشه"
+                      shouldUpdate
+                      style={{ marginBottom: 0 }}
+                    >
+                      {() => {
+                        const latitude = form.getFieldValue([
+                          'addresses',
+                          name,
+                          'latitude',
+                        ]);
+                        const longitude = form.getFieldValue([
+                          'addresses',
+                          name,
+                          'longitude',
+                        ]);
+                        return (
+                          <MapPicker
+                            latitude={
+                              typeof latitude === 'number'
+                                ? latitude
+                                : undefined
+                            }
+                            longitude={
+                              typeof longitude === 'number'
+                                ? longitude
+                                : undefined
+                            }
+                            onChange={(lat, lng) =>
+                              handleAddressPositionChange(index, lat, lng)
+                            }
+                          />
+                        );
+                      }}
+                    </Form.Item>
                   </div>
                 ))}
                 <Button
@@ -461,6 +512,9 @@ const CreateForm: React.FC<CreateFormProps> = ({
                       province_id: undefined,
                       city_id: undefined,
                       address: '',
+                      label: '',
+                      latitude: undefined,
+                      longitude: undefined,
                     })
                   }
                   block

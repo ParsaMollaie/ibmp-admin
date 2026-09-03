@@ -37,16 +37,27 @@ export async function getServiceComment(id: string) {
 }
 
 /**
- * Update service comment (toggle is_active)
+ * Approve a service comment — makes it publicly visible
  */
-export async function updateServiceComment(
-  id: string,
-  data: API.ServiceCommentPayload,
-) {
-  return request<API.ApiResponse<[]>>(`${API_BASE}/service-comments/${id}`, {
-    method: 'PUT',
-    data,
-  });
+export async function approveServiceComment(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/service-comments/${id}/approve`,
+    {
+      method: 'PUT',
+    },
+  );
+}
+
+/**
+ * Reject a service comment — hides it from public view
+ */
+export async function rejectServiceComment(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/service-comments/${id}/reject`,
+    {
+      method: 'PUT',
+    },
+  );
 }
 
 /**

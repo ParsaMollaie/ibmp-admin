@@ -529,12 +529,18 @@ declare namespace API {
     province: ServiceProvince;
     city: ServiceCity;
     address: string | null;
+    label: string | null;
+    latitude: number | null;
+    longitude: number | null;
   }
 
   interface ServiceAddressPayload {
     province_id: string;
     city_id: string;
     address?: string;
+    label?: string;
+    latitude?: number;
+    longitude?: number;
   }
 
   interface ServiceContactNumber {
@@ -543,8 +549,46 @@ declare namespace API {
   }
 
   interface ServiceSocialMedia {
-    type: 'instagram' | 'telegram' | 'eita' | 'bale' | 'whatsapp' | 'website';
+    type:
+      | 'instagram'
+      | 'telegram'
+      | 'eita'
+      | 'bale'
+      | 'whatsapp'
+      | 'website'
+      | 'linkedin'
+      | 'rubika';
     data: string;
+  }
+
+  interface ServiceCertification {
+    id: string;
+    title: string | null;
+    file: string;
+    file_path?: string;
+  }
+
+  interface ServiceCertificationPayload {
+    title?: string;
+    file: string;
+  }
+
+  interface ServiceCompletedProject {
+    id: string;
+    title: string | null;
+    place: string | null;
+    year: string | null;
+    description: string | null;
+    image: string;
+    image_path?: string;
+  }
+
+  interface ServiceCompletedProjectPayload {
+    title?: string;
+    place?: string;
+    year?: string;
+    description?: string;
+    image: string;
   }
 
   /**
@@ -614,6 +658,18 @@ declare namespace API {
     website: string | null;
     avatar?: string | null;
     avatar_path?: string | null;
+    logo?: string | null;
+    logo_path?: string | null;
+    banner?: string | null;
+    banner_path?: string | null;
+    catalog?: string | null;
+    catalog_path?: string | null;
+    incorporation_year?: number | null;
+    working_hours?: string | null;
+    keywords?: string | null;
+    service_areas?: string | null;
+    certifications?: ServiceCertification[];
+    completed_projects?: ServiceCompletedProject[];
     videos?: string[];
     type: ServiceType;
     promotion_type: ServicePromotionType;
@@ -694,10 +750,16 @@ declare namespace API {
     category_id: string;
     addresses?: ServiceAddressPayload[];
     logo?: string | null;
+    banner?: string | null;
     catalog?: string | null;
+    incorporation_year?: number | null;
+    working_hours?: string | null;
+    keywords?: string | null;
+    service_areas?: string | null;
+    certifications?: ServiceCertificationPayload[];
+    completed_projects?: ServiceCompletedProjectPayload[];
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
-    products: ServiceProductPayload[];
     contact_profile_id?: string | null;
   }
 
@@ -787,10 +849,6 @@ declare namespace API {
     replies?: ServiceCommentItem[];
   }
 
-  interface ServiceCommentPayload {
-    is_active: boolean;
-  }
-
   interface ServiceCommentStats {
     active: number;
     inactive: number;
@@ -845,11 +903,18 @@ declare namespace API {
     website?: string;
     videos?: string[];
     avatar?: string | null;
+    banner?: string | null;
+    catalog?: string | null;
+    incorporation_year?: number | null;
+    working_hours?: string | null;
+    keywords?: string | null;
+    service_areas?: string | null;
+    certifications?: ServiceCertificationPayload[];
+    completed_projects?: ServiceCompletedProjectPayload[];
     category_id: string;
     addresses?: ServiceAddressPayload[];
     contact_numbers: ServiceContactNumber[];
     social_medias: ServiceSocialMedia[];
-    work_samples: ServiceWorkSamplePayload[];
     contact_profile_id?: string | null;
   }
 
@@ -880,6 +945,6 @@ declare namespace API {
     website?: string | null;
     contact_numbers?: { type: string; data: string }[];
     social_medias?: { type: string; data: string }[];
-    addresses?: { province_id: string; city_id: string; address?: string }[];
+    addresses?: ServiceAddressPayload[];
   }
 }

@@ -21,6 +21,8 @@
     "file-saver": "^2.0.5",
     "jalali-moment": "^3.3.11",
     "js-cookie": "^3.0.5",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1",
     "react-multi-date-picker": "^4.5.2",
     "react-quill-new": "^3.8.3",
     "recharts": "^3.6.0",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
+    "@types/leaflet": "^1.9.22",
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
     "husky": "^9",

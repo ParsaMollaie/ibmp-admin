@@ -1,13 +1,16 @@
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
+  approveServiceComment,
   deleteServiceComment,
   getServiceComments,
   getServiceCommentStats,
+  rejectServiceComment,
 } from '@/services/serviceComment';
 import {
   CalendarOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
   DeleteOutlined,
-  EditOutlined,
   ExclamationCircleOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
@@ -28,7 +31,6 @@ import {
 import { DatePicker } from 'antd-jalali';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
-import UpdateForm from './components/UpdateForm';
 
 const { Text } = Typography;
 
@@ -82,7 +84,6 @@ const ServiceCommentsPage: React.FC = () => {
 
   // Modals
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] =
     useState<API.ServiceCommentItem | null>(null);
   const [pageSize, setPageSize] = usePersistedPageSize('service-comments', 10);
@@ -114,9 +115,66 @@ const ServiceCommentsPage: React.FC = () => {
     setDetailModalVisible(true);
   };
 
-  const handleEdit = (record: API.ServiceCommentItem) => {
-    setCurrentRecord(record);
-    setUpdateModalVisible(true);
+  const handleApprove = (record: API.ServiceCommentItem) => {
+    Modal.confirm({
+      title: 'تایید نظر',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از تایید این نظر مطمئن هستید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.description}</p>
+        </div>
+      ),
+      okText: 'بله، تایید شود',
+      okType: 'primary',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await approveServiceComment(record.id);
+          if (response.success) {
+            message.success('نظر با موفقیت تایید شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در تایید نظر');
+          }
+        } catch (error) {
+          console.error('Approve comment error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
+  };
+
+  const handleReject = (record: API.ServiceCommentItem) => {
+    Modal.confirm({
+      title: 'رد نظر',
+      icon: <ExclamationCircleOutlined />,
+      content: (
+        <div>
+          <p>آیا از رد این نظر مطمئن هستید؟</p>
+          <p style={{ fontWeight: 600 }}>{record.description}</p>
+        </div>
+      ),
+      okText: 'بله، رد شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        try {
+          const response = await rejectServiceComment(record.id);
+          if (response.success) {
+            message.success('نظر با موفقیت رد شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در رد نظر');
+          }
+        } catch (error) {
+          console.error('Reject comment error:', error);
+          message.error('خطا در ارتباط با سرور');
+        }
+      },
+    });
   };
 
   const handleDelete = (record: API.ServiceCommentItem) => {
@@ -148,13 +206,6 @@ const ServiceCommentsPage: React.FC = () => {
         }
       },
     });
-  };
-
-  const handleUpdateSuccess = () => {
-    setUpdateModalVisible(false);
-    setCurrentRecord(null);
-    actionRef.current?.reload();
-    fetchStats();
   };
 
   const handleActiveCardClick = (isActive: string) => {
@@ -244,15 +295,15 @@ const ServiceCommentsPage: React.FC = () => {
     {
       title: 'وضعیت',
       dataIndex: 'is_active',
-      width: 100,
+      width: 130,
       valueType: 'select',
       valueEnum: {
-        true: { text: 'فعال', status: 'Success' },
-        false: { text: 'غیرفعال', status: 'Error' },
+        true: { text: 'تایید شده', status: 'Success' },
+        false: { text: 'در انتظار بررسی', status: 'Error' },
       },
       render: (_, record) => (
         <Tag color={record.is_active ? 'success' : 'error'}>
-          {record.is_active ? 'فعال' : 'غیرفعال'}
+          {record.is_active ? 'تایید شده' : 'در انتظار بررسی'}
         </Tag>
       ),
       sorter: true,
@@ -350,18 +401,33 @@ const ServiceCommentsPage: React.FC = () => {
     {
       title: 'عملیات',
       valueType: 'option',
-      width: 140,
+      width: 160,
       fixed: 'right',
       render: (_, record) => (
         <Space>
+          {!record.is_active && (
+            <Tooltip title="تایید نظر">
+              <a
+                style={{ color: '#52c41a' }}
+                onClick={() => handleApprove(record)}
+              >
+                <CheckCircleOutlined />
+              </a>
+            </Tooltip>
+          )}
+          {record.is_active && (
+            <Tooltip title="رد نظر">
+              <a
+                style={{ color: '#ff4d4f' }}
+                onClick={() => handleReject(record)}
+              >
+                <CloseCircleOutlined />
+              </a>
+            </Tooltip>
+          )}
           <Tooltip title="مشاهده جزئیات">
             <a onClick={() => handleViewDetail(record)}>
               <EyeOutlined />
-            </a>
-          </Tooltip>
-          <Tooltip title="بروزرسانی">
-            <a onClick={() => handleEdit(record)}>
-              <EditOutlined />
             </a>
           </Tooltip>
           <Tooltip title="حذف">
@@ -392,7 +458,7 @@ const ServiceCommentsPage: React.FC = () => {
             style={{ borderTop: '3px solid #52c41a' }}
           >
             <Statistic
-              title="فعال"
+              title="تایید شده"
               value={stats.active}
               loading={statsLoading}
               valueStyle={{ color: '#52c41a' }}
@@ -406,7 +472,7 @@ const ServiceCommentsPage: React.FC = () => {
             style={{ borderTop: '3px solid #ff4d4f' }}
           >
             <Statistic
-              title="غیرفعال"
+              title="در انتظار بررسی"
               value={stats.inactive}
               loading={statsLoading}
               valueStyle={{ color: '#ff4d4f' }}
@@ -604,7 +670,7 @@ const ServiceCommentsPage: React.FC = () => {
                           color={msg.is_active ? 'success' : 'error'}
                           style={{ margin: 0 }}
                         >
-                          {msg.is_active ? 'فعال' : 'غیرفعال'}
+                          {msg.is_active ? 'تایید شده' : 'در انتظار بررسی'}
                         </Tag>
                       </div>
                       <div
@@ -634,17 +700,6 @@ const ServiceCommentsPage: React.FC = () => {
           </div>
         )}
       </Modal>
-
-      {/* Update Modal */}
-      <UpdateForm
-        visible={updateModalVisible}
-        onCancel={() => {
-          setUpdateModalVisible(false);
-          setCurrentRecord(null);
-        }}
-        onSuccess={handleUpdateSuccess}
-        record={currentRecord}
-      />
     </>
   );
 };

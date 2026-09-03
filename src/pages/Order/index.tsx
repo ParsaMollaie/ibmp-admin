@@ -481,7 +481,6 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'تاریخ انقضا',
-      key: 'expires_at_display',
       dataIndex: 'expires_at',
       width: 120,
       hideInSearch: true,
@@ -498,7 +497,6 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'تاریخ ایجاد',
-      key: 'created_at_display',
       dataIndex: 'created_at',
       width: 150,
       hideInSearch: true,
@@ -512,7 +510,6 @@ const OrderPage: React.FC = () => {
     },
     {
       title: 'تاریخ بروزرسانی',
-      key: 'updated_at_display',
       dataIndex: 'updated_at',
       width: 150,
       hideInSearch: true,

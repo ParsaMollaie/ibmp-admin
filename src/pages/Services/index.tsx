@@ -1,3 +1,4 @@
+import { getSocialTypeLabel } from '@/constants/serviceSocialMedia';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getCategoryTree } from '@/services/category';
 import { getPlans } from '@/services/plan';
@@ -21,14 +22,14 @@ import {
   AppstoreOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
+  CheckOutlined,
   CloseCircleOutlined,
+  CloseOutlined,
   CrownOutlined,
   DownloadOutlined,
   EditOutlined,
   EyeOutlined,
-  FileExclamationOutlined,
   FileImageOutlined,
-  FileSyncOutlined,
   FileTextOutlined,
   LinkOutlined,
   MoreOutlined,
@@ -69,11 +70,13 @@ import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
 import AssignPlanForm from './components/AssignPlanForm';
+import ProductsManagementModal from './components/ProductsManagementModal';
 import UpdateCategoryForm from './components/UpdateCategoryForm';
 import UpdateFormCompany from './components/UpdateFormCompany';
 import UpdateFormEngineers from './components/UpdateFormEngineers';
 import UpdatePriorityForm from './components/UpdatePriorityForm';
 import UpdateStatusForm from './components/UpdateStatusForm';
+import WorkSamplesManagementModal from './components/WorkSamplesManagementModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -163,18 +166,6 @@ const getContactTypeLabel = (type: string): string => {
   const typeMap: Record<string, string> = {
     phone: 'تلفن',
     mobile: 'موبایل',
-  };
-  return typeMap[type] || type;
-};
-
-const getSocialTypeLabel = (type: string): string => {
-  const typeMap: Record<string, string> = {
-    instagram: 'اینستاگرام',
-    telegram: 'تلگرام',
-    eita: 'ایتا',
-    bale: 'بله',
-    whatsapp: 'واتساپ',
-    website: 'وب‌سایت',
   };
   return typeMap[type] || type;
 };
@@ -485,6 +476,17 @@ const ServicesPage: React.FC = () => {
   const [priorityModalVisible, setPriorityModalVisible] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Products management modal state
+  const [productsModalVisible, setProductsModalVisible] = useState(false);
+  const [productsRecord, setProductsRecord] = useState<API.ServiceItem | null>(
+    null,
+  );
+
+  // Work samples management modal state
+  const [workSamplesModalVisible, setWorkSamplesModalVisible] = useState(false);
+  const [workSamplesRecord, setWorkSamplesRecord] =
+    useState<API.ServiceItem | null>(null);
+
   // Notes modal state
   const [notesModalVisible, setNotesModalVisible] = useState(false);
   const [notesRecord, setNotesRecord] = useState<API.ServiceItem | null>(null);
@@ -590,6 +592,16 @@ const ServicesPage: React.FC = () => {
     setPriorityModalVisible(false);
     setCurrentRecord(null);
     actionRef.current?.reload();
+  };
+
+  const handleManageProducts = (record: API.ServiceItem) => {
+    setProductsRecord(record);
+    setProductsModalVisible(true);
+  };
+
+  const handleManageWorkSamples = (record: API.ServiceItem) => {
+    setWorkSamplesRecord(record);
+    setWorkSamplesModalVisible(true);
   };
 
   // ============================================
@@ -1020,7 +1032,6 @@ const ServicesPage: React.FC = () => {
     },
     {
       title: 'تاریخ ثبت',
-      key: 'created_at_display',
       dataIndex: 'created_at',
       width: 150,
       hideInSearch: true,
@@ -1034,7 +1045,6 @@ const ServicesPage: React.FC = () => {
     },
     {
       title: 'تاریخ بروزرسانی',
-      key: 'updated_at_display',
       dataIndex: 'updated_at',
       width: 150,
       hideInSearch: true,
@@ -1246,6 +1256,26 @@ const ServicesPage: React.FC = () => {
                 : 'یادداشت‌ها',
             onClick: () => openNotesModal(record),
           },
+          ...(record.type === 'company'
+            ? [
+                {
+                  key: 'manage-products',
+                  icon: <ShoppingOutlined />,
+                  label: 'مدیریت محصولات',
+                  onClick: () => handleManageProducts(record),
+                },
+              ]
+            : []),
+          ...(record.type === 'engineers'
+            ? [
+                {
+                  key: 'manage-work-samples',
+                  icon: <FileImageOutlined />,
+                  label: 'مدیریت نمونه‌کارها',
+                  onClick: () => handleManageWorkSamples(record),
+                },
+              ]
+            : []),
           ...(record.can_set_regular
             ? [
                 {
@@ -1302,11 +1332,16 @@ const ServicesPage: React.FC = () => {
               </Tooltip>
             )}
 
+            {(record.can_approve || record.can_reject) &&
+              (record.can_approve_revision || record.can_reject_revision) && (
+                <Divider type="vertical" />
+              )}
+
             {record.can_approve_revision && (
               <Tooltip title="تایید ویرایش در انتظار تایید">
                 <Button
                   type="text"
-                  icon={<FileSyncOutlined style={{ color: '#1677ff' }} />}
+                  icon={<CheckOutlined style={{ color: '#52c41a' }} />}
                   onClick={() => handleApproveRevision(record)}
                   loading={actionLoading === `${record.id}-revision`}
                 />
@@ -1317,9 +1352,7 @@ const ServicesPage: React.FC = () => {
               <Tooltip title="رد ویرایش در انتظار تایید">
                 <Button
                   type="text"
-                  icon={
-                    <FileExclamationOutlined style={{ color: '#ff4d4f' }} />
-                  }
+                  icon={<CloseOutlined style={{ color: '#ff4d4f' }} />}
                   onClick={() => handleRejectRevision(record)}
                   loading={actionLoading === `${record.id}-revision`}
                 />
@@ -1355,22 +1388,37 @@ const ServicesPage: React.FC = () => {
   // RENDER
   // ============================================
 
+  // Each of the 3 quick-filter cards below is meant to be exclusive — clicking
+  // one must clear whichever of the other two was previously active, not
+  // combine with it.
+  const resetQuickFilterFields = () => {
+    formRef.current?.setFieldsValue({
+      status: undefined,
+      tag: undefined,
+      has_pending_revision: undefined,
+    });
+  };
+
   const handlePendingRevisionCardClick = () => {
+    resetQuickFilterFields();
     // Keep the search form's dropdown in sync for display purposes, but the
     // actual filtering is driven by `pendingRevisionQuickFilter` via the
     // ProTable `params` prop below (guaranteed to trigger a refetch).
     formRef.current?.setFieldsValue({ has_pending_revision: 'yes' });
     setPendingRevisionQuickFilter(true);
+    formRef.current?.submit();
   };
 
   const handleStatusCardClick = (status: API.ServiceStatus) => {
     setPendingRevisionQuickFilter(false);
+    resetQuickFilterFields();
     formRef.current?.setFieldsValue({ status });
     formRef.current?.submit();
   };
 
   const handleTagCardClick = (tag: API.ServiceTag) => {
     setPendingRevisionQuickFilter(false);
+    resetQuickFilterFields();
     formRef.current?.setFieldsValue({ tag });
     formRef.current?.submit();
   };
@@ -1729,6 +1777,28 @@ const ServicesPage: React.FC = () => {
         />
       </Modal>
 
+      {/* Products Management Modal */}
+      <ProductsManagementModal
+        visible={productsModalVisible}
+        onCancel={() => {
+          setProductsModalVisible(false);
+          setProductsRecord(null);
+        }}
+        onChanged={() => actionRef.current?.reload()}
+        service={productsRecord}
+      />
+
+      {/* Work Samples Management Modal */}
+      <WorkSamplesManagementModal
+        visible={workSamplesModalVisible}
+        onCancel={() => {
+          setWorkSamplesModalVisible(false);
+          setWorkSamplesRecord(null);
+        }}
+        onChanged={() => actionRef.current?.reload()}
+        service={workSamplesRecord}
+      />
+
       {/* Assign Plan Modal */}
       <AssignPlanForm
         visible={assignPlanModalVisible}
@@ -1789,17 +1859,29 @@ const ServicesPage: React.FC = () => {
                     </Text>
                   </Space>
                 </div>
-                {currentRecord.type === 'company' &&
-                  currentRecord.company?.logo && (
-                    <Image
-                      src={currentRecord.company.logo}
-                      alt="logo"
-                      width={60}
-                      height={60}
-                      style={{ objectFit: 'cover', borderRadius: 8 }}
-                    />
-                  )}
+                {(currentRecord.logo || currentRecord.avatar) && (
+                  <Image
+                    src={currentRecord.logo || currentRecord.avatar || ''}
+                    alt="logo"
+                    width={60}
+                    height={60}
+                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                  />
+                )}
               </div>
+              {currentRecord.banner && (
+                <Image
+                  src={currentRecord.banner}
+                  alt="banner"
+                  width="100%"
+                  height={120}
+                  style={{
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                    marginTop: 12,
+                  }}
+                />
+              )}
             </Card>
 
             {/* Summary */}
@@ -1839,6 +1921,11 @@ const ServicesPage: React.FC = () => {
                   <Descriptions.Item label="شهرستان">
                     {addr.city?.name}
                   </Descriptions.Item>
+                  {addr.label && (
+                    <Descriptions.Item label="برچسب">
+                      {addr.label}
+                    </Descriptions.Item>
+                  )}
                   {addr.address && (
                     <Descriptions.Item label="آدرس" span={2}>
                       {addr.address}
@@ -1864,19 +1951,38 @@ const ServicesPage: React.FC = () => {
                   </span>
                 </Descriptions.Item>
               )}
-              {currentRecord.type === 'company' &&
-                currentRecord.company?.catalog && (
-                  <Descriptions.Item label="کاتالوگ">
-                    <a
-                      href={currentRecord.company.catalog}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <LinkOutlined style={{ marginLeft: 4 }} />
-                      دانلود کاتالوگ
-                    </a>
-                  </Descriptions.Item>
-                )}
+              {currentRecord.catalog && (
+                <Descriptions.Item label="کاتالوگ">
+                  <a
+                    href={currentRecord.catalog}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <LinkOutlined style={{ marginLeft: 4 }} />
+                    دانلود کاتالوگ
+                  </a>
+                </Descriptions.Item>
+              )}
+              {currentRecord.incorporation_year && (
+                <Descriptions.Item label="سال تاسیس">
+                  {currentRecord.incorporation_year}
+                </Descriptions.Item>
+              )}
+              {currentRecord.working_hours && (
+                <Descriptions.Item label="ساعات کاری">
+                  {currentRecord.working_hours}
+                </Descriptions.Item>
+              )}
+              {currentRecord.service_areas && (
+                <Descriptions.Item label="مناطق تحت پوشش" span={2}>
+                  {currentRecord.service_areas}
+                </Descriptions.Item>
+              )}
+              {currentRecord.keywords && (
+                <Descriptions.Item label="کلمات کلیدی" span={2}>
+                  {currentRecord.keywords}
+                </Descriptions.Item>
+              )}
             </Descriptions>
 
             {/* Contact Numbers */}
@@ -1973,6 +2079,79 @@ const ServicesPage: React.FC = () => {
                   </Row>
                 </>
               )}
+
+            {/* Certifications */}
+            {(currentRecord.certifications?.length || 0) > 0 && (
+              <>
+                <Divider orientation="right">گواهینامه‌ها</Divider>
+                <Row gutter={[16, 16]}>
+                  {currentRecord.certifications!.map((cert, index) => (
+                    <Col key={cert.id || index} xs={12} sm={8} md={6}>
+                      <a
+                        href={cert.file || cert.file_path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Card
+                          size="small"
+                          cover={
+                            <Image
+                              src={cert.file || cert.file_path}
+                              alt={cert.title || `گواهینامه ${index + 1}`}
+                              style={{ height: 120, objectFit: 'cover' }}
+                              preview={false}
+                            />
+                          }
+                        >
+                          {cert.title && (
+                            <Card.Meta
+                              description={cert.title}
+                              style={{ textAlign: 'center' }}
+                            />
+                          )}
+                        </Card>
+                      </a>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
+
+            {/* Completed Projects */}
+            {(currentRecord.completed_projects?.length || 0) > 0 && (
+              <>
+                <Divider orientation="right">پروژه‌های انجام شده</Divider>
+                <Row gutter={[16, 16]}>
+                  {currentRecord.completed_projects!.map((project, index) => (
+                    <Col key={project.id || index} xs={12} sm={8} md={6}>
+                      <Card
+                        size="small"
+                        cover={
+                          <Image
+                            src={project.image || project.image_path}
+                            alt={project.title || `پروژه ${index + 1}`}
+                            style={{ height: 150, objectFit: 'cover' }}
+                          />
+                        }
+                      >
+                        <Card.Meta
+                          title={project.title || undefined}
+                          description={
+                            <>
+                              {project.place && <div>{project.place}</div>}
+                              {project.year && <div>{project.year}</div>}
+                              {project.description && (
+                                <div>{project.description}</div>
+                              )}
+                            </>
+                          }
+                        />
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </>
+            )}
           </div>
         )}
       </Modal>
