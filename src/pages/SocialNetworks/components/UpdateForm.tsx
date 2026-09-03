@@ -35,10 +35,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   const [iconPreview, setIconPreview] = useState<string>(
     initialValues.icon || '',
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedSocial, setSelectedSocial] = useState<string>(
-    initialValues.social,
-  );
 
   const handleIconChange: UploadProps['onChange'] = async ({ file }) => {
     if (file.status === 'removed') {
@@ -121,9 +117,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
               </div>
             ),
           }))}
-          fieldProps={{
-            onChange: (value: string) => setSelectedSocial(value),
-          }}
         />
 
         <ProFormSelect

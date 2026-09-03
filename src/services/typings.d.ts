@@ -120,8 +120,6 @@ declare namespace API {
     updated_at: string;
   }
 
-  type definitions_0 = null;
-
   // Add these inside the API namespace in your typing.d.ts file
 
   // Advertising section options

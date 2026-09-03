@@ -7,8 +7,6 @@ import {
 } from '@ant-design/icons';
 import React from 'react';
 
-export const DEFAULT_NAME = 'Umi Max';
-
 export interface SocialNetworkOption {
   value: string;
   label: string;

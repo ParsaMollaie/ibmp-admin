@@ -96,26 +96,3 @@ export async function getCategoryTree() {
     },
   );
 }
-
-/**
- * Get all categories for a select/dropdown field
- * Fetches with a large page_size to get all matching categories at once
- * Only returns active categories, optionally restricted to a category type
- *
- * @param params.type - Restrict results to one category type (e.g. 'news')
- */
-export async function getCategoriesForSelect(params?: {
-  type?: 'company' | 'engineers' | 'news';
-}) {
-  return request<API.ApiResponse<API.PaginatedResponse<API.CategoryItem>>>(
-    `${API_BASE}/categories`,
-    {
-      method: 'GET',
-      params: {
-        page_size: 100000, // Get all categories
-        status: 'active',
-        ...params,
-      },
-    },
-  );
-}

@@ -144,11 +144,3 @@ export async function deleteSocialNetwork(id: string) {
     method: 'DELETE',
   });
 }
-
-// News endpoints
-export async function getNewsList(params?: any) {
-  return request(`${API_BASE}/news`, {
-    method: 'GET',
-    params,
-  });
-}

@@ -186,10 +186,6 @@ export async function getServiceStats(type?: API.ServiceType) {
   );
 }
 
-// Old separate functions — replaced by getServiceStats(type) which returns both status & tag stats
-// export async function getServiceStatusStats() { ... }
-// export async function getServiceTagStats() { ... }
-
 /**
  * Get service activity report (aggregated log counts per service)
  */
