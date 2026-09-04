@@ -1,4 +1,6 @@
+import { sectionOptions } from '@/constants/advertisingSections';
 import { createAdvertising } from '@/services/advertising';
+import { getCategoryTree } from '@/services/category';
 import { combineFaDateAndTimeToEnDateTime } from '@/utils/convert-fa-date-to-en-date';
 import { PlusOutlined } from '@ant-design/icons';
 import {
@@ -8,11 +10,35 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
-import { Col, Form, InputNumber, message, Row, Space, Upload } from 'antd';
-import React, { useState } from 'react';
+import {
+  Col,
+  Form,
+  InputNumber,
+  message,
+  Row,
+  Space,
+  TreeSelect,
+  Upload,
+} from 'antd';
+import React, { useEffect, useState } from 'react';
 import persian from 'react-date-object/calendars/persian';
 import persian_fa from 'react-date-object/locales/persian_fa';
 import DatePicker, { DateObject } from 'react-multi-date-picker';
+
+// Builds TreeSelect options keyed by category `id` (not `code`) — Advertising's
+// category_ids validation requires real category UUIDs.
+const buildCategoryTreeSelectOptions = (
+  items: API.CategoryTreeItem[],
+): { title: string; value: string; key: string; children?: any[] }[] =>
+  items.map((item) => ({
+    title: item.title,
+    value: item.id,
+    key: item.id,
+    children:
+      item.children && item.children.length > 0
+        ? buildCategoryTreeSelectOptions(item.children)
+        : undefined,
+  }));
 
 interface CreateFormProps {
   open: boolean;
@@ -41,6 +67,25 @@ const CreateForm: React.FC<CreateFormProps> = ({
   // State for image uploads (we store the file list for display, but send base64 to API)
   const [imageList, setImageList] = useState<UploadFile[]>([]);
   const [portraitImageList, setPortraitImageList] = useState<UploadFile[]>([]);
+
+  // State for the hierarchical category-targeting picker
+  const [categoryTree, setCategoryTree] = useState<API.CategoryTreeItem[]>([]);
+  const [categoryTreeLoading, setCategoryTreeLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setCategoryTreeLoading(true);
+    getCategoryTree()
+      .then((response) => {
+        if (response.success && response.data) {
+          setCategoryTree(response.data);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to fetch category tree:', error);
+      })
+      .finally(() => setCategoryTreeLoading(false));
+  }, [open]);
 
   // Reset form and file lists when modal closes
   const handleOpenChange = (visible: boolean) => {
@@ -72,7 +117,8 @@ const CreateForm: React.FC<CreateFormProps> = ({
         title: values.title,
         priority: values.priority,
         status: values.status,
-        section: values.section,
+        sections: values.sections,
+        category_ids: values.category_ids || [],
         link: values.link,
         alt_image: values.alt_image || null,
         image: imageBase64,
@@ -137,17 +183,31 @@ const CreateForm: React.FC<CreateFormProps> = ({
       />
 
       <ProFormSelect
-        name="section"
-        label="بخش"
-        placeholder="بخش نمایش را انتخاب کنید"
-        rules={[{ required: true, message: 'انتخاب بخش الزامی است' }]}
-        options={[
-          { label: 'بخش اول صفحه اصلی', value: 'main_page_first_section' },
-          { label: 'بخش دوم صفحه اصلی', value: 'main_page_second_section' },
-          { label: 'بخش سوم صفحه اصلی', value: 'main_page_third_section' },
-          { label: 'بخش چهارم صفحه اصلی', value: 'main_page_fourth_section' },
-        ]}
+        name="sections"
+        label="بخش‌ها"
+        mode="multiple"
+        placeholder="بخش‌های نمایش را انتخاب کنید"
+        rules={[{ required: true, message: 'انتخاب حداقل یک بخش الزامی است' }]}
+        options={sectionOptions}
       />
+
+      <Form.Item
+        name="category_ids"
+        label="دسته‌بندی‌های هدف"
+        tooltip="خالی = نمایش در همه دسته‌بندی‌ها"
+      >
+        <TreeSelect
+          treeCheckable
+          showCheckedStrategy={TreeSelect.SHOW_CHILD}
+          treeData={buildCategoryTreeSelectOptions(categoryTree)}
+          treeNodeFilterProp="title"
+          allowClear
+          showSearch
+          loading={categoryTreeLoading}
+          placeholder="انتخاب دسته‌بندی (اختیاری)"
+          style={{ width: '100%' }}
+        />
+      </Form.Item>
 
       <ProFormDigit
         name="priority"

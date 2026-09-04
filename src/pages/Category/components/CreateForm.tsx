@@ -1,3 +1,4 @@
+import RichTextEditor from '@/components/RichTextEditor';
 import { createCategory, getCategoryTree } from '@/services/category';
 import { PlusOutlined } from '@ant-design/icons';
 import {
@@ -148,6 +149,8 @@ const CreateForm: React.FC<CreateFormProps> = ({
       // Build the API payload
       const payload: API.CategoryPayload = {
         title: values.title,
+        description: values.description || null,
+        guide_title: values.guide_title || null,
         parent_id: values.parent_id || '', // Empty string for root category
         priority: values.priority,
         status: values.status,
@@ -221,6 +224,24 @@ const CreateForm: React.FC<CreateFormProps> = ({
           ]}
         >
           <Input placeholder="عنوان دسته‌بندی" />
+        </Form.Item>
+
+        {/* Guide title - Optional, shown as the heading above the guide content */}
+        <Form.Item
+          name="guide_title"
+          label="عنوان راهنما"
+          tooltip="این متن به‌عنوان تیتر بالای راهنمای بررسی و انتخاب نمایش داده می‌شود"
+        >
+          <Input placeholder="مثال: راهنمای تخصصی انتخاب و قیمت ..." />
+        </Form.Item>
+
+        {/* Description / buying guide - Optional, shown at the bottom of the category's listing page */}
+        <Form.Item
+          name="description"
+          label="راهنمای بررسی و انتخاب"
+          tooltip="این متن در پایین صفحه لیست خدمات این دسته‌بندی نمایش داده می‌شود"
+        >
+          <RichTextEditor placeholder="راهنمای این دسته‌بندی را وارد کنید" />
         </Form.Item>
 
         {/* Parent Category - Optional */}

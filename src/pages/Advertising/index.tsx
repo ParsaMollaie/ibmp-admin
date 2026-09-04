@@ -1,3 +1,4 @@
+import { sectionLabels } from '@/constants/advertisingSections';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { deleteAdvertising, getAdvertisings } from '@/services/advertising';
 import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
@@ -8,14 +9,6 @@ import { Button, Image, message, Modal, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
-
-// Human-readable labels for section values (Persian)
-const sectionLabels: Record<string, string> = {
-  main_page_first_section: 'بخش اول صفحه اصلی',
-  main_page_second_section: 'بخش دوم صفحه اصلی',
-  main_page_third_section: 'بخش سوم صفحه اصلی',
-  main_page_fourth_section: 'بخش چهارم صفحه اصلی',
-};
 
 const AdvertisingPage: React.FC = () => {
   // Reference to ProTable for manual refresh after create/update
@@ -94,19 +87,20 @@ const AdvertisingPage: React.FC = () => {
       },
     },
     {
-      title: 'بخش',
-      dataIndex: 'section',
+      title: 'بخش‌ها',
+      dataIndex: 'sections',
+      width: 200,
       valueType: 'select',
-      valueEnum: {
-        main_page_first_section: { text: 'بخش اول صفحه اصلی' },
-        main_page_second_section: { text: 'بخش دوم صفحه اصلی' },
-        main_page_third_section: { text: 'بخش سوم صفحه اصلی' },
-        main_page_fourth_section: { text: 'بخش چهارم صفحه اصلی' },
-      },
-      render: (_, record) => {
-        return sectionLabels[record.section] || record.section;
-      },
-      sorter: true,
+      valueEnum: Object.fromEntries(
+        Object.entries(sectionLabels).map(([value, text]) => [value, { text }]),
+      ),
+      render: (_, record) => (
+        <Space size={[4, 4]} wrap>
+          {(record.sections || []).map((section) => (
+            <Tag key={section}>{sectionLabels[section] || section}</Tag>
+          ))}
+        </Space>
+      ),
     },
     {
       title: 'اولویت',
@@ -245,7 +239,7 @@ const AdvertisingPage: React.FC = () => {
           try {
             const response = await getAdvertisings({
               title: params.title,
-              section: params.section,
+              section: params.sections,
               status: params.status,
               page: params.current,
               page_size: params.pageSize,

@@ -60,6 +60,8 @@ declare namespace API {
     id: string;
     code: number;
     title: string;
+    description?: string | null;
+    guide_title?: string | null;
     type?: 'company' | 'engineers' | null;
     priority: number;
     status: 'active' | 'inactive';
@@ -80,6 +82,8 @@ declare namespace API {
   // Payload for creating/updating a category
   interface CategoryPayload {
     title: string;
+    description?: string | null;
+    guide_title?: string | null;
     parent_id: string;
     priority: number;
     status: 'active' | 'inactive';
@@ -126,7 +130,11 @@ declare namespace API {
   type AdvertisingSection =
     | 'main_page_first_section'
     | 'main_page_second_section'
-    | 'main_page_third_section';
+    | 'main_page_third_section'
+    | 'main_page_fourth_section'
+    | 'listing_page_after_promoted_section'
+    | 'listing_page_after_regular_section'
+    | 'listing_page_after_products_section';
 
   // Advertising item returned from API
   interface AdvertisingItem {
@@ -135,7 +143,8 @@ declare namespace API {
     title: string;
     priority: number;
     status: 'active' | 'inactive';
-    section: AdvertisingSection;
+    sections: AdvertisingSection[];
+    category_ids: string[];
     link: string;
     image: string | null;
     portrait_image: string | null;
@@ -153,7 +162,8 @@ declare namespace API {
     title: string;
     priority: number;
     status: 'active' | 'inactive';
-    section: AdvertisingSection;
+    sections: AdvertisingSection[];
+    category_ids?: string[];
     link: string;
     image?: string | null;
     portrait_image?: string | null;

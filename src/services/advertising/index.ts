@@ -11,9 +11,6 @@ export async function getAdvertisings(params?: {
   page_size?: number;
   sorter?: string;
 }) {
-  // Debug log - remove this after confirming it works
-  console.log('🔍 getAdvertisings called with params:', params);
-
   return request<API.ApiResponse<API.PaginatedResponse<API.AdvertisingItem>>>(
     `${API_BASE}/advertising`,
     {
