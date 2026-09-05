@@ -684,6 +684,7 @@ declare namespace API {
     tag: ServiceTag;
     status: ServiceStatus;
     priority: number;
+    priority_locked: boolean;
     addresses: ServiceAddress[];
     company: ServiceCompany | null;
     category: ServiceCategory;

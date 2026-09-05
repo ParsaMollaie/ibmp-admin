@@ -150,12 +150,16 @@ export async function updateServiceStatus(
 /**
  * Update the priority of a service
  */
-export async function updateServicePriority(id: string, priority: number) {
+export async function updateServicePriority(
+  id: string,
+  priority: number,
+  priorityLocked: boolean,
+) {
   return request<API.ApiResponse<[]>>(
     `${API_BASE}/services/${id}/update-priority`,
     {
       method: 'PUT',
-      data: { priority },
+      data: { priority, priority_locked: priorityLocked },
     },
   );
 }

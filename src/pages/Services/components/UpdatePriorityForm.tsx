@@ -1,5 +1,5 @@
 import { updateServicePriority } from '@/services/service';
-import { Form, InputNumber, Modal, message } from 'antd';
+import { Form, InputNumber, Modal, Switch, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 interface UpdatePriorityFormProps {
@@ -22,6 +22,11 @@ const UpdatePriorityForm: React.FC<UpdatePriorityFormProps> = ({
     if (record && visible) {
       form.setFieldsValue({
         priority: record.priority,
+        // Default to locked on open — this form is an explicit manual edit,
+        // so a plain "change the number, save" flow should stick rather than
+        // silently get overwritten by the next automatic rotation. Admins
+        // who want to hand a service back to auto-rotation can uncheck it.
+        priority_locked: true,
       });
     }
   }, [record, visible, form]);
@@ -33,7 +38,11 @@ const UpdatePriorityForm: React.FC<UpdatePriorityFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
-      const response = await updateServicePriority(record.id, values.priority);
+      const response = await updateServicePriority(
+        record.id,
+        values.priority,
+        values.priority_locked,
+      );
 
       if (response.success) {
         form.resetFields();
@@ -87,6 +96,15 @@ const UpdatePriorityForm: React.FC<UpdatePriorityFormProps> = ({
           rules={[{ required: true, message: 'لطفاً اولویت را وارد کنید' }]}
         >
           <InputNumber min={0} style={{ width: '100%' }} />
+        </Form.Item>
+
+        <Form.Item
+          name="priority_locked"
+          label="قفل اولویت"
+          valuePropName="checked"
+          tooltip="در صورت فعال بودن، این اولویت توسط سامانه چرخش خودکار (هر ۵ دقیقه) تغییر نمی‌کند"
+        >
+          <Switch checkedChildren="قفل است" unCheckedChildren="خودکار" />
         </Form.Item>
       </Form>
     </Modal>

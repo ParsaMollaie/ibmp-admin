@@ -32,6 +32,7 @@ import {
   FileImageOutlined,
   FileTextOutlined,
   LinkOutlined,
+  LockOutlined,
   MoreOutlined,
   OrderedListOutlined,
   ShoppingOutlined,
@@ -1214,6 +1215,16 @@ const ServicesPage: React.FC = () => {
       width: 80,
       hideInSearch: true,
       sorter: true,
+      render: (_, record) => (
+        <Space size={4}>
+          {record.priority}
+          {record.priority_locked && (
+            <Tooltip title="قفل است — توسط سامانه چرخش خودکار تغییر نمی‌کند">
+              <LockOutlined style={{ color: '#faad14' }} />
+            </Tooltip>
+          )}
+        </Space>
+      ),
     },
     {
       title: 'عملیات',
