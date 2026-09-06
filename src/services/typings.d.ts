@@ -631,6 +631,7 @@ declare namespace API {
     image: string;
     minimum_price: number;
     maximum_price: number;
+    unit: string | null;
     status: string;
   }
 
@@ -739,6 +740,7 @@ declare namespace API {
     image: string;
     minimum_price: number;
     maximum_price: number;
+    unit?: string | null;
   }
 
   interface ServiceWorkSamplePayload {

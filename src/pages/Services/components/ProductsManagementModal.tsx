@@ -18,6 +18,7 @@ import {
   Modal,
   Popconfirm,
   Row,
+  Select,
   Space,
   Switch,
   Table,
@@ -25,6 +26,22 @@ import {
   message,
 } from 'antd';
 import React, { useEffect, useState } from 'react';
+
+const UNIT_OPTIONS = [
+  { label: 'عدد', value: 'عدد' },
+  { label: 'متر', value: 'متر' },
+  { label: 'مترمربع', value: 'مترمربع' },
+  { label: 'مترمکعب', value: 'مترمکعب' },
+  { label: 'گرم', value: 'گرم' },
+  { label: 'کیلوگرم', value: 'کیلوگرم' },
+  { label: 'تن', value: 'تن' },
+  { label: 'لیتر', value: 'لیتر' },
+  { label: 'بسته', value: 'بسته' },
+  { label: 'جعبه', value: 'جعبه' },
+  { label: 'ساعت', value: 'ساعت' },
+  { label: 'روز', value: 'روز' },
+  { label: 'نفر', value: 'نفر' },
+];
 
 interface ProductsManagementModalProps {
   visible: boolean;
@@ -106,6 +123,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
       name: product.name,
       minimum_price: product.minimum_price,
       maximum_price: product.maximum_price,
+      unit: product.unit,
     });
     setImageFile(
       product.image
@@ -167,6 +185,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
             image: imageValue || undefined,
             minimum_price: values.minimum_price || 0,
             maximum_price: values.maximum_price || 0,
+            unit: values.unit || null,
           },
         );
         if (response.success) {
@@ -188,6 +207,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
           image: imageValue,
           minimum_price: values.minimum_price || 0,
           maximum_price: values.maximum_price || 0,
+          unit: values.unit || null,
         });
         if (response.success) {
           message.success('محصول با موفقیت اضافه شد');
@@ -389,6 +409,19 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
                       </div>
                     )}
                   </Upload>
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item name="unit" label="واحد (مترمربع، کیلوگرم و ...)">
+                  <Select
+                    placeholder="انتخاب واحد"
+                    options={UNIT_OPTIONS}
+                    showSearch
+                    optionFilterProp="label"
+                    allowClear
+                  />
                 </Form.Item>
               </Col>
             </Row>
