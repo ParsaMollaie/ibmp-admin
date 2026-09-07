@@ -80,6 +80,12 @@ export default defineConfig({
       icon: 'ExclamationCircleOutlined',
     },
     {
+      name: 'درخواست‌های مشتریان',
+      path: '/leads',
+      component: './Leads',
+      icon: 'SolutionOutlined',
+    },
+    {
       name: 'نظرات شرکت ها/خدمات',
       path: '/service-comments',
       component: './ServiceComments',

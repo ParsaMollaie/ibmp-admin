@@ -832,6 +832,83 @@ declare namespace API {
     content: string;
   }
 
+  // --- Price Inquiries & Project Visit Requests (lead-gen requests) ---
+  type LeadRequestStatus = 'pending' | 'followed_up' | 'closed';
+
+  interface LeadRequestService {
+    id: string;
+    title: string;
+    type: ServiceType;
+    code: number;
+  }
+
+  interface PriceInquiryItem {
+    id: string;
+    code: number;
+    service: LeadRequestService | null;
+    user: OrderUser | null;
+    full_name: string;
+    mobile: string;
+    email: string | null;
+    project_title: string;
+    description: string | null;
+    status: LeadRequestStatus;
+    notes_count?: number;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface PriceInquiryPayload {
+    status: LeadRequestStatus;
+  }
+
+  interface PriceInquiryNoteItem {
+    id: string;
+    price_inquiry_id: string;
+    content: string;
+    user: OrderUser;
+    created_at: string;
+  }
+
+  interface PriceInquiryNotePayload {
+    content: string;
+  }
+
+  interface ProjectVisitRequestItem {
+    id: string;
+    code: number;
+    service: LeadRequestService | null;
+    user: OrderUser | null;
+    full_name: string;
+    mobile: string;
+    email: string | null;
+    project_title: string;
+    project_address: string;
+    preferred_date: string | null;
+    preferred_time: string | null;
+    description: string | null;
+    status: LeadRequestStatus;
+    notes_count?: number;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface ProjectVisitRequestPayload {
+    status: LeadRequestStatus;
+  }
+
+  interface ProjectVisitRequestNoteItem {
+    id: string;
+    project_visit_request_id: string;
+    content: string;
+    user: OrderUser;
+    created_at: string;
+  }
+
+  interface ProjectVisitRequestNotePayload {
+    content: string;
+  }
+
   // --- Service Comments ---
   interface ServiceCommentService {
     id: string;
