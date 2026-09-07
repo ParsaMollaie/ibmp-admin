@@ -47,6 +47,29 @@ declare namespace API {
     updated_by?: OrderUser | null;
     updated_at?: string;
     created_at?: string;
+    roles?: string[];
+    permissions?: string[];
+  }
+
+  // --- Roles & Permissions (RBAC) ---
+  interface RoleItem {
+    id: string;
+    name: string;
+    title: string | null;
+    permissions_count?: number;
+    created_at?: string;
+    updated_at?: string;
+  }
+
+  interface RolePayload {
+    name: string;
+    title?: string;
+  }
+
+  interface PermissionItem {
+    id: string;
+    name: string;
+    title: string | null;
   }
 
   // Category parent reference (simplified)

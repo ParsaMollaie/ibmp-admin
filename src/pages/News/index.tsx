@@ -5,6 +5,7 @@ import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Image, message, Modal, Space, Tag, TreeSelect } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
@@ -37,6 +38,7 @@ const stripHtml = (html: string): string => {
 };
 
 const NewsPage: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const formRef = useRef<any>();
 
@@ -257,20 +259,24 @@ const NewsPage: React.FC = () => {
       render: (_, record) => {
         return (
           <Space>
-            <a
-              onClick={() => {
-                setCurrentRecord(record);
-                setUpdateModalOpen(true);
-              }}
-            >
-              ویرایش
-            </a>
-            <a
-              style={{ color: '#ff4d4f' }}
-              onClick={() => handleDelete(record)}
-            >
-              حذف
-            </a>
+            {access.hasPermission('news:update') && (
+              <a
+                onClick={() => {
+                  setCurrentRecord(record);
+                  setUpdateModalOpen(true);
+                }}
+              >
+                ویرایش
+              </a>
+            )}
+            {access.hasPermission('news:delete') && (
+              <a
+                style={{ color: '#ff4d4f' }}
+                onClick={() => handleDelete(record)}
+              >
+                حذف
+              </a>
+            )}
           </Space>
         );
       },
@@ -340,16 +346,20 @@ const NewsPage: React.FC = () => {
         }}
         // Add card bordered for consistent styling with Category table
         cardBordered
-        toolBarRender={() => [
-          <Button
-            type="primary"
-            key="create"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            افزودن خبر
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          access.hasPermission('news:create')
+            ? [
+                <Button
+                  type="primary"
+                  key="create"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  افزودن خبر
+                </Button>,
+              ]
+            : []
+        }
       />
 
       <CreateForm

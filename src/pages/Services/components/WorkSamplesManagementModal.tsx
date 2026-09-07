@@ -6,6 +6,7 @@ import {
   updateServiceWorkSample,
 } from '@/services/service-work-sample';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { useAccess } from '@umijs/max';
 import type { UploadFile, UploadProps } from 'antd';
 import {
   Button,
@@ -47,6 +48,7 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
   onChanged,
   service,
 }) => {
+  const access = useAccess();
   const [form] = Form.useForm();
   const [samples, setSamples] = useState<API.ServiceWorkSample[]>([]);
   const [loading, setLoading] = useState(false);
@@ -266,6 +268,7 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
         <Switch
           checked={status === 'active'}
           loading={togglingId === record.id}
+          disabled={!access.hasPermission('service-work-samples:toggle-status')}
           onChange={() => handleToggleStatus(record)}
           checkedChildren="فعال"
           unCheckedChildren="غیرفعال"
@@ -278,24 +281,28 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
       width: 100,
       render: (_: unknown, record: API.ServiceWorkSample) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => openEditForm(record)}
-          />
-          <Popconfirm
-            title="آیا از حذف این نمونه کار مطمئنید؟"
-            onConfirm={() => handleDelete(record)}
-            okText="بله"
-            cancelText="خیر"
-          >
+          {access.hasPermission('service-work-samples:update') && (
             <Button
               type="text"
-              danger
-              icon={<DeleteOutlined />}
-              loading={deletingId === record.id}
+              icon={<EditOutlined />}
+              onClick={() => openEditForm(record)}
             />
-          </Popconfirm>
+          )}
+          {access.hasPermission('service-work-samples:delete') && (
+            <Popconfirm
+              title="آیا از حذف این نمونه کار مطمئنید؟"
+              onConfirm={() => handleDelete(record)}
+              okText="بله"
+              cancelText="خیر"
+            >
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingId === record.id}
+              />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -310,7 +317,7 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
       width={800}
       styles={{ body: { maxHeight: '75vh', overflowY: 'auto' } }}
     >
-      {!formVisible && (
+      {!formVisible && access.hasPermission('service-work-samples:create') && (
         <Button
           type="dashed"
           block

@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, message, Modal, Space, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
@@ -21,6 +22,7 @@ import UpdateForm from './components/UpdateForm';
 const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
 
 const ContactProfilePage: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
 
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -205,13 +207,15 @@ const ContactProfilePage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Tooltip title="ویرایش">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
+          {access.hasPermission('contact-profiles:update') && (
+            <Tooltip title="ویرایش">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          )}
 
           {record.user?.user_type === 'client' && (
             <Tooltip title="ورود به حساب">
@@ -223,14 +227,16 @@ const ContactProfilePage: React.FC = () => {
             </Tooltip>
           )}
 
-          <Tooltip title="حذف">
-            <Button
-              type="text"
-              icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
-              onClick={() => handleDelete(record)}
-              loading={actionLoading === record.id}
-            />
-          </Tooltip>
+          {access.hasPermission('contact-profiles:delete') && (
+            <Tooltip title="حذف">
+              <Button
+                type="text"
+                icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
+                onClick={() => handleDelete(record)}
+                loading={actionLoading === record.id}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -243,16 +249,20 @@ const ContactProfilePage: React.FC = () => {
         actionRef={actionRef}
         rowKey="id"
         columns={columns}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalVisible(true)}
-          >
-            افزودن پروفایل تماس
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          [
+            access.hasPermission('contact-profiles:create') && (
+              <Button
+                key="add"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalVisible(true)}
+              >
+                افزودن پروفایل تماس
+              </Button>
+            ),
+          ].filter(Boolean)
+        }
         request={async (params, sort) => {
           const response = await getContactProfiles({
             search: params.title,

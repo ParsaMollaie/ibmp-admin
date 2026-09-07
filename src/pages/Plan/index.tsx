@@ -9,12 +9,15 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Card, message, Popover, Space, Switch, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
 const PlanPage: React.FC = () => {
+  const access = useAccess();
+
   // ============================================
   // STATE MANAGEMENT
   // ============================================
@@ -154,6 +157,7 @@ const PlanPage: React.FC = () => {
           checkedChildren="فعال"
           unCheckedChildren="غیرفعال"
           loading={togglingStatusId === record.id}
+          disabled={!access.hasPermission('plans:update')}
           onChange={(checked) => handleToggleStatus(record, checked)}
         />
       ),
@@ -263,13 +267,14 @@ const PlanPage: React.FC = () => {
       width: 80,
       search: false,
       fixed: 'right',
-      render: (_, record) => (
-        <Button
-          type="text"
-          icon={<EditOutlined />}
-          onClick={() => handleEdit(record)}
-        />
-      ),
+      render: (_, record) =>
+        access.hasPermission('plans:update') && (
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          />
+        ),
     },
   ];
 
@@ -306,16 +311,18 @@ const PlanPage: React.FC = () => {
         // Toolbar configuration
         toolbar={{
           title: 'مدیریت پلن‌ها',
-          actions: [
-            <Button
-              key="create"
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
-              افزودن پلن
-            </Button>,
-          ],
+          actions: access.hasPermission('plans:create')
+            ? [
+                <Button
+                  key="create"
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreate}
+                >
+                  افزودن پلن
+                </Button>,
+              ]
+            : [],
         }}
         // Search form configuration
         search={{

@@ -16,6 +16,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import {
   Card,
   Col,
@@ -71,6 +72,7 @@ const getServiceTypeLabel = (type: string): string => {
 // ============================================
 
 const ServiceCommentsPage: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const formRef = useRef<any>();
 
@@ -405,39 +407,43 @@ const ServiceCommentsPage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          {!record.is_active && (
-            <Tooltip title="تایید نظر">
-              <a
-                style={{ color: '#52c41a' }}
-                onClick={() => handleApprove(record)}
-              >
-                <CheckCircleOutlined />
-              </a>
-            </Tooltip>
-          )}
-          {record.is_active && (
-            <Tooltip title="رد نظر">
-              <a
-                style={{ color: '#ff4d4f' }}
-                onClick={() => handleReject(record)}
-              >
-                <CloseCircleOutlined />
-              </a>
-            </Tooltip>
-          )}
+          {!record.is_active &&
+            access.hasPermission('service-comments:approve') && (
+              <Tooltip title="تایید نظر">
+                <a
+                  style={{ color: '#52c41a' }}
+                  onClick={() => handleApprove(record)}
+                >
+                  <CheckCircleOutlined />
+                </a>
+              </Tooltip>
+            )}
+          {record.is_active &&
+            access.hasPermission('service-comments:reject') && (
+              <Tooltip title="رد نظر">
+                <a
+                  style={{ color: '#ff4d4f' }}
+                  onClick={() => handleReject(record)}
+                >
+                  <CloseCircleOutlined />
+                </a>
+              </Tooltip>
+            )}
           <Tooltip title="مشاهده جزئیات">
             <a onClick={() => handleViewDetail(record)}>
               <EyeOutlined />
             </a>
           </Tooltip>
-          <Tooltip title="حذف">
-            <a
-              style={{ color: '#ff4d4f' }}
-              onClick={() => handleDelete(record)}
-            >
-              <DeleteOutlined />
-            </a>
-          </Tooltip>
+          {access.hasPermission('service-comments:delete') && (
+            <Tooltip title="حذف">
+              <a
+                style={{ color: '#ff4d4f' }}
+                onClick={() => handleDelete(record)}
+              >
+                <DeleteOutlined />
+              </a>
+            </Tooltip>
+          )}
         </Space>
       ),
     },

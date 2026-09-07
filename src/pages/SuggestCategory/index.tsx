@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, message, Modal, Space, Tag, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateForm from './components/UpdateForm';
@@ -51,6 +52,8 @@ const getStatusLabel = (status: API.SuggestCategoryStatus): string => {
 };
 
 const SuggestCategoryPage: React.FC = () => {
+  const access = useAccess();
+
   const actionRef = useRef<ActionType>();
 
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
@@ -252,44 +255,50 @@ const SuggestCategoryPage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          {record.can_approve && (
-            <Tooltip title="تایید">
+          {access.hasPermission('suggest-categories:approve') &&
+            record.can_approve && (
+              <Tooltip title="تایید">
+                <Button
+                  type="text"
+                  icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                  onClick={() => handleApprove(record)}
+                  loading={actionLoading === record.id}
+                />
+              </Tooltip>
+            )}
+
+          {access.hasPermission('suggest-categories:reject') &&
+            record.can_reject && (
+              <Tooltip title="رد">
+                <Button
+                  type="text"
+                  icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
+                  onClick={() => handleReject(record)}
+                  loading={actionLoading === record.id}
+                />
+              </Tooltip>
+            )}
+
+          {access.hasPermission('suggest-categories:update') && (
+            <Tooltip title="ویرایش">
               <Button
                 type="text"
-                icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                onClick={() => handleApprove(record)}
-                loading={actionLoading === record.id}
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
               />
             </Tooltip>
           )}
 
-          {record.can_reject && (
-            <Tooltip title="رد">
+          {access.hasPermission('suggest-categories:delete') && (
+            <Tooltip title="حذف">
               <Button
                 type="text"
-                icon={<CloseCircleOutlined style={{ color: '#ff4d4f' }} />}
-                onClick={() => handleReject(record)}
+                icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
+                onClick={() => handleDelete(record)}
                 loading={actionLoading === record.id}
               />
             </Tooltip>
           )}
-
-          <Tooltip title="ویرایش">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
-
-          <Tooltip title="حذف">
-            <Button
-              type="text"
-              icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
-              onClick={() => handleDelete(record)}
-              loading={actionLoading === record.id}
-            />
-          </Tooltip>
         </Space>
       ),
     },

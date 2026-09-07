@@ -93,6 +93,36 @@ export const request: RequestConfig = {
   ],
 };
 
+/**
+ * Recursively filters the sidebar menu tree against the current admin's permission list.
+ * A route may declare a custom `permission: '<resource>:list'` field in .umirc.ts (not a
+ * native Umi route field — just passed through into the generated menu item). A leaf item
+ * with no `permission` field is shown by default; a parent group (e.g. "گزارش‌ها") is shown
+ * only if at least one of its children remains visible, mirroring Umi's own built-in
+ * per-route `access` filtering logic (useAccessMarkedRoutes) since the native mechanism only
+ * supports static named flags, not a parameterized permission check.
+ */
+const filterMenuByPermission = (
+  menuData: any[],
+  hasPermission: (permission: string) => boolean,
+): any[] => {
+  return menuData
+    .map((item) => {
+      const isGroup = Array.isArray(item.children) && item.children.length > 0;
+
+      if (isGroup) {
+        const children = filterMenuByPermission(item.children, hasPermission);
+        if (children.length === 0) return null;
+        return { ...item, children };
+      }
+
+      if (item.permission && !hasPermission(item.permission)) return null;
+
+      return item;
+    })
+    .filter((item): item is any => item !== null);
+};
+
 export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
     logo: logo,
@@ -101,6 +131,12 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     },
     layout: 'mix',
     navTheme: 'light',
+    menuDataRender: (menuData) => {
+      const permissions = initialState?.currentUser?.permissions ?? [];
+      return filterMenuByPermission(menuData, (permission) =>
+        permissions.includes(permission),
+      );
+    },
     onPageChange: () => {
       const currentPath = history.location.pathname;
 

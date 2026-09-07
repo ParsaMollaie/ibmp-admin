@@ -71,6 +71,9 @@ const LeadsPage: React.FC = () => {
               fetchNotes={getProjectVisitRequestNotes}
               createNote={createProjectVisitRequestNote}
               deleteNote={deleteProjectVisitRequestNote}
+              updatePermission="project-visit-requests:update"
+              addNotePermission="project-visit-requests:notes-create"
+              deleteNotePermission="project-visit-request-notes:delete"
             />
           ),
         },
@@ -87,6 +90,9 @@ const LeadsPage: React.FC = () => {
               fetchNotes={getPriceInquiryNotes}
               createNote={createPriceInquiryNote}
               deleteNote={deletePriceInquiryNote}
+              updatePermission="price-inquiries:update"
+              addNotePermission="price-inquiries:notes-create"
+              deleteNotePermission="price-inquiry-notes:delete"
             />
           ),
         },

@@ -10,7 +10,7 @@ import {
   PlusOutlined,
   SaveOutlined,
 } from '@ant-design/icons';
-import { useRequest } from '@umijs/max';
+import { useAccess, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -29,6 +29,8 @@ import React, { useEffect, useState } from 'react';
 const { Title, Text } = Typography;
 
 const WebsiteContactPage: React.FC = () => {
+  const access = useAccess();
+
   // Form instance for programmatic control
   const [form] = Form.useForm();
 
@@ -315,17 +317,19 @@ const WebsiteContactPage: React.FC = () => {
         </Card>
 
         {/* Submit Button */}
-        <div style={{ textAlign: 'left' }}>
-          <Button
-            type="primary"
-            onClick={handleSubmit}
-            loading={saving}
-            size="large"
-            icon={<SaveOutlined />}
-          >
-            ذخیره تغییرات
-          </Button>
-        </div>
+        {access.hasPermission('website-contact:update') && (
+          <div style={{ textAlign: 'left' }}>
+            <Button
+              type="primary"
+              onClick={handleSubmit}
+              loading={saving}
+              size="large"
+              icon={<SaveOutlined />}
+            >
+              ذخیره تغییرات
+            </Button>
+          </div>
+        )}
       </Form>
     </div>
   );

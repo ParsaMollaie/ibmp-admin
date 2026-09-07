@@ -6,6 +6,7 @@ import {
   updateServiceProduct,
 } from '@/services/service-product';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { useAccess } from '@umijs/max';
 import type { UploadFile, UploadProps } from 'antd';
 import {
   Button,
@@ -70,6 +71,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
   onChanged,
   service,
 }) => {
+  const access = useAccess();
   const [form] = Form.useForm();
   const [products, setProducts] = useState<API.ServiceProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -304,6 +306,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
         <Switch
           checked={status === 'active'}
           loading={togglingId === record.id}
+          disabled={!access.hasPermission('service-products:toggle-status')}
           onChange={() => handleToggleStatus(record)}
           checkedChildren="فعال"
           unCheckedChildren="غیرفعال"
@@ -316,24 +319,28 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
       width: 100,
       render: (_: unknown, record: API.ServiceProduct) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => openEditForm(record)}
-          />
-          <Popconfirm
-            title="آیا از حذف این محصول مطمئنید؟"
-            onConfirm={() => handleDelete(record)}
-            okText="بله"
-            cancelText="خیر"
-          >
+          {access.hasPermission('service-products:update') && (
             <Button
               type="text"
-              danger
-              icon={<DeleteOutlined />}
-              loading={deletingId === record.id}
+              icon={<EditOutlined />}
+              onClick={() => openEditForm(record)}
             />
-          </Popconfirm>
+          )}
+          {access.hasPermission('service-products:delete') && (
+            <Popconfirm
+              title="آیا از حذف این محصول مطمئنید؟"
+              onConfirm={() => handleDelete(record)}
+              okText="بله"
+              cancelText="خیر"
+            >
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                loading={deletingId === record.id}
+              />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -348,7 +355,7 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
       width={800}
       styles={{ body: { maxHeight: '75vh', overflowY: 'auto' } }}
     >
-      {!formVisible && (
+      {!formVisible && access.hasPermission('service-products:create') && (
         <Button
           type="dashed"
           block

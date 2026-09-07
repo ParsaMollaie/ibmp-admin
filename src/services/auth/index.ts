@@ -83,6 +83,25 @@ export async function generateUserToken(id: string | number) {
   );
 }
 
+/**
+ * Get the role names currently assigned to a user
+ */
+export async function getUserRoles(id: string) {
+  return request<API.ApiResponse<string[]>>(`${API_BASE}/users/${id}/roles`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * Replace the full set of roles assigned to a user
+ */
+export async function updateUserRoles(id: string, roles: string[]) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/users/${id}/roles`, {
+    method: 'PUT',
+    data: { roles },
+  });
+}
+
 // Slider endpoints
 export async function getSliders(params?: any) {
   return request(`${API_BASE}/sliders`, {

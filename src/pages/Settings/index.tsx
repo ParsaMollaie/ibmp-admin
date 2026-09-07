@@ -1,6 +1,6 @@
 import { getSettings, saveSettings } from '@/services/settings';
 import { SaveOutlined, SettingOutlined } from '@ant-design/icons';
-import { useRequest } from '@umijs/max';
+import { useAccess, useRequest } from '@umijs/max';
 import {
   Button,
   Card,
@@ -16,6 +16,7 @@ import React, { useEffect, useState } from 'react';
 const { Title, Text } = Typography;
 
 const SettingsPage: React.FC = () => {
+  const access = useAccess();
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
 
@@ -112,17 +113,19 @@ const SettingsPage: React.FC = () => {
         </Card>
 
         {/* Submit Button */}
-        <div style={{ textAlign: 'left' }}>
-          <Button
-            type="primary"
-            onClick={handleSubmit}
-            loading={saving}
-            size="large"
-            icon={<SaveOutlined />}
-          >
-            ذخیره تغییرات
-          </Button>
-        </div>
+        {access.hasPermission('settings:update') && (
+          <div style={{ textAlign: 'left' }}>
+            <Button
+              type="primary"
+              onClick={handleSubmit}
+              loading={saving}
+              size="large"
+              icon={<SaveOutlined />}
+            >
+              ذخیره تغییرات
+            </Button>
+          </div>
+        )}
       </Form>
     </div>
   );

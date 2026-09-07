@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import {
   Button,
   Card,
@@ -76,6 +77,7 @@ const getServiceTypeLabel = (type: string): string => {
 // ============================================
 
 const ComplaintsPage: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const formRef = useRef<any>();
 
@@ -401,16 +403,20 @@ const ComplaintsPage: React.FC = () => {
               <EyeOutlined />
             </a>
           </Tooltip>
-          <Tooltip title="بروزرسانی">
-            <a onClick={() => handleEdit(record)}>
-              <EditOutlined />
-            </a>
-          </Tooltip>
-          <Tooltip title="ویرایش متن خطا">
-            <a onClick={() => handleEditDescription(record)}>
-              <FileTextOutlined />
-            </a>
-          </Tooltip>
+          {access.hasPermission('service-complaints:update') && (
+            <Tooltip title="بروزرسانی">
+              <a onClick={() => handleEdit(record)}>
+                <EditOutlined />
+              </a>
+            </Tooltip>
+          )}
+          {access.hasPermission('service-complaints:update-description') && (
+            <Tooltip title="ویرایش متن خطا">
+              <a onClick={() => handleEditDescription(record)}>
+                <FileTextOutlined />
+              </a>
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -639,24 +645,26 @@ const ComplaintsPage: React.FC = () => {
         width={600}
       >
         {/* Add new note */}
-        <div style={{ marginBottom: 16 }}>
-          <TextArea
-            rows={3}
-            value={newNoteContent}
-            onChange={(e) => setNewNoteContent(e.target.value)}
-            placeholder="یادداشت جدید..."
-            maxLength={5000}
-          />
-          <Button
-            type="primary"
-            style={{ marginTop: 8 }}
-            onClick={handleAddNote}
-            loading={submittingNote}
-            disabled={!newNoteContent.trim()}
-          >
-            ثبت یادداشت
-          </Button>
-        </div>
+        {access.hasPermission('service-complaints:notes-create') && (
+          <div style={{ marginBottom: 16 }}>
+            <TextArea
+              rows={3}
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              placeholder="یادداشت جدید..."
+              maxLength={5000}
+            />
+            <Button
+              type="primary"
+              style={{ marginTop: 8 }}
+              onClick={handleAddNote}
+              loading={submittingNote}
+              disabled={!newNoteContent.trim()}
+            >
+              ثبت یادداشت
+            </Button>
+          </div>
+        )}
 
         {/* Notes list */}
         <List
@@ -665,19 +673,23 @@ const ComplaintsPage: React.FC = () => {
           locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
           renderItem={(note) => (
             <List.Item
-              actions={[
-                <Popconfirm
-                  key="delete"
-                  title="آیا از حذف این یادداشت مطمئنید؟"
-                  onConfirm={() => handleDeleteNote(note.id)}
-                  okText="بله"
-                  cancelText="خیر"
-                >
-                  <Button type="link" danger size="small">
-                    حذف
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                access.hasPermission('service-complaint-notes:delete')
+                  ? [
+                      <Popconfirm
+                        key="delete"
+                        title="آیا از حذف این یادداشت مطمئنید؟"
+                        onConfirm={() => handleDeleteNote(note.id)}
+                        okText="بله"
+                        cancelText="خیر"
+                      >
+                        <Button type="link" danger size="small">
+                          حذف
+                        </Button>
+                      </Popconfirm>,
+                    ]
+                  : []
+              }
             >
               <List.Item.Meta
                 title={

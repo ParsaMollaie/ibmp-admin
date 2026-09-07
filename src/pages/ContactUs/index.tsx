@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import {
   Button,
   Card,
@@ -54,6 +55,8 @@ const getStatusConfig = (
 };
 
 const ContactUsPage: React.FC = () => {
+  const access = useAccess();
+
   // ============================================
   // STATE MANAGEMENT
   // ============================================
@@ -326,18 +329,22 @@ const ContactUsPage: React.FC = () => {
             onClick={() => handleViewDetail(record)}
           />
           {/* Edit status button */}
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          />
+          {access.hasPermission('contact-us:update') && (
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          )}
           {/* Delete button */}
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-          />
+          {access.hasPermission('contact-us:delete') && (
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+            />
+          )}
         </Space>
       ),
     },
@@ -480,15 +487,17 @@ const ContactUsPage: React.FC = () => {
             placeholder="یادداشت جدید..."
             maxLength={5000}
           />
-          <Button
-            type="primary"
-            style={{ marginTop: 8 }}
-            onClick={handleAddNote}
-            loading={submittingNote}
-            disabled={!newNoteContent.trim()}
-          >
-            ثبت یادداشت
-          </Button>
+          {access.hasPermission('contact-us:notes-create') && (
+            <Button
+              type="primary"
+              style={{ marginTop: 8 }}
+              onClick={handleAddNote}
+              loading={submittingNote}
+              disabled={!newNoteContent.trim()}
+            >
+              ثبت یادداشت
+            </Button>
+          )}
         </div>
 
         {/* Notes list */}
@@ -498,19 +507,23 @@ const ContactUsPage: React.FC = () => {
           locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
           renderItem={(note) => (
             <List.Item
-              actions={[
-                <Popconfirm
-                  key="delete"
-                  title="آیا از حذف این یادداشت مطمئنید؟"
-                  onConfirm={() => handleDeleteNote(note.id)}
-                  okText="بله"
-                  cancelText="خیر"
-                >
-                  <Button type="link" danger size="small">
-                    حذف
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                access.hasPermission('contact-us-notes:delete')
+                  ? [
+                      <Popconfirm
+                        key="delete"
+                        title="آیا از حذف این یادداشت مطمئنید؟"
+                        onConfirm={() => handleDeleteNote(note.id)}
+                        okText="بله"
+                        cancelText="خیر"
+                      >
+                        <Button type="link" danger size="small">
+                          حذف
+                        </Button>
+                      </Popconfirm>,
+                    ]
+                  : []
+              }
             >
               <List.Item.Meta
                 title={

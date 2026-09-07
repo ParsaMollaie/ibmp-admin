@@ -9,12 +9,14 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Image, message, Modal, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
 const SliderTable: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const [selectedRows, setSelectedRows] = useState<API.SliderItem[]>([]);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -198,22 +200,26 @@ const SliderTable: React.FC = () => {
       valueType: 'option',
       width: 120,
       render: (_, record) => [
-        <a
-          key="edit"
-          onClick={() => {
-            setCurrentSlider(record);
-            setUpdateModalVisible(true);
-          }}
-        >
-          ویرایش
-        </a>,
-        <a
-          key="delete"
-          style={{ color: '#ff4d4f' }}
-          onClick={() => handleDelete(record)}
-        >
-          حذف
-        </a>,
+        access.hasPermission('sliders:update') && (
+          <a
+            key="edit"
+            onClick={() => {
+              setCurrentSlider(record);
+              setUpdateModalVisible(true);
+            }}
+          >
+            ویرایش
+          </a>
+        ),
+        access.hasPermission('sliders:delete') && (
+          <a
+            key="delete"
+            style={{ color: '#ff4d4f' }}
+            onClick={() => handleDelete(record)}
+          >
+            حذف
+          </a>
+        ),
       ],
     },
   ];
@@ -247,15 +253,19 @@ const SliderTable: React.FC = () => {
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            onClick={() => setCreateModalVisible(true)}
-          >
-            افزودن اسلایدر جدید
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          access.hasPermission('sliders:create')
+            ? [
+                <Button
+                  key="add"
+                  type="primary"
+                  onClick={() => setCreateModalVisible(true)}
+                >
+                  افزودن اسلایدر جدید
+                </Button>,
+              ]
+            : []
+        }
         pagination={{
           pageSize,
           showSizeChanger: true,

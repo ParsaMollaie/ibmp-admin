@@ -36,7 +36,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { history } from 'umi';
+import { history, useAccess } from 'umi';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -103,6 +103,7 @@ function renderRemainingTag(days: number | null) {
 }
 
 export default function PromotionRemainingPage() {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const [pageSize, setPageSize] = usePersistedPageSize(
     'reports-promotion-remaining',
@@ -562,15 +563,17 @@ export default function PromotionRemainingPage() {
             placeholder="یادداشت جدید..."
             maxLength={5000}
           />
-          <Button
-            type="primary"
-            style={{ marginTop: 8 }}
-            onClick={handleAddNote}
-            loading={submittingNote}
-            disabled={!newNoteContent.trim()}
-          >
-            ثبت یادداشت
-          </Button>
+          {access.hasPermission('services:notes-create') && (
+            <Button
+              type="primary"
+              style={{ marginTop: 8 }}
+              onClick={handleAddNote}
+              loading={submittingNote}
+              disabled={!newNoteContent.trim()}
+            >
+              ثبت یادداشت
+            </Button>
+          )}
         </div>
 
         {/* Notes list */}
@@ -580,19 +583,23 @@ export default function PromotionRemainingPage() {
           locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
           renderItem={(note) => (
             <List.Item
-              actions={[
-                <Popconfirm
-                  key="delete"
-                  title="آیا از حذف این یادداشت مطمئنید؟"
-                  onConfirm={() => handleDeleteNote(note.id)}
-                  okText="بله"
-                  cancelText="خیر"
-                >
-                  <Button type="link" danger size="small">
-                    حذف
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                access.hasPermission('service-notes:delete')
+                  ? [
+                      <Popconfirm
+                        key="delete"
+                        title="آیا از حذف این یادداشت مطمئنید؟"
+                        onConfirm={() => handleDeleteNote(note.id)}
+                        okText="بله"
+                        cancelText="خیر"
+                      >
+                        <Button type="link" danger size="small">
+                          حذف
+                        </Button>
+                      </Popconfirm>,
+                    ]
+                  : []
+              }
             >
               <List.Item.Meta
                 title={

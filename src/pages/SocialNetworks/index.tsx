@@ -9,12 +9,14 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Image, message, Modal, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
 const SocialNetworkTable: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const [selectedRows, setSelectedRows] = useState<API.SocialNetworkItem[]>([]);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -149,22 +151,26 @@ const SocialNetworkTable: React.FC = () => {
       valueType: 'option',
       width: 120,
       render: (_, record) => [
-        <a
-          key="edit"
-          onClick={() => {
-            setCurrentItem(record);
-            setUpdateModalVisible(true);
-          }}
-        >
-          ویرایش
-        </a>,
-        <a
-          key="delete"
-          style={{ color: '#ff4d4f' }}
-          onClick={() => handleDelete(record)}
-        >
-          حذف
-        </a>,
+        access.hasPermission('social-networks:update') && (
+          <a
+            key="edit"
+            onClick={() => {
+              setCurrentItem(record);
+              setUpdateModalVisible(true);
+            }}
+          >
+            ویرایش
+          </a>
+        ),
+        access.hasPermission('social-networks:delete') && (
+          <a
+            key="delete"
+            style={{ color: '#ff4d4f' }}
+            onClick={() => handleDelete(record)}
+          >
+            حذف
+          </a>
+        ),
       ],
     },
   ];
@@ -198,15 +204,19 @@ const SocialNetworkTable: React.FC = () => {
         rowSelection={{
           onChange: (_, rows) => setSelectedRows(rows),
         }}
-        toolBarRender={() => [
-          <Button
-            key="add"
-            type="primary"
-            onClick={() => setCreateModalVisible(true)}
-          >
-            افزودن شبکه اجتماعی جدید
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          access.hasPermission('social-networks:create')
+            ? [
+                <Button
+                  key="add"
+                  type="primary"
+                  onClick={() => setCreateModalVisible(true)}
+                >
+                  افزودن شبکه اجتماعی جدید
+                </Button>,
+              ]
+            : []
+        }
         pagination={{
           pageSize,
           showSizeChanger: true,

@@ -3,8 +3,11 @@
  * This function receives the initialState (which contains the current user)
  * and returns an object with permission flags.
  *
- * These flags can be used in routes (via `access` property) or components
- * (via `useAccess` hook) to control what the user can see/do.
+ * `hasPermission` is a function-valued flag (not a static boolean) since the actual permission
+ * set is dynamic and backend-driven (see config/route_permissions.php in the Laravel backend) —
+ * Umi's per-route `access:` field only supports static flag names, so route-level menu filtering
+ * uses a separate `menuDataRender` hook in app.tsx instead; this flag is for in-page button/action
+ * gating via `useAccess()`.
  */
 export default (initialState: { currentUser?: API.UserInfo } | undefined) => {
   const { currentUser } = initialState || {};
@@ -12,10 +15,12 @@ export default (initialState: { currentUser?: API.UserInfo } | undefined) => {
   // User can access admin features if they're logged in and have admin role
   const canSeeAdmin = !!(currentUser && currentUser.user_type === 'admin');
 
-  // You can add more granular permissions here as needed
-  // For example: canManageUsers, canEditNews, etc.
+  const permissions = currentUser?.permissions ?? [];
+  const hasPermission = (permission: string) =>
+    permissions.includes(permission);
 
   return {
     canSeeAdmin,
+    hasPermission,
   };
 };

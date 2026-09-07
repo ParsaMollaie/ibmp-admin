@@ -2,6 +2,7 @@ import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { CalendarOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import {
   Button,
   Descriptions,
@@ -90,6 +91,12 @@ type LeadsTableProps<T extends LeadItem> = {
     data: { content: string },
   ) => Promise<API.ApiResponse<LeadNoteItem>>;
   deleteNote: (noteId: string) => Promise<API.ApiResponse<[]>>;
+  /** Permission required to change the record's status */
+  updatePermission: string;
+  /** Permission required to add a note */
+  addNotePermission: string;
+  /** Permission required to delete a note */
+  deleteNotePermission: string;
 };
 
 function LeadsTable<T extends LeadItem>({
@@ -103,7 +110,11 @@ function LeadsTable<T extends LeadItem>({
   fetchNotes,
   createNote,
   deleteNote,
+  updatePermission,
+  addNotePermission,
+  deleteNotePermission,
 }: LeadsTableProps<T>) {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const [pageSize, setPageSize] = usePersistedPageSize(storageKey, 10);
 
@@ -296,20 +307,25 @@ function LeadsTable<T extends LeadItem>({
         followed_up: { text: 'پیگیری شده', status: 'Processing' },
         closed: { text: 'بسته شده', status: 'Default' },
       },
-      render: (_, record) => (
-        <Select<API.LeadRequestStatus>
-          size="small"
-          value={record.status}
-          style={{ width: 140 }}
-          loading={statusUpdating}
-          onChange={(value) => handleStatusChange(record, value)}
-          options={[
-            { value: 'pending', label: 'در انتظار پیگیری' },
-            { value: 'followed_up', label: 'پیگیری شده' },
-            { value: 'closed', label: 'بسته شده' },
-          ]}
-        />
-      ),
+      render: (_, record) =>
+        access.hasPermission(updatePermission) ? (
+          <Select<API.LeadRequestStatus>
+            size="small"
+            value={record.status}
+            style={{ width: 140 }}
+            loading={statusUpdating}
+            onChange={(value) => handleStatusChange(record, value)}
+            options={[
+              { value: 'pending', label: 'در انتظار پیگیری' },
+              { value: 'followed_up', label: 'پیگیری شده' },
+              { value: 'closed', label: 'بسته شده' },
+            ]}
+          />
+        ) : (
+          <Tag color={STATUS_COLOR[record.status]}>
+            {STATUS_LABEL[record.status]}
+          </Tag>
+        ),
     },
     {
       title: 'جستجو',
@@ -483,24 +499,26 @@ function LeadsTable<T extends LeadItem>({
         footer={null}
         width={600}
       >
-        <div style={{ marginBottom: 16 }}>
-          <TextArea
-            rows={3}
-            value={newNoteContent}
-            onChange={(e) => setNewNoteContent(e.target.value)}
-            placeholder="یادداشت جدید..."
-            maxLength={5000}
-          />
-          <Button
-            type="primary"
-            style={{ marginTop: 8 }}
-            onClick={handleAddNote}
-            loading={submittingNote}
-            disabled={!newNoteContent.trim()}
-          >
-            ثبت یادداشت
-          </Button>
-        </div>
+        {access.hasPermission(addNotePermission) && (
+          <div style={{ marginBottom: 16 }}>
+            <TextArea
+              rows={3}
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              placeholder="یادداشت جدید..."
+              maxLength={5000}
+            />
+            <Button
+              type="primary"
+              style={{ marginTop: 8 }}
+              onClick={handleAddNote}
+              loading={submittingNote}
+              disabled={!newNoteContent.trim()}
+            >
+              ثبت یادداشت
+            </Button>
+          </div>
+        )}
 
         <List
           loading={notesLoading}
@@ -508,19 +526,23 @@ function LeadsTable<T extends LeadItem>({
           locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
           renderItem={(note) => (
             <List.Item
-              actions={[
-                <Popconfirm
-                  key="delete"
-                  title="آیا از حذف این یادداشت مطمئنید؟"
-                  onConfirm={() => handleDeleteNote(note.id)}
-                  okText="بله"
-                  cancelText="خیر"
-                >
-                  <Button type="link" danger size="small">
-                    حذف
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                access.hasPermission(deleteNotePermission)
+                  ? [
+                      <Popconfirm
+                        key="delete"
+                        title="آیا از حذف این یادداشت مطمئنید؟"
+                        onConfirm={() => handleDeleteNote(note.id)}
+                        okText="بله"
+                        cancelText="خیر"
+                      >
+                        <Button type="link" danger size="small">
+                          حذف
+                        </Button>
+                      </Popconfirm>,
+                    ]
+                  : []
+              }
             >
               <List.Item.Meta
                 title={

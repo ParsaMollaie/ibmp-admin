@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Image, Modal, Space, Tag, message } from 'antd';
 import React, { useCallback, useEffect, useState } from 'react';
 import CreateForm from './components/CreateForm';
@@ -39,6 +40,8 @@ const addDepthToTree = (
   }));
 
 const CategoryPage: React.FC = () => {
+  const access = useAccess();
+
   const [treeData, setTreeData] = useState<API.CategoryTreeItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -269,19 +272,23 @@ const CategoryPage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            title="ویرایش"
-          />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
-            title="حذف"
-          />
+          {access.hasPermission('categories:update') && (
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+              title="ویرایش"
+            />
+          )}
+          {access.hasPermission('categories:delete') && (
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDelete(record)}
+              title="حذف"
+            />
+          )}
         </Space>
       ),
     },
@@ -299,16 +306,20 @@ const CategoryPage: React.FC = () => {
         pagination={false}
         expandable={{ defaultExpandAllRows: true, indentSize: 28 }}
         rowClassName={(record: any) => `category-depth-${record._depth ?? 0}`}
-        toolBarRender={() => [
-          <Button
-            key="create"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            افزودن دسته‌بندی
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          access.hasPermission('categories:create')
+            ? [
+                <Button
+                  key="create"
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreate}
+                >
+                  افزودن دسته‌بندی
+                </Button>,
+              ]
+            : []
+        }
         options={{
           density: true,
           fullScreen: true,

@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Input, message, Modal, Space, Tag, Tooltip } from 'antd';
 import React, { useRef, useState } from 'react';
 import { history } from 'umi';
@@ -27,6 +28,7 @@ const statusLabelMap: Record<
 };
 
 const NewsCommentsPage: React.FC = () => {
+  const access = useAccess();
   const actionRef = useRef<ActionType>();
   const [pageSize, setPageSize] = usePersistedPageSize('news-comments', 10);
 
@@ -174,31 +176,35 @@ const NewsCommentsPage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          {record.status !== 'approved' && (
-            <Tooltip title="تایید">
-              <a
-                style={{ color: '#52c41a' }}
-                onClick={() => handleUpdateStatus(record, 'approved')}
-              >
-                <CheckOutlined />
+          {access.hasPermission('news-comments:update') &&
+            record.status !== 'approved' && (
+              <Tooltip title="تایید">
+                <a
+                  style={{ color: '#52c41a' }}
+                  onClick={() => handleUpdateStatus(record, 'approved')}
+                >
+                  <CheckOutlined />
+                </a>
+              </Tooltip>
+            )}
+          {access.hasPermission('news-comments:update') &&
+            record.status !== 'rejected' && (
+              <Tooltip title="رد">
+                <a
+                  style={{ color: '#ff4d4f' }}
+                  onClick={() => handleUpdateStatus(record, 'rejected')}
+                >
+                  <CloseOutlined />
+                </a>
+              </Tooltip>
+            )}
+          {access.hasPermission('news-comments:reply') && (
+            <Tooltip title="پاسخ">
+              <a onClick={() => openReplyModal(record)}>
+                <MessageOutlined />
               </a>
             </Tooltip>
           )}
-          {record.status !== 'rejected' && (
-            <Tooltip title="رد">
-              <a
-                style={{ color: '#ff4d4f' }}
-                onClick={() => handleUpdateStatus(record, 'rejected')}
-              >
-                <CloseOutlined />
-              </a>
-            </Tooltip>
-          )}
-          <Tooltip title="پاسخ">
-            <a onClick={() => openReplyModal(record)}>
-              <MessageOutlined />
-            </a>
-          </Tooltip>
         </Space>
       ),
     },

@@ -5,12 +5,15 @@ import { convertEnDateToFaDate } from '@/utils/convert-en-date-to-fa-date';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, Image, message, Modal, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import UpdateForm from './components/UpdateForm';
 
 const AdvertisingPage: React.FC = () => {
+  const access = useAccess();
+
   // Reference to ProTable for manual refresh after create/update
   const actionRef = useRef<ActionType>();
 
@@ -208,20 +211,24 @@ const AdvertisingPage: React.FC = () => {
       render: (_, record) => {
         return (
           <Space>
-            <a
-              onClick={() => {
-                setCurrentRecord(record);
-                setUpdateModalOpen(true);
-              }}
-            >
-              ویرایش
-            </a>
-            <a
-              style={{ color: '#ff4d4f' }}
-              onClick={() => handleDelete(record)}
-            >
-              حذف
-            </a>
+            {access.hasPermission('advertising:update') && (
+              <a
+                onClick={() => {
+                  setCurrentRecord(record);
+                  setUpdateModalOpen(true);
+                }}
+              >
+                ویرایش
+              </a>
+            )}
+            {access.hasPermission('advertising:delete') && (
+              <a
+                style={{ color: '#ff4d4f' }}
+                onClick={() => handleDelete(record)}
+              >
+                حذف
+              </a>
+            )}
           </Space>
         );
       },
@@ -270,16 +277,20 @@ const AdvertisingPage: React.FC = () => {
           onShowSizeChange: (_current, size) => setPageSize(size),
         }}
         scroll={{ x: 1100 }}
-        toolBarRender={() => [
-          <Button
-            type="primary"
-            key="create"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            افزودن تبلیغ
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          access.hasPermission('advertising:create')
+            ? [
+                <Button
+                  type="primary"
+                  key="create"
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  افزودن تبلیغ
+                </Button>,
+              ]
+            : []
+        }
       />
 
       <CreateForm

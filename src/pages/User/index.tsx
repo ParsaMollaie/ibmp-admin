@@ -7,6 +7,7 @@ import {
   KeyOutlined,
   LoginOutlined,
   PlusOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import {
   ActionType,
@@ -14,11 +15,13 @@ import {
   ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import { Button, message, Space, Tag } from 'antd';
 import React, { useRef, useState } from 'react';
 import ChangePasswordForm from './components/ChangePasswordForm';
 import CreateForm from './components/CreateForm';
 import UpdateForm, { FormValueType } from './components/UpdateForm';
+import UserRolesForm from './components/UserRolesForm';
 
 const handleUpdate = async (fields: FormValueType) => {
   const hide = message.loading('در حال به روز رسانی');
@@ -75,6 +78,7 @@ const exportColumns: ExportColumn[] = [
 const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
 
 const UserTable: React.FC = () => {
+  const access = useAccess();
   const [updateModalVisible, handleUpdateModalVisible] =
     useState<boolean>(false);
   const [stepFormValues, setStepFormValues] = useState({});
@@ -82,6 +86,8 @@ const UserTable: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordUserId, setPasswordUserId] = useState<string | null>(null);
+  const [rolesModalVisible, setRolesModalVisible] = useState(false);
+  const [rolesUserId, setRolesUserId] = useState<string | null>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [pageSize, setPageSize] = usePersistedPageSize('user', 10);
   const actionRef = useRef<ActionType>();
@@ -257,33 +263,51 @@ const UserTable: React.FC = () => {
       valueType: 'option',
       render: (_, record) => (
         <Space>
-          <a
-            onClick={() => {
-              handleUpdateModalVisible(true);
-              setStepFormValues(record);
-            }}
-          >
-            ویرایش
-          </a>
-          <Button
-            type="text"
-            icon={<KeyOutlined />}
-            onClick={() => {
-              setPasswordUserId(record.id);
-              setPasswordModalVisible(true);
-            }}
-          >
-            تغییر رمز
-          </Button>
-          {record.user_type === 'client' && (
+          {access.hasPermission('users:update') && (
+            <a
+              onClick={() => {
+                handleUpdateModalVisible(true);
+                setStepFormValues(record);
+              }}
+            >
+              ویرایش
+            </a>
+          )}
+          {access.hasPermission('users:password') && (
             <Button
               type="text"
-              icon={<LoginOutlined />}
-              onClick={() => handleImpersonate(record.id)}
+              icon={<KeyOutlined />}
+              onClick={() => {
+                setPasswordUserId(record.id);
+                setPasswordModalVisible(true);
+              }}
             >
-              ورود به حساب
+              تغییر رمز
             </Button>
           )}
+          {record.user_type === 'admin' &&
+            access.hasPermission('user-roles:update') && (
+              <Button
+                type="text"
+                icon={<SafetyCertificateOutlined />}
+                onClick={() => {
+                  setRolesUserId(record.id);
+                  setRolesModalVisible(true);
+                }}
+              >
+                نقش‌ها
+              </Button>
+            )}
+          {record.user_type === 'client' &&
+            access.hasPermission('users:token') && (
+              <Button
+                type="text"
+                icon={<LoginOutlined />}
+                onClick={() => handleImpersonate(record.id)}
+              >
+                ورود به حساب
+              </Button>
+            )}
         </Space>
       ),
     },
@@ -303,24 +327,28 @@ const UserTable: React.FC = () => {
           labelWidth: 'auto',
           syncToUrl: true,
         }}
-        toolBarRender={() => [
-          <Button
-            key="create"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalVisible(true)}
-          >
-            افزودن کاربر
-          </Button>,
-          <Button
-            key="export"
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-            loading={exporting}
-          >
-            دانلود اکسل
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          [
+            access.hasPermission('users:create') && (
+              <Button
+                key="create"
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setCreateModalVisible(true)}
+              >
+                افزودن کاربر
+              </Button>
+            ),
+            <Button
+              key="export"
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+              loading={exporting}
+            >
+              دانلود اکسل
+            </Button>,
+          ].filter(Boolean)
+        }
         request={async (params = {}, sort) => {
           // Store filter params for export (excluding pagination params)
           const filters = Object.fromEntries(
@@ -395,6 +423,20 @@ const UserTable: React.FC = () => {
           actionRef.current?.reload();
         }}
         userId={passwordUserId}
+      />
+
+      <UserRolesForm
+        visible={rolesModalVisible}
+        onCancel={() => {
+          setRolesModalVisible(false);
+          setRolesUserId(null);
+        }}
+        onSuccess={() => {
+          setRolesModalVisible(false);
+          setRolesUserId(null);
+          actionRef.current?.reload();
+        }}
+        userId={rolesUserId}
       />
 
       <CreateForm

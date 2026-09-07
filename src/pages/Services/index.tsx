@@ -42,6 +42,7 @@ import {
 } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
+import { useAccess } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import {
   Button,
@@ -346,6 +347,7 @@ const productColumns = [
 ];
 
 const ServicesPage: React.FC = () => {
+  const access = useAccess();
   // ============================================
   // REFS & STATE
   // ============================================
@@ -1234,30 +1236,46 @@ const ServicesPage: React.FC = () => {
       fixed: 'right',
       render: (_, record) => {
         const moreItems: MenuProps['items'] = [
-          {
-            key: 'status',
-            icon: <SwapOutlined />,
-            label: 'تغییر وضعیت',
-            onClick: () => handleChangeStatus(record),
-          },
-          {
-            key: 'category',
-            icon: <AppstoreOutlined />,
-            label: 'تغییر دسته‌بندی',
-            onClick: () => handleUpdateCategory(record),
-          },
-          {
-            key: 'plan',
-            icon: <CrownOutlined />,
-            label: 'تخصیص پلن',
-            onClick: () => handleAssignPlan(record),
-          },
-          {
-            key: 'priority',
-            icon: <OrderedListOutlined />,
-            label: 'تغییر اولویت',
-            onClick: () => handleChangePriority(record),
-          },
+          ...(access.hasPermission('services:update-status')
+            ? [
+                {
+                  key: 'status',
+                  icon: <SwapOutlined />,
+                  label: 'تغییر وضعیت',
+                  onClick: () => handleChangeStatus(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:update-category')
+            ? [
+                {
+                  key: 'category',
+                  icon: <AppstoreOutlined />,
+                  label: 'تغییر دسته‌بندی',
+                  onClick: () => handleUpdateCategory(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:assign-plan')
+            ? [
+                {
+                  key: 'plan',
+                  icon: <CrownOutlined />,
+                  label: 'تخصیص پلن',
+                  onClick: () => handleAssignPlan(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:update-priority')
+            ? [
+                {
+                  key: 'priority',
+                  icon: <OrderedListOutlined />,
+                  label: 'تغییر اولویت',
+                  onClick: () => handleChangePriority(record),
+                },
+              ]
+            : []),
           {
             key: 'notes',
             icon: <FileTextOutlined />,
@@ -1287,7 +1305,8 @@ const ServicesPage: React.FC = () => {
                 },
               ]
             : []),
-          ...(record.can_set_regular
+          ...(record.can_set_regular &&
+          access.hasPermission('services:set-regular')
             ? [
                 {
                   key: 'tag-regular',
@@ -1297,7 +1316,8 @@ const ServicesPage: React.FC = () => {
                 },
               ]
             : []),
-          ...(record.can_set_most_view
+          ...(record.can_set_most_view &&
+          access.hasPermission('services:set-most-view')
             ? [
                 {
                   key: 'tag-most-view',
@@ -1307,7 +1327,8 @@ const ServicesPage: React.FC = () => {
                 },
               ]
             : []),
-          ...(record.can_set_promoted
+          ...(record.can_set_promoted &&
+          access.hasPermission('services:set-promoted')
             ? [
                 {
                   key: 'tag-promoted',
@@ -1321,7 +1342,7 @@ const ServicesPage: React.FC = () => {
 
         return (
           <Space>
-            {record.can_approve && (
+            {record.can_approve && access.hasPermission('services:approve') && (
               <Tooltip title="تایید خدمت">
                 <Button
                   type="text"
@@ -1332,7 +1353,7 @@ const ServicesPage: React.FC = () => {
               </Tooltip>
             )}
 
-            {record.can_reject && (
+            {record.can_reject && access.hasPermission('services:reject') && (
               <Tooltip title="رد خدمت">
                 <Button
                   type="text"
@@ -1348,27 +1369,29 @@ const ServicesPage: React.FC = () => {
                 <Divider type="vertical" />
               )}
 
-            {record.can_approve_revision && (
-              <Tooltip title="تایید ویرایش در انتظار تایید">
-                <Button
-                  type="text"
-                  icon={<CheckOutlined style={{ color: '#52c41a' }} />}
-                  onClick={() => handleApproveRevision(record)}
-                  loading={actionLoading === `${record.id}-revision`}
-                />
-              </Tooltip>
-            )}
+            {record.can_approve_revision &&
+              access.hasPermission('services:approve-revision') && (
+                <Tooltip title="تایید ویرایش در انتظار تایید">
+                  <Button
+                    type="text"
+                    icon={<CheckOutlined style={{ color: '#52c41a' }} />}
+                    onClick={() => handleApproveRevision(record)}
+                    loading={actionLoading === `${record.id}-revision`}
+                  />
+                </Tooltip>
+              )}
 
-            {record.can_reject_revision && (
-              <Tooltip title="رد ویرایش در انتظار تایید">
-                <Button
-                  type="text"
-                  icon={<CloseOutlined style={{ color: '#ff4d4f' }} />}
-                  onClick={() => handleRejectRevision(record)}
-                  loading={actionLoading === `${record.id}-revision`}
-                />
-              </Tooltip>
-            )}
+            {record.can_reject_revision &&
+              access.hasPermission('services:reject-revision') && (
+                <Tooltip title="رد ویرایش در انتظار تایید">
+                  <Button
+                    type="text"
+                    icon={<CloseOutlined style={{ color: '#ff4d4f' }} />}
+                    onClick={() => handleRejectRevision(record)}
+                    loading={actionLoading === `${record.id}-revision`}
+                  />
+                </Tooltip>
+              )}
 
             <Tooltip title="مشاهده جزئیات">
               <Button
@@ -1378,13 +1401,15 @@ const ServicesPage: React.FC = () => {
               />
             </Tooltip>
 
-            <Tooltip title="ویرایش">
-              <Button
-                type="text"
-                icon={<EditOutlined />}
-                onClick={() => handleEdit(record)}
-              />
-            </Tooltip>
+            {access.hasPermission('services:update') && (
+              <Tooltip title="ویرایش">
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEdit(record)}
+                />
+              </Tooltip>
+            )}
 
             <Dropdown menu={{ items: moreItems }} trigger={['click']}>
               <Button type="text" icon={<MoreOutlined />} />
@@ -1564,16 +1589,20 @@ const ServicesPage: React.FC = () => {
         columns={columns}
         form={{ initialValues }}
         params={{ pendingRevisionQuickFilter }}
-        toolBarRender={() => [
-          <Button
-            key="export"
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-            loading={exporting}
-          >
-            دانلود اکسل
-          </Button>,
-        ]}
+        toolBarRender={() =>
+          [
+            access.hasPermission('services:export') && (
+              <Button
+                key="export"
+                icon={<DownloadOutlined />}
+                onClick={handleExport}
+                loading={exporting}
+              >
+                دانلود اکسل
+              </Button>
+            ),
+          ].filter(Boolean)
+        }
         request={async (params, sort) => {
           const categoryCodes = Array.isArray(params.category_codes)
             ? params.category_codes
@@ -1728,24 +1757,26 @@ const ServicesPage: React.FC = () => {
         width={600}
       >
         {/* Add new note */}
-        <div style={{ marginBottom: 16 }}>
-          <TextArea
-            rows={3}
-            value={newNoteContent}
-            onChange={(e) => setNewNoteContent(e.target.value)}
-            placeholder="یادداشت جدید..."
-            maxLength={5000}
-          />
-          <Button
-            type="primary"
-            style={{ marginTop: 8 }}
-            onClick={handleAddNote}
-            loading={submittingNote}
-            disabled={!newNoteContent.trim()}
-          >
-            ثبت یادداشت
-          </Button>
-        </div>
+        {access.hasPermission('services:notes-create') && (
+          <div style={{ marginBottom: 16 }}>
+            <TextArea
+              rows={3}
+              value={newNoteContent}
+              onChange={(e) => setNewNoteContent(e.target.value)}
+              placeholder="یادداشت جدید..."
+              maxLength={5000}
+            />
+            <Button
+              type="primary"
+              style={{ marginTop: 8 }}
+              onClick={handleAddNote}
+              loading={submittingNote}
+              disabled={!newNoteContent.trim()}
+            >
+              ثبت یادداشت
+            </Button>
+          </div>
+        )}
 
         {/* Notes list */}
         <List
@@ -1754,19 +1785,23 @@ const ServicesPage: React.FC = () => {
           locale={{ emptyText: 'یادداشتی ثبت نشده است' }}
           renderItem={(note) => (
             <List.Item
-              actions={[
-                <Popconfirm
-                  key="delete"
-                  title="آیا از حذف این یادداشت مطمئنید؟"
-                  onConfirm={() => handleDeleteNote(note.id)}
-                  okText="بله"
-                  cancelText="خیر"
-                >
-                  <Button type="link" danger size="small">
-                    حذف
-                  </Button>
-                </Popconfirm>,
-              ]}
+              actions={
+                access.hasPermission('service-notes:delete')
+                  ? [
+                      <Popconfirm
+                        key="delete"
+                        title="آیا از حذف این یادداشت مطمئنید؟"
+                        onConfirm={() => handleDeleteNote(note.id)}
+                        okText="بله"
+                        cancelText="خیر"
+                      >
+                        <Button type="link" danger size="small">
+                          حذف
+                        </Button>
+                      </Popconfirm>,
+                    ]
+                  : []
+              }
             >
               <List.Item.Meta
                 title={
