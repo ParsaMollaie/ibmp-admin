@@ -209,6 +209,7 @@ const UpdateFormEngineers: React.FC<UpdateFormProps> = ({
 
       form.setFieldsValue({
         title: record.title,
+        slug: record.slug || '',
         summary: record.summary,
         description: record.description,
         email: record.email,
@@ -528,6 +529,7 @@ const UpdateFormEngineers: React.FC<UpdateFormProps> = ({
 
       const payload: API.ServiceEngineersPayload = {
         title: values.title,
+        slug: values.slug || undefined,
         summary: values.summary,
         description: values.description,
         email: values.email,
@@ -669,6 +671,21 @@ const UpdateFormEngineers: React.FC<UpdateFormProps> = ({
                   placeholder="https://example.com"
                   style={{ direction: 'ltr' }}
                 />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="slug"
+                label="آدرس صفحه (اسلاگ)"
+                tooltip="فقط حروف انگلیسی کوچک، عدد و خط تیره - آدرس عمومی صفحه خدمت را می‌سازد"
+                rules={[
+                  {
+                    pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
+                    message: 'فقط حروف انگلیسی کوچک، عدد و خط تیره مجاز است',
+                  },
+                ]}
+              >
+                <Input placeholder="akhavan-jam" style={{ direction: 'ltr' }} />
               </Form.Item>
             </Col>
           </Row>

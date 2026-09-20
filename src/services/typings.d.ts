@@ -684,6 +684,7 @@ declare namespace API {
     id: string;
     code: number;
     title: string;
+    slug?: string | null;
     summary: string;
     description: string;
     email: string | null;
@@ -776,6 +777,7 @@ declare namespace API {
    */
   interface ServiceCompanyPayload {
     title: string;
+    slug?: string;
     summary?: string;
     description: string;
     email?: string;
@@ -1008,6 +1010,7 @@ declare namespace API {
 
   interface ServiceEngineersPayload {
     title: string;
+    slug?: string;
     summary?: string;
     description: string;
     email?: string;
