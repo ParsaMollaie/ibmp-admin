@@ -380,7 +380,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       </Row>
 
       {/* Current Image Preview + Upload for Change */}
-      <Form.Item label="تصویر اصلی">
+      <Form.Item label="تصویر اصلی" extra="ابعاد پیشنهادی: 1200×320 پیکسل">
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           {/* Show existing image if available and not changed */}
           {record?.image && !imageChanged && (
@@ -417,7 +417,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       </Form.Item>
 
       {/* Portrait Image */}
-      <Form.Item label="تصویر عمودی">
+      <Form.Item label="تصویر عمودی" extra="ابعاد پیشنهادی: 1200×320 پیکسل">
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
           {record?.portrait_image && !portraitImageChanged && (
             <div>

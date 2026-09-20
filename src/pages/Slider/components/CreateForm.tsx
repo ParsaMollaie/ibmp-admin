@@ -311,6 +311,7 @@ const CreateForm: React.FC<{
         <Form.Item
           name="image"
           label="تصویر اصلی"
+          extra="ابعاد پیشنهادی: 1920×600 پیکسل"
           rules={[
             { required: true, message: 'لطفاً تصویر اصلی را آپلود کنید' },
           ]}
@@ -338,7 +339,11 @@ const CreateForm: React.FC<{
           </Upload>
         </Form.Item>
 
-        <Form.Item name="portrait_image" label="تصویر پرتره">
+        <Form.Item
+          name="portrait_image"
+          label="تصویر پرتره"
+          extra="ابعاد پیشنهادی: 1080×1350 پیکسل"
+        >
           <Upload
             name="portrait_image"
             listType="picture-card"

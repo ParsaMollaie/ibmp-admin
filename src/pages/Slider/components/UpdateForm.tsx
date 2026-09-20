@@ -396,6 +396,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           label="تصویر اصلی"
           required
           tooltip="تصویر اصلی اسلایدر - اگر نمی‌خواهید تغییر کند، خالی بگذارید"
+          extra="ابعاد پیشنهادی: 1920×600 پیکسل"
         >
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             {/* Show existing image if available and not changed */}
@@ -442,7 +443,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           </div>
         </Form.Item>
 
-        <Form.Item label="تصویر پرتره">
+        <Form.Item label="تصویر پرتره" extra="ابعاد پیشنهادی: 1080×1350 پیکسل">
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             {/* Show existing portrait image if available and not changed */}
             {initialValues.portrait_image && !portraitImageChanged && (

@@ -327,7 +327,11 @@ const CreateForm: React.FC<CreateFormProps> = ({
       </Row>
 
       {/* Image Upload */}
-      <Form.Item label="تصویر اصلی" name="image">
+      <Form.Item
+        label="تصویر اصلی"
+        name="image"
+        extra="ابعاد پیشنهادی: 1200×320 پیکسل"
+      >
         <Upload
           listType="picture-card"
           fileList={imageList}
@@ -341,7 +345,11 @@ const CreateForm: React.FC<CreateFormProps> = ({
       </Form.Item>
 
       {/* Portrait Image Upload */}
-      <Form.Item label="تصویر عمودی" name="portrait_image">
+      <Form.Item
+        label="تصویر عمودی"
+        name="portrait_image"
+        extra="ابعاد پیشنهادی: 1200×320 پیکسل"
+      >
         <Upload
           listType="picture-card"
           fileList={portraitImageList}
