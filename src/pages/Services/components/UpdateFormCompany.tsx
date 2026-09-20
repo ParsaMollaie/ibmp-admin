@@ -3,8 +3,13 @@ import { socialMediaTypeOptions } from '@/constants/serviceSocialMedia';
 import { getCategories } from '@/services/category';
 import { getContactProfiles } from '@/services/contact-profile';
 import { getCities, getProvinces } from '@/services/location';
-import { updateServiceCompany } from '@/services/service';
+import {
+  checkServiceSlugAvailability,
+  updateServiceCompany,
+} from '@/services/service';
+import { debouncePromise } from '@/utils/debounce';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useAccess } from '@umijs/max';
 import type { UploadFile, UploadProps } from 'antd';
 import {
   Button,
@@ -20,7 +25,7 @@ import {
   Upload,
   message,
 } from 'antd';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const { TextArea } = Input;
 
@@ -58,6 +63,17 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const access = useAccess();
+
+  const checkSlugDebounced = useMemo(
+    () =>
+      debouncePromise(
+        (slug: string, excludeId?: string) =>
+          checkServiceSlugAvailability({ slug, service_id: excludeId }),
+        500,
+      ),
+    [],
+  );
 
   const [categories, setCategories] = useState<API.CategoryItem[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -676,10 +692,36 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
                 name="slug"
                 label="آدرس صفحه (اسلاگ)"
                 tooltip="فقط حروف انگلیسی کوچک، عدد و خط تیره - آدرس عمومی صفحه خدمت را می‌سازد"
+                validateTrigger="onBlur"
                 rules={[
                   {
                     pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
                     message: 'فقط حروف انگلیسی کوچک، عدد و خط تیره مجاز است',
+                  },
+                  {
+                    validator: async (_, value: string) => {
+                      if (
+                        !value ||
+                        !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(value) ||
+                        value === record?.slug ||
+                        !access.hasPermission('services:check-slug')
+                      ) {
+                        return Promise.resolve();
+                      }
+
+                      const result = await checkSlugDebounced(
+                        value,
+                        record?.id,
+                      );
+                      if (result?.data?.available === false) {
+                        return Promise.reject(
+                          new Error(
+                            'این آدرس قبلاً توسط خدمت دیگری استفاده شده است',
+                          ),
+                        );
+                      }
+                      return Promise.resolve();
+                    },
                   },
                 ]}
               >

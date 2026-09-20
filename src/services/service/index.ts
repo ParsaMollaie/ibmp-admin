@@ -286,3 +286,21 @@ export async function getServicesForExport(params?: {
     },
   );
 }
+
+/**
+ * Check whether a slug is available before submitting the update form.
+ * `excludeServiceId` should be the service currently being edited, so its own
+ * current slug isn't reported as taken against itself.
+ */
+export async function checkServiceSlugAvailability(params: {
+  slug: string;
+  service_id?: string;
+}) {
+  return request<API.ApiResponse<{ available: boolean }>>(
+    `${API_BASE}/services/check-slug`,
+    {
+      method: 'GET',
+      params,
+    },
+  );
+}
