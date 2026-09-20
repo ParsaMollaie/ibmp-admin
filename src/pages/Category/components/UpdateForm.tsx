@@ -145,6 +145,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 
     form.setFieldsValue({
       title: record.title,
+      slug: record.slug || '',
       description: record.description || '',
       guide_title: record.guide_title || '',
       parent_id: record.parent?.id || undefined,
@@ -224,6 +225,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       // Build the API payload
       const payload: API.CategoryPayload = {
         title: values.title,
+        slug: values.slug || undefined,
         description: values.description || null,
         guide_title: values.guide_title || null,
         parent_id: values.parent_id || '', // Empty string for root category
@@ -319,6 +321,21 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           ]}
         >
           <Input placeholder="عنوان دسته‌بندی" />
+        </Form.Item>
+
+        {/* Slug - Optional, builds the public /listing/{slug} URL */}
+        <Form.Item
+          name="slug"
+          label="آدرس صفحه (اسلاگ)"
+          tooltip="فقط حروف انگلیسی کوچک، عدد و خط تیره - آدرس عمومی صفحه دسته‌بندی را می‌سازد"
+          rules={[
+            {
+              pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
+              message: 'فقط حروف انگلیسی کوچک، عدد و خط تیره مجاز است',
+            },
+          ]}
+        >
+          <Input placeholder="structure" style={{ direction: 'ltr' }} />
         </Form.Item>
 
         {/* Guide title - Optional, shown as the heading above the guide content */}

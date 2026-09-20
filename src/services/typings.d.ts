@@ -82,6 +82,7 @@ declare namespace API {
   interface CategoryItem {
     id: string;
     code: number;
+    slug?: string | null;
     title: string;
     description?: string | null;
     guide_title?: string | null;
@@ -105,6 +106,7 @@ declare namespace API {
   // Payload for creating/updating a category
   interface CategoryPayload {
     title: string;
+    slug?: string;
     description?: string | null;
     guide_title?: string | null;
     parent_id: string;
