@@ -47,6 +47,7 @@ export interface ServiceByStatus {
 }
 
 export interface TopCategory {
+  category_id: string | null;
   category: string;
   count: number;
 }

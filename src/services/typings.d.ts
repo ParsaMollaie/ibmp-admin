@@ -315,6 +315,7 @@ declare namespace API {
     attributes: string; // deprecated — use features
     is_free_trial: boolean;
     features: PlanFeature[] | null;
+    is_recommended: boolean;
     price: string;
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
@@ -329,6 +330,7 @@ declare namespace API {
     attributes: string; // deprecated — use features
     is_free_trial: boolean;
     features: PlanFeature[] | null;
+    is_recommended: boolean;
     price: number;
   }
 

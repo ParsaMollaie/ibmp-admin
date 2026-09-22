@@ -54,6 +54,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
         attributes: '', // deprecated
         is_free_trial: values.is_free_trial || false,
         features: values.features || null,
+        is_recommended: values.is_recommended || false,
         price: values.price,
       };
 
@@ -105,6 +106,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
           month: 1,
           price: 0,
           is_free_trial: false,
+          is_recommended: false,
         }}
       >
         {/* Plan name field - required */}
@@ -127,6 +129,15 @@ const CreateForm: React.FC<CreateFormProps> = ({
             unCheckedChildren="خیر"
             onChange={handleFreeTrialChange}
           />
+        </Form.Item>
+
+        {/* Recommended plan toggle — highlighted with a green button on the client plan page */}
+        <Form.Item
+          name="is_recommended"
+          label="پلن پیشنهادی"
+          valuePropName="checked"
+        >
+          <Switch checkedChildren="بله" unCheckedChildren="خیر" />
         </Form.Item>
 
         {/* Duration in months - required, minimum 1 */}

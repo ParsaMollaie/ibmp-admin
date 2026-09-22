@@ -93,6 +93,15 @@ export async function rejectService(id: string) {
 }
 
 /**
+ * Delete (soft-delete) a service
+ */
+export async function deleteService(id: string) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/services/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
  * Approve a service's pending edit revision — applies the submitted changes onto the
  * live record; the service itself stays approved/public the whole time (see status
  * field, unaffected by revision approval).

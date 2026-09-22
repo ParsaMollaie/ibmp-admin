@@ -202,6 +202,17 @@ const HomePage: React.FC = () => {
     },
   ];
 
+  // Per-category quick access cards — sourced from the same top_categories data already
+  // fetched for the charts section, filtered to categories with a real id to link to.
+  const categoryQuickAccessCards = (stats?.charts.top_categories || [])
+    .filter((item) => item.category_id)
+    .slice(0, 8)
+    .map((item) => ({
+      title: item.category,
+      value: item.count,
+      path: `/services?type=company&category_codes=${item.category_id}`,
+    }));
+
   // Format number to Persian locale
   const formatNumber = (num: number) => {
     return num.toLocaleString('fa-IR');
@@ -325,6 +336,38 @@ const HomePage: React.FC = () => {
               </Col>
             ))}
           </Row>
+
+          {!loading && categoryQuickAccessCards.length > 0 && (
+            <>
+              <Text
+                type="secondary"
+                style={{
+                  fontSize: 12,
+                  display: 'block',
+                  margin: '16px 0 12px',
+                }}
+              >
+                دسته‌بندی‌های پرتکرار
+              </Text>
+              <Row gutter={[16, 16]}>
+                {categoryQuickAccessCards.map((card, index) => (
+                  <Col xs={12} sm={8} lg={6} key={index}>
+                    <Card
+                      hoverable
+                      size="small"
+                      onClick={() => history.push(card.path)}
+                    >
+                      <Statistic
+                        title={card.title}
+                        value={card.value}
+                        formatter={(value) => formatNumber(Number(value))}
+                      />
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </>
+          )}
         </div>
 
         {/* Charts Section */}

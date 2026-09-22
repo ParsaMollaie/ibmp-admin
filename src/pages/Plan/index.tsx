@@ -69,6 +69,7 @@ const PlanPage: React.FC = () => {
         attributes: record.attributes,
         is_free_trial: record.is_free_trial,
         features: record.features,
+        is_recommended: record.is_recommended,
         price: Number(record.price),
       });
       message.success(checked ? 'پلن فعال شد' : 'پلن غیرفعال شد');
@@ -122,6 +123,15 @@ const PlanPage: React.FC = () => {
         </Tag>
       ),
       sorter: true,
+    },
+    {
+      title: 'پیشنهادی',
+      dataIndex: 'is_recommended',
+      key: 'is_recommended',
+      width: 100,
+      search: false,
+      render: (_, record) =>
+        record.is_recommended ? <Tag color="green">پیشنهادی</Tag> : null,
     },
     {
       title: 'مدت (ماه)',

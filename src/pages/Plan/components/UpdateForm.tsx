@@ -44,6 +44,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         status: record.status,
         is_free_trial: isTrial,
         features: record.features || [],
+        is_recommended: record.is_recommended || false,
         // attributes: record.attributes, // deprecated
       });
     }
@@ -74,6 +75,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         attributes: '', // deprecated
         is_free_trial: values.is_free_trial || false,
         features: values.features || null,
+        is_recommended: values.is_recommended || false,
         price: values.price,
       };
 
@@ -134,6 +136,15 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             unCheckedChildren="خیر"
             onChange={handleFreeTrialChange}
           />
+        </Form.Item>
+
+        {/* Recommended plan toggle — highlighted with a green button on the client plan page */}
+        <Form.Item
+          name="is_recommended"
+          label="پلن پیشنهادی"
+          valuePropName="checked"
+        >
+          <Switch checkedChildren="بله" unCheckedChildren="خیر" />
         </Form.Item>
 
         {/* Duration in months */}

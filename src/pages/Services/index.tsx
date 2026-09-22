@@ -5,6 +5,7 @@ import { getPlans } from '@/services/plan';
 import {
   approveService,
   approveServiceRevision,
+  deleteService,
   getServices,
   getServicesForExport,
   getServiceStats,
@@ -26,8 +27,10 @@ import {
   CloseCircleOutlined,
   CloseOutlined,
   CrownOutlined,
+  DeleteOutlined,
   DownloadOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   EyeOutlined,
   FileImageOutlined,
   FileTextOutlined,
@@ -446,13 +449,16 @@ const ServicesPage: React.FC = () => {
   }, []);
 
   // Dashboard charts link here with query params (e.g. ?tag=most_view, ?status=approved,
-  // ?type=engineers) to pre-filter the list — read them once as the ProTable form's
-  // initial values.
+  // ?type=engineers, ?category_codes=<id>) to pre-filter the list — read them once as the
+  // ProTable form's initial values.
   const urlParams = new URLSearchParams(history.location.search);
+  const urlCategoryCode = urlParams.get('category_codes');
   const initialValues = {
     type: urlParams.get('type') || undefined,
     status: urlParams.get('status') || undefined,
     tag: urlParams.get('tag') || undefined,
+    // The TreeSelect field is `treeCheckable` (multi-select), so it expects an array.
+    category_codes: urlCategoryCode ? [urlCategoryCode] : undefined,
   };
 
   const buildTreeSelectOptions = (
@@ -729,6 +735,34 @@ const ServicesPage: React.FC = () => {
             fetchStats();
           } else {
             message.error(response.message || 'خطا در رد خدمت');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
+  const handleDelete = (record: API.ServiceItem) => {
+    Modal.confirm({
+      title: 'حذف خدمت',
+      icon: <ExclamationCircleOutlined />,
+      content: `آیا از حذف خدمت "${record.title}" اطمینان دارید؟ این عملیات قابل بازگشت نیست.`,
+      okText: 'بله، حذف شود',
+      okType: 'danger',
+      cancelText: 'انصراف',
+      onOk: async () => {
+        setActionLoading(record.id);
+        try {
+          const response = await deleteService(record.id);
+          if (response.success) {
+            message.success('خدمت با موفقیت حذف شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در حذف خدمت');
           }
         } catch (error) {
           message.error('خطا در برقراری ارتباط با سرور');
@@ -1335,6 +1369,17 @@ const ServicesPage: React.FC = () => {
                   icon: <StarOutlined />,
                   label: 'تنظیم به ویژه',
                   onClick: () => handleSetPromoted(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:delete')
+            ? [
+                {
+                  key: 'delete',
+                  icon: <DeleteOutlined style={{ color: '#ff4d4f' }} />,
+                  label: 'حذف',
+                  danger: true,
+                  onClick: () => handleDelete(record),
                 },
               ]
             : []),
