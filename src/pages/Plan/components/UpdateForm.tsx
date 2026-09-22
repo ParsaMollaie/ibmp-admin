@@ -39,6 +39,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       form.setFieldsValue({
         name: record.name,
         month: record.month,
+        priority: record.priority,
         // Parse the price string "1000.00" to number for the InputNumber component
         price: parseFloat(record.price),
         status: record.status,
@@ -72,6 +73,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         name: values.name,
         status: values.status,
         month: values.month,
+        priority: values.priority,
         attributes: '', // deprecated
         is_free_trial: values.is_free_trial || false,
         features: values.features || null,
@@ -158,6 +160,21 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
             style={{ width: '100%' }}
             placeholder="تعداد ماه"
             disabled={isFreeTrial}
+          />
+        </Form.Item>
+
+        {/* Display priority — required, lower number = higher priority */}
+        <Form.Item
+          name="priority"
+          label="اولویت نمایش"
+          rules={[{ required: true, message: 'لطفاً اولویت را وارد کنید' }]}
+          tooltip="عدد کمتر = اولویت بالاتر در نمایش"
+        >
+          <InputNumber
+            min={1}
+            max={10000}
+            style={{ width: '100%' }}
+            placeholder="اولویت نمایش"
           />
         </Form.Item>
 

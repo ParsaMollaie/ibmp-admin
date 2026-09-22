@@ -312,6 +312,7 @@ declare namespace API {
     name: string;
     status: 'active' | 'inactive';
     month: number;
+    priority: number;
     attributes: string; // deprecated — use features
     is_free_trial: boolean;
     features: PlanFeature[] | null;
@@ -327,6 +328,7 @@ declare namespace API {
     name: string;
     status: 'active' | 'inactive';
     month: number;
+    priority: number;
     attributes: string; // deprecated — use features
     is_free_trial: boolean;
     features: PlanFeature[] | null;

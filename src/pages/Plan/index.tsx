@@ -66,6 +66,7 @@ const PlanPage: React.FC = () => {
         name: record.name,
         status: checked ? 'active' : 'inactive',
         month: record.month,
+        priority: record.priority,
         attributes: record.attributes,
         is_free_trial: record.is_free_trial,
         features: record.features,
@@ -140,6 +141,14 @@ const PlanPage: React.FC = () => {
       width: 100,
       search: false,
       render: (_, record) => `${record.month} ماه`,
+      sorter: true,
+    },
+    {
+      title: 'اولویت نمایش',
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 110,
+      search: false,
       sorter: true,
     },
     {
