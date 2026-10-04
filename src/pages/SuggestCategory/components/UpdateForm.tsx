@@ -60,7 +60,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       }
     } catch (error) {
       console.error('Update suggest category error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

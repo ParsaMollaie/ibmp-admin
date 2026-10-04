@@ -39,12 +39,8 @@ const LoginPage: React.FC = () => {
       await refresh();
 
       message.success('ورود با موفقیت انجام شد');
-    } catch (err: any) {
-      // Display the error message from the API if available, otherwise show a generic message
-      const errorMessage =
-        err?.response?.data?.message ||
-        'ورود ناموفق. لطفاً اطلاعات را بررسی کنید';
-      message.error(errorMessage);
+    } catch (err) {
+      // Real backend error is already shown by the global errorHandler (src/app.tsx).
       console.error('Login failed:', err);
     }
   };

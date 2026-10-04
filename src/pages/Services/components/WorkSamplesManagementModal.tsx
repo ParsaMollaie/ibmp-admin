@@ -188,7 +188,6 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
       }
     } catch (error) {
       console.error('Work sample submit error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSubmitting(false);
     }
@@ -210,7 +209,6 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
         message.error(response.message || 'خطا در تغییر وضعیت');
       }
     } catch (error) {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setTogglingId(null);
     }
@@ -229,7 +227,6 @@ const WorkSamplesManagementModal: React.FC<WorkSamplesManagementModalProps> = ({
         message.error(response.message || 'خطا در حذف نمونه کار');
       }
     } catch (error) {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setDeletingId(null);
     }

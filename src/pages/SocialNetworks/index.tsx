@@ -50,7 +50,6 @@ const SocialNetworkTable: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete social network error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

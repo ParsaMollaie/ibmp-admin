@@ -247,7 +247,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       }
     } catch (error) {
       console.error('Update category error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

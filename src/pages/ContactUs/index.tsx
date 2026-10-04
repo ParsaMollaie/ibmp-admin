@@ -190,7 +190,6 @@ const ContactUsPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete contact-us error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

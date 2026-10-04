@@ -149,7 +149,6 @@ const UpdateCategoryForm: React.FC<UpdateCategoryFormProps> = ({
         message.error(response.message || 'خطا در تغییر دسته‌بندی');
       }
     } catch {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

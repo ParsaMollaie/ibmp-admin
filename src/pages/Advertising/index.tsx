@@ -49,7 +49,6 @@ const AdvertisingPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete advertising error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

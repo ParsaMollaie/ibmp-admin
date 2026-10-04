@@ -62,7 +62,6 @@ const AssignPlanForm: React.FC<AssignPlanFormProps> = ({
       }
     } catch (error) {
       console.error('Assign plan error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

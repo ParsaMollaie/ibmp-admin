@@ -51,9 +51,7 @@ const NewsCommentsPage: React.FC = () => {
       } else {
         message.error(res.message || 'خطا در بروزرسانی وضعیت');
       }
-    } catch {
-      message.error('خطا در ارتباط با سرور');
-    }
+    } catch {}
   };
 
   const openReplyModal = (record: API.NewsCommentItem) => {
@@ -78,7 +76,6 @@ const NewsCommentsPage: React.FC = () => {
         message.error(res.message || 'خطا در ثبت پاسخ');
       }
     } catch {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSubmittingReply(false);
     }

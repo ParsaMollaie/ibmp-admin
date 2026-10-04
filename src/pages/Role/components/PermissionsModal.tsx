@@ -102,7 +102,6 @@ const PermissionsModal: React.FC<PermissionsModalProps> = ({
       }
     } catch (error) {
       console.error('Update role permissions error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSaving(false);
     }

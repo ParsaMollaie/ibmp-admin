@@ -587,7 +587,6 @@ const UpdateFormEngineers: React.FC<UpdateFormProps> = ({
       }
     } catch (error) {
       console.error('Update service error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

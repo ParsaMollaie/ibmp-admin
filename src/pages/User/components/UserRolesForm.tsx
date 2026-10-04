@@ -69,7 +69,6 @@ const UserRolesForm: React.FC<UserRolesFormProps> = ({
       }
     } catch (error: any) {
       if (error?.errorFields) return; // validation error
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

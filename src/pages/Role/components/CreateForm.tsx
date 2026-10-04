@@ -36,7 +36,6 @@ const CreateForm: React.FC<CreateFormProps> = ({
       }
     } catch (error) {
       console.error('Create role error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

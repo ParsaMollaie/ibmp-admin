@@ -222,7 +222,6 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
       }
     } catch (error) {
       console.error('Product submit error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSubmitting(false);
     }
@@ -241,7 +240,6 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
         message.error(response.message || 'خطا در تغییر وضعیت');
       }
     } catch (error) {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setTogglingId(null);
     }
@@ -260,7 +258,6 @@ const ProductsManagementModal: React.FC<ProductsManagementModalProps> = ({
         message.error(response.message || 'خطا در حذف محصول');
       }
     } catch (error) {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setDeletingId(null);
     }

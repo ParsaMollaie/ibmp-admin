@@ -51,7 +51,6 @@ const UpdateStatusForm: React.FC<UpdateStatusFormProps> = ({
       }
     } catch (error) {
       console.error('Update status error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

@@ -73,7 +73,6 @@ export default function useUserModel(): UseUserModelReturn {
       await logoutAPI();
       message.success('خروج با موفقیت انجام شد');
     } catch {
-      message.error('خطا در ارتباط با سرور');
     } finally {
       Cookies.remove('admin_token');
       setCurrentUser(null);

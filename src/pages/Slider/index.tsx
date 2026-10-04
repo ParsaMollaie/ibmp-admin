@@ -50,7 +50,6 @@ const SliderTable: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete slider error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

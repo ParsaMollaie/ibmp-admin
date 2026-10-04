@@ -88,7 +88,6 @@ const NewsPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete news error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

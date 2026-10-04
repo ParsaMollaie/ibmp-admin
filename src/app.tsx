@@ -1,4 +1,5 @@
 import { getProfile } from '@/services/auth';
+import { showApiError } from '@/utils/apiError';
 import { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { JalaliLocaleListener } from 'antd-jalali';
@@ -70,6 +71,8 @@ export const request: RequestConfig = {
       if (response && response.status === 401) {
         Cookies.remove('admin_token');
         window.location.href = '/auth';
+      } else {
+        showApiError(error);
       }
       throw error;
     },

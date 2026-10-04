@@ -107,7 +107,6 @@ const CategoryPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete category error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

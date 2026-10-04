@@ -102,7 +102,6 @@ const WebsiteContactPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Save website contact error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSaving(false);
     }

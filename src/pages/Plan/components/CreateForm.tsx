@@ -74,7 +74,6 @@ const CreateForm: React.FC<CreateFormProps> = ({
       }
     } catch (error) {
       console.error('Create plan error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

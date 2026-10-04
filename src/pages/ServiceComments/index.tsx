@@ -142,7 +142,6 @@ const ServiceCommentsPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Approve comment error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });
@@ -173,7 +172,6 @@ const ServiceCommentsPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Reject comment error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });
@@ -204,7 +202,6 @@ const ServiceCommentsPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete comment error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

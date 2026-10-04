@@ -72,10 +72,9 @@ const CreateForm: React.FC<{
       }
       message.success('شبکه اجتماعی با موفقیت ایجاد شد');
       onSuccess();
-    } catch (error: any) {
-      const backendMessage =
-        error?.response?.data?.message || 'خطا در ایجاد شبکه اجتماعی';
-      message.error(backendMessage);
+    } catch (error) {
+      // Real backend error is already shown by the global errorHandler (src/app.tsx).
+      console.error('Create social network error:', error);
     }
   };
 

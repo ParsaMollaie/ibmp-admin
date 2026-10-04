@@ -51,7 +51,6 @@ const BusinessPartnersPage: React.FC = () => {
           }
         } catch (error) {
           console.error('Delete business partner error:', error);
-          message.error('خطا در ارتباط با سرور');
         }
       },
     });

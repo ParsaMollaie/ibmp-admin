@@ -51,7 +51,6 @@ const SettingsPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Save settings error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setSaving(false);
     }

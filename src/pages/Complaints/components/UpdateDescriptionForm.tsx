@@ -49,7 +49,6 @@ const UpdateDescriptionForm: React.FC<UpdateDescriptionFormProps> = ({
       }
     } catch (error) {
       console.error('Update complaint description error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }

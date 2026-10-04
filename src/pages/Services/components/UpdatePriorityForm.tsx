@@ -53,7 +53,6 @@ const UpdatePriorityForm: React.FC<UpdatePriorityFormProps> = ({
       }
     } catch (error) {
       console.error('Update priority error:', error);
-      message.error('خطا در ارتباط با سرور');
     } finally {
       setLoading(false);
     }
