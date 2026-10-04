@@ -1,3 +1,4 @@
+import ServiceLink from '@/components/ServiceLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   approveServiceComment,
@@ -31,7 +32,6 @@ import {
 } from 'antd';
 import { DatePicker } from 'antd-jalali';
 import React, { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
 
 const { Text } = Typography;
 
@@ -232,26 +232,17 @@ const ServiceCommentsPage: React.FC = () => {
       render: (_, record) => {
         if (!record.service) return '—';
         return (
-          <Space
-            direction="vertical"
-            size={0}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              history.push(
-                `/services?type=${
-                  record.service!.type
-                }&search=${encodeURIComponent(record.service!.title)}`,
-              )
-            }
-          >
-            <Text strong style={{ color: '#1890ff' }}>
-              {record.service.title}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              کد: {record.service.code} |{' '}
-              {getServiceTypeLabel(record.service.type)}
-            </Text>
-          </Space>
+          <ServiceLink type={record.service.type} title={record.service.title}>
+            <Space direction="vertical" size={0} style={{ cursor: 'pointer' }}>
+              <Text strong style={{ color: '#1890ff' }}>
+                {record.service.title}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                کد: {record.service.code} |{' '}
+                {getServiceTypeLabel(record.service.type)}
+              </Text>
+            </Space>
+          </ServiceLink>
         );
       },
     },

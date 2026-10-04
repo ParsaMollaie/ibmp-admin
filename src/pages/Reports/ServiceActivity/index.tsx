@@ -1,4 +1,6 @@
 import DateRangeFilter from '@/components/DateRangeFilter';
+import ServiceLink from '@/components/ServiceLink';
+import UserLink from '@/components/UserLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   getServiceActivityReport,
@@ -41,7 +43,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { history, useAccess } from 'umi';
+import { useAccess } from 'umi';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -333,18 +335,11 @@ export default function ServiceActivityReport() {
       sorter: true,
       search: false,
       render: (_, record) => (
-        <span
-          style={{ cursor: 'pointer', color: '#1890ff' }}
-          onClick={() =>
-            history.push(
-              `/services?type=${record.type}&search=${encodeURIComponent(
-                record.title,
-              )}`,
-            )
-          }
-        >
-          {record.title}
-        </span>
+        <ServiceLink type={record.type} title={record.title}>
+          <span style={{ cursor: 'pointer', color: '#1890ff' }}>
+            {record.title}
+          </span>
+        </ServiceLink>
       ),
     },
     {
@@ -378,12 +373,11 @@ export default function ServiceActivityReport() {
       search: false,
       render: (_, record) =>
         record.username ? (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() => history.push(`/user?username=${record.username}`)}
-          >
-            {record.user_name}
-          </span>
+          <UserLink username={record.username}>
+            <span style={{ cursor: 'pointer', color: '#1890ff' }}>
+              {record.user_name}
+            </span>
+          </UserLink>
         ) : (
           record.user_name || '—'
         ),

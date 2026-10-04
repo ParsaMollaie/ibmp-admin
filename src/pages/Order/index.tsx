@@ -1,3 +1,5 @@
+import ServiceLink from '@/components/ServiceLink';
+import UserLink from '@/components/UserLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getOrders } from '@/services/order';
 import { getPlans } from '@/services/plan';
@@ -24,7 +26,6 @@ import {
 import { DatePicker } from 'antd-jalali';
 import jalaliMoment from 'jalali-moment';
 import React, { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
 
 const { Text } = Typography;
 
@@ -294,19 +295,16 @@ const OrderPage: React.FC = () => {
       sorter: true,
       render: (_, record) =>
         record.user ? (
-          <div
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() =>
-              history.push(`/user?username=${record.user.username}`)
-            }
-          >
-            <div style={{ fontWeight: 500 }}>
-              {record.user.first_name} {record.user.last_name}
+          <UserLink username={record.user.username}>
+            <div style={{ cursor: 'pointer', color: '#1890ff' }}>
+              <div style={{ fontWeight: 500 }}>
+                {record.user.first_name} {record.user.last_name}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>
+                {record.user.username}
+              </div>
             </div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>
-              {record.user.username}
-            </div>
-          </div>
+          </UserLink>
         ) : (
           <span style={{ color: '#999' }}>—</span>
         ),
@@ -327,18 +325,11 @@ const OrderPage: React.FC = () => {
         return (
           <div>
             {record.service ? (
-              <div
-                style={{ cursor: 'pointer', color: '#1890ff' }}
-                onClick={() =>
-                  history.push(
-                    `/services?type=${serviceType}&search=${encodeURIComponent(
-                      title,
-                    )}`,
-                  )
-                }
-              >
-                {title}
-              </div>
+              <ServiceLink type={serviceType} title={title}>
+                <div style={{ cursor: 'pointer', color: '#1890ff' }}>
+                  {title}
+                </div>
+              </ServiceLink>
             ) : (
               <div>{title}</div>
             )}

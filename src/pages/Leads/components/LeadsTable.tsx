@@ -1,3 +1,5 @@
+import ServiceLink from '@/components/ServiceLink';
+import UserLink from '@/components/UserLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { CalendarOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
@@ -18,7 +20,6 @@ import {
   Typography,
 } from 'antd';
 import React, { useRef, useState } from 'react';
-import { history } from 'umi';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -226,26 +227,17 @@ function LeadsTable<T extends LeadItem>({
       render: (_, record) => {
         if (!record.service) return '—';
         return (
-          <Space
-            direction="vertical"
-            size={0}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              history.push(
-                `/services?type=${
-                  record.service!.type
-                }&search=${encodeURIComponent(record.service!.title)}`,
-              )
-            }
-          >
-            <Text strong style={{ color: '#1890ff' }}>
-              {record.service.title}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              کد: {record.service.code} |{' '}
-              {getServiceTypeLabel(record.service.type)}
-            </Text>
-          </Space>
+          <ServiceLink type={record.service.type} title={record.service.title}>
+            <Space direction="vertical" size={0} style={{ cursor: 'pointer' }}>
+              <Text strong style={{ color: '#1890ff' }}>
+                {record.service.title}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                کد: {record.service.code} |{' '}
+                {getServiceTypeLabel(record.service.type)}
+              </Text>
+            </Space>
+          </ServiceLink>
         );
       },
     },
@@ -256,21 +248,16 @@ function LeadsTable<T extends LeadItem>({
       width: 160,
       render: (_, record) =>
         record.user ? (
-          <Space
-            direction="vertical"
-            size={0}
-            style={{ cursor: 'pointer' }}
-            onClick={() =>
-              history.push(`/user?username=${record.user!.username}`)
-            }
-          >
-            <Text strong style={{ color: '#1890ff' }}>
-              {record.user.first_name} {record.user.last_name}
-            </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {record.user.username}
-            </Text>
-          </Space>
+          <UserLink username={record.user.username}>
+            <Space direction="vertical" size={0} style={{ cursor: 'pointer' }}>
+              <Text strong style={{ color: '#1890ff' }}>
+                {record.user.first_name} {record.user.last_name}
+              </Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {record.user.username}
+              </Text>
+            </Space>
+          </UserLink>
         ) : (
           <span style={{ color: '#999' }}>—</span>
         ),

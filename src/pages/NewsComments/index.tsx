@@ -1,3 +1,4 @@
+import UserLink from '@/components/UserLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   getNewsComments,
@@ -115,14 +116,11 @@ const NewsCommentsPage: React.FC = () => {
       width: 150,
       render: (_, record) =>
         record.user ? (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() =>
-              history.push(`/user?username=${record.user!.username}`)
-            }
-          >
-            {record.user.first_name} {record.user.last_name}
-          </span>
+          <UserLink username={record.user.username}>
+            <span style={{ cursor: 'pointer', color: '#1890ff' }}>
+              {record.user.first_name} {record.user.last_name}
+            </span>
+          </UserLink>
         ) : (
           '—'
         ),

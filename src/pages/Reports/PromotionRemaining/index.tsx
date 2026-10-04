@@ -1,4 +1,6 @@
 import DateRangeFilter from '@/components/DateRangeFilter';
+import ServiceLink from '@/components/ServiceLink';
+import UserLink from '@/components/UserLink';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getPromotionRemainingTrend, getServices } from '@/services/service';
 import {
@@ -36,7 +38,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { history, useAccess } from 'umi';
+import { useAccess } from 'umi';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -308,18 +310,11 @@ export default function PromotionRemainingPage() {
       sorter: true,
       search: false,
       render: (_, record) => (
-        <span
-          style={{ cursor: 'pointer', color: '#1890ff' }}
-          onClick={() =>
-            history.push(
-              `/services?type=${record.type}&search=${encodeURIComponent(
-                record.title,
-              )}`,
-            )
-          }
-        >
-          {record.title}
-        </span>
+        <ServiceLink type={record.type} title={record.title}>
+          <span style={{ cursor: 'pointer', color: '#1890ff' }}>
+            {record.title}
+          </span>
+        </ServiceLink>
       ),
     },
     {
@@ -378,14 +373,11 @@ export default function PromotionRemainingPage() {
       search: false,
       render: (_, record) =>
         record.user ? (
-          <span
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() =>
-              history.push(`/user?username=${record.user!.username}`)
-            }
-          >
-            {record.user.first_name} {record.user.last_name}
-          </span>
+          <UserLink username={record.user.username}>
+            <span style={{ cursor: 'pointer', color: '#1890ff' }}>
+              {record.user.first_name} {record.user.last_name}
+            </span>
+          </UserLink>
         ) : (
           '-'
         ),

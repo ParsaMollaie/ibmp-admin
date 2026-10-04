@@ -1,3 +1,4 @@
+import UserLink from '@/components/UserLink';
 import { getSocialTypeLabel } from '@/constants/serviceSocialMedia';
 import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import { getCategoryTree } from '@/services/category';
@@ -947,24 +948,21 @@ const ServicesPage: React.FC = () => {
       width: 150,
       render: (_, record) =>
         record.user ? (
-          <div
-            style={{ cursor: 'pointer', color: '#1890ff' }}
-            onClick={() =>
-              history.push(`/user?username=${record.user!.username}`)
-            }
-          >
-            <div style={{ fontWeight: 500 }}>
-              {record.user.first_name} {record.user.last_name}
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>
-              {record.user.username}
-            </div>
-            {record.user.job_position && (
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
-                {record.user.job_position}
+          <UserLink username={record.user.username}>
+            <div style={{ cursor: 'pointer', color: '#1890ff' }}>
+              <div style={{ fontWeight: 500 }}>
+                {record.user.first_name} {record.user.last_name}
               </div>
-            )}
-          </div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>
+                {record.user.username}
+              </div>
+              {record.user.job_position && (
+                <div style={{ fontSize: 12, opacity: 0.7 }}>
+                  {record.user.job_position}
+                </div>
+              )}
+            </div>
+          </UserLink>
         ) : (
           <span style={{ color: '#999' }}>—</span>
         ),
