@@ -1052,6 +1052,7 @@ declare namespace API {
     addresses: ServiceAddress[];
     user?: OrderUser;
     services_count: number;
+    services?: { id: string; title: string }[];
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;

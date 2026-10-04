@@ -5,8 +5,10 @@ import {
   deleteContactProfile,
   getContactProfiles,
 } from '@/services/contact-profile';
+import { exportAllToExcel, ExportColumn } from '@/utils/exportExcel';
 import {
   DeleteOutlined,
+  DownloadOutlined,
   EditOutlined,
   LoginOutlined,
   PlusOutlined,
@@ -21,6 +23,35 @@ import UpdateForm from './components/UpdateForm';
 
 const CLIENT_APP_URL = process.env.UMI_APP_CLIENT_URL || 'https://ibmp.ir';
 
+// Excel export column definitions
+const exportColumns: ExportColumn[] = [
+  { title: 'عنوان', dataIndex: 'title' },
+  {
+    title: 'ایمیل',
+    dataIndex: 'email',
+    render: (_, record) => record.email || '—',
+  },
+  {
+    title: 'کاربر',
+    dataIndex: 'user',
+    render: (_, record) =>
+      record.user
+        ? `${record.user.first_name} ${record.user.last_name} (${record.user.username})`
+        : '—',
+  },
+  {
+    title: 'خدمات',
+    dataIndex: 'services',
+    render: (_, record) =>
+      record.services?.map((s: { title: string }) => s.title).join('، ') || '—',
+  },
+  {
+    title: 'تاریخ ایجاد',
+    dataIndex: 'created_at',
+    render: (_, record) => new Date(record.created_at).toLocaleString('fa-IR'),
+  },
+];
+
 const ContactProfilePage: React.FC = () => {
   const access = useAccess();
   const actionRef = useRef<ActionType>();
@@ -31,6 +62,10 @@ const ContactProfilePage: React.FC = () => {
   const [pageSize, setPageSize] = usePersistedPageSize('contact-profile', 10);
   const [currentRecord, setCurrentRecord] =
     useState<API.ContactProfileItem | null>(null);
+
+  // Export state
+  const [filterParams, setFilterParams] = useState<Record<string, any>>({});
+  const [exporting, setExporting] = useState(false);
 
   // Handle edit
   const handleEdit = (record: API.ContactProfileItem) => {
@@ -97,6 +132,49 @@ const ContactProfilePage: React.FC = () => {
         }
       },
     });
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    const messageKey = 'export-progress';
+    message.loading({
+      content: 'در حال دانلود...',
+      key: messageKey,
+      duration: 0,
+    });
+
+    try {
+      const result = await exportAllToExcel(
+        (params) => getContactProfiles(params),
+        filterParams,
+        exportColumns,
+        'contact-profiles',
+        500,
+        (loaded, total) => {
+          message.loading({
+            content: `در حال دانلود... ${loaded} از ${total}`,
+            key: messageKey,
+            duration: 0,
+          });
+        },
+      );
+
+      if (result.success) {
+        message.success({
+          content: `${result.count} رکورد با موفقیت دانلود شد`,
+          key: messageKey,
+        });
+      } else {
+        message.warning({
+          content: 'داده‌ای برای دانلود وجود ندارد',
+          key: messageKey,
+        });
+      }
+    } catch (error) {
+      message.error({ content: 'خطا در دانلود فایل اکسل', key: messageKey });
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Column definitions
@@ -248,6 +326,14 @@ const ContactProfilePage: React.FC = () => {
         columns={columns}
         toolBarRender={() =>
           [
+            <Button
+              key="export"
+              icon={<DownloadOutlined />}
+              onClick={handleExport}
+              loading={exporting}
+            >
+              دانلود اکسل
+            </Button>,
             access.hasPermission('contact-profiles:create') && (
               <Button
                 key="add"
@@ -261,14 +347,20 @@ const ContactProfilePage: React.FC = () => {
           ].filter(Boolean)
         }
         request={async (params, sort) => {
-          const response = await getContactProfiles({
+          const apiParams = {
             search: params.title,
-            page: params.current,
-            page_size: params.pageSize,
             sorter:
               sort && Object.keys(sort).length
                 ? JSON.stringify(sort)
                 : undefined,
+          };
+
+          setFilterParams(apiParams);
+
+          const response = await getContactProfiles({
+            ...apiParams,
+            page: params.current,
+            page_size: params.pageSize,
           });
 
           return {

@@ -5,6 +5,7 @@ import usePersistedPageSize from '@/hooks/usePersistedPageSize';
 import {
   getServiceActivityReport,
   getServiceActivityTrend,
+  sendServiceActivitySms,
 } from '@/services/service';
 import {
   createServiceNote,
@@ -133,6 +134,7 @@ export default function ServiceActivityReport() {
   );
 
   const [quickFilter, setQuickFilter] = useState<QuickRange | null>(30);
+  const [sendingSmsId, setSendingSmsId] = useState<string | null>(null);
   const [jalaliRange, setJalaliRange] = useState<[Dayjs, Dayjs]>(() =>
     getQuickJalaliRange(30),
   );
@@ -277,6 +279,22 @@ export default function ServiceActivityReport() {
     setNotesModalVisible(true);
     setNewNoteContent('');
     await fetchNotes(record.id);
+  };
+
+  const handleSendActivitySms = async (record: API.ServiceActivityItem) => {
+    setSendingSmsId(record.id);
+    try {
+      const res = await sendServiceActivitySms(record.id);
+      if (res.success) {
+        message.success('پیامک با موفقیت ارسال شد');
+      } else {
+        message.error(res.message || 'خطا در ارسال پیامک');
+      }
+    } catch {
+      message.error('خطا در ارسال پیامک');
+    } finally {
+      setSendingSmsId(null);
+    }
   };
 
   const handleAddNote = async () => {
@@ -460,6 +478,32 @@ export default function ServiceActivityReport() {
         </Button>
       ),
     },
+    ...(access.hasPermission('services:send-activity-sms')
+      ? [
+          {
+            title: 'ارسال پیامک',
+            key: 'send-sms',
+            width: 120,
+            search: false,
+            render: (_: unknown, record: API.ServiceActivityItem) => (
+              <Popconfirm
+                title="برای کاربر این خدمت پیامک گزارش فعالیت ارسال شود؟"
+                okText="بله"
+                cancelText="انصراف"
+                onConfirm={() => handleSendActivitySms(record)}
+              >
+                <Button
+                  type="link"
+                  size="small"
+                  loading={sendingSmsId === record.id}
+                >
+                  ارسال پیامک
+                </Button>
+              </Popconfirm>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

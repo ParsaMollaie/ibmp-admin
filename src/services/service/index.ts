@@ -93,6 +93,19 @@ export async function rejectService(id: string) {
 }
 
 /**
+ * Send the service's owning user an SMS notification that their activity
+ * report is ready
+ */
+export async function sendServiceActivitySms(id: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${id}/send-activity-sms`,
+    {
+      method: 'POST',
+    },
+  );
+}
+
+/**
  * Delete (soft-delete) a service
  */
 export async function deleteService(id: string) {

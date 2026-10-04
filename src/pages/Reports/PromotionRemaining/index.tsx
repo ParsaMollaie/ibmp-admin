@@ -12,6 +12,7 @@ import { convertFaDateToEnDate } from '@/utils/convert-fa-date-to-en-date';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { PageContainer, ProTable } from '@ant-design/pro-components';
 import {
+  Alert,
   Button,
   Card,
   Col,
@@ -126,10 +127,11 @@ export default function PromotionRemainingPage() {
 
   // Staged filter state — edited freely by the user, only committed to the
   // applied state above (and sent to the backend) when "اعمال" is clicked.
+  // The type filter is NOT staged — it applies instantly (see handleTypeChange),
+  // matching the sibling ServiceActivity report's behavior.
   const [stagedJalaliRange, setStagedJalaliRange] = useState<[Dayjs, Dayjs]>(
     () => getQuickJalaliForwardRange(30),
   );
-  const [stagedType, setStagedType] = useState<string | undefined>(undefined);
   const [stagedServiceSearch, setStagedServiceSearch] = useState('');
   const [stagedUserSearch, setStagedUserSearch] = useState('');
 
@@ -212,10 +214,16 @@ export default function PromotionRemainingPage() {
       stagedJalaliRange[1],
     );
     setDateRange(newRange);
-    setTypeFilter(stagedType);
     setServiceSearch(stagedServiceSearch);
     setUserSearch(stagedUserSearch);
-    fetchTrend(newRange.start_date, newRange.end_date, stagedType);
+    fetchTrend(newRange.start_date, newRange.end_date, typeFilter);
+  };
+
+  // Type filter applies instantly — no separate "اعمال" click needed, matching
+  // the sibling ServiceActivity report's handleTypeChange.
+  const handleTypeChange = (value?: string) => {
+    setTypeFilter(value);
+    fetchTrend(dateRange.start_date, dateRange.end_date, value);
   };
 
   const filterParams: Record<string, any> = {
@@ -425,6 +433,13 @@ export default function PromotionRemainingPage() {
         </ResponsiveContainer>
       </Card>
 
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="این گزارش فقط خدمات ویژه (تبلیغ‌شده) با پلن فعال را نمایش می‌دهد؛ فیلتر تاریخ، محدوده انقضای پلن را مشخص می‌کند."
+      />
+
       {/* Prominent filters */}
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }} align="middle">
         <Col>
@@ -445,8 +460,8 @@ export default function PromotionRemainingPage() {
             allowClear
             placeholder="همه انواع"
             style={{ width: 160 }}
-            value={stagedType}
-            onChange={(value) => setStagedType(value)}
+            value={typeFilter}
+            onChange={handleTypeChange}
             options={[
               { label: 'شرکت', value: 'company' },
               { label: 'مهندس/مجری', value: 'engineers' },
