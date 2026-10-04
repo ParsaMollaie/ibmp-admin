@@ -1,6 +1,6 @@
+import CategoryCascadeSelect from '@/components/CategoryCascadeSelect';
 import MapPicker from '@/components/MapPicker';
 import { socialMediaTypeOptions } from '@/constants/serviceSocialMedia';
-import { getCategories } from '@/services/category';
 import { getContactProfiles } from '@/services/contact-profile';
 import { getCities, getProvinces } from '@/services/location';
 import {
@@ -75,9 +75,6 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
     [],
   );
 
-  const [categories, setCategories] = useState<API.CategoryItem[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-
   const [provinces, setProvinces] = useState<API.ProvinceItem[]>([]);
   const [citiesMap, setCitiesMap] = useState<Record<number, API.CityItem[]>>(
     {},
@@ -125,20 +122,6 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
   };
 
   // Fetch dropdown data
-  const fetchCategories = async () => {
-    setLoadingCategories(true);
-    try {
-      const response = await getCategories({ page_size: 1000 });
-      if (response.success && response.data?.list) {
-        setCategories(response.data.list);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
   const fetchProvinces = async () => {
     setLoadingProvinces(true);
     try {
@@ -169,7 +152,6 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
 
   useEffect(() => {
     if (visible) {
-      fetchCategories();
       fetchProvinces();
     }
   }, [visible]);
@@ -186,7 +168,7 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
   }, [visible, record]);
 
   useEffect(() => {
-    if (record && visible && categories.length > 0) {
+    if (record && visible) {
       // The API returns the assigned category (already the leaf) with a
       // parent chain pointing toward the root — no traversal needed here.
       const categoryId = record.category?.id;
@@ -335,7 +317,7 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
       });
       setCompletedProjectFiles(projectFiles);
     }
-  }, [record, visible, categories, form]);
+  }, [record, visible, form]);
 
   const getBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -738,15 +720,9 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
                   { required: true, message: 'دسته‌بندی را انتخاب کنید' },
                 ]}
               >
-                <Select
-                  placeholder="انتخاب دسته‌بندی"
-                  loading={loadingCategories}
-                  showSearch
-                  optionFilterProp="label"
-                  options={categories.map((c) => ({
-                    label: c.title,
-                    value: c.id,
-                  }))}
+                <CategoryCascadeSelect
+                  key={visible ? record?.id : undefined}
+                  initialCategory={record?.category}
                 />
               </Form.Item>
             </Col>
