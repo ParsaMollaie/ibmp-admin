@@ -22,6 +22,7 @@
     "jalali-moment": "^3.3.11",
     "js-cookie": "^3.0.5",
     "leaflet": "^1.9.4",
+    "quill-table-better": "^1.2.3",
     "react-leaflet": "^4.2.1",
     "react-multi-date-picker": "^4.5.2",
     "react-quill-new": "^3.8.3",
