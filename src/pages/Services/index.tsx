@@ -6,6 +6,7 @@ import { getPlans } from '@/services/plan';
 import {
   approveService,
   approveServiceRevision,
+  deactivateServicePlan,
   deleteService,
   getServices,
   getServicesForExport,
@@ -41,6 +42,7 @@ import {
   OrderedListOutlined,
   ShoppingOutlined,
   StarOutlined,
+  StopOutlined,
   SwapOutlined,
   TagOutlined,
 } from '@ant-design/icons';
@@ -746,6 +748,33 @@ const ServicesPage: React.FC = () => {
     });
   };
 
+  const handleDeactivatePlan = (record: API.ServiceItem) => {
+    Modal.confirm({
+      title: 'لغو پلن فعال',
+      content: `آیا از لغو پلن «${record.latest_active_order?.plan?.name}» برای خدمت «${record.title}» اطمینان دارید؟`,
+      okText: 'بله، لغو شود',
+      cancelText: 'انصراف',
+      okType: 'danger',
+      onOk: async () => {
+        setActionLoading(record.id);
+        try {
+          const response = await deactivateServicePlan(record.id);
+          if (response.success) {
+            message.success('پلن فعال با موفقیت لغو شد');
+            actionRef.current?.reload();
+            fetchStats();
+          } else {
+            message.error(response.message || 'خطا در لغو پلن فعال');
+          }
+        } catch (error) {
+          message.error('خطا در برقراری ارتباط با سرور');
+        } finally {
+          setActionLoading(null);
+        }
+      },
+    });
+  };
+
   const handleDelete = (record: API.ServiceItem) => {
     Modal.confirm({
       title: 'حذف خدمت',
@@ -1295,6 +1324,17 @@ const ServicesPage: React.FC = () => {
                   icon: <CrownOutlined />,
                   label: 'تخصیص پلن',
                   onClick: () => handleAssignPlan(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:deactivate-plan') &&
+          record.latest_active_order
+            ? [
+                {
+                  key: 'deactivate-plan',
+                  icon: <StopOutlined />,
+                  label: 'لغو پلن فعال',
+                  onClick: () => handleDeactivatePlan(record),
                 },
               ]
             : []),

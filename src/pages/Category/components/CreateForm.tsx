@@ -268,7 +268,6 @@ const CreateForm: React.FC<CreateFormProps> = ({
           <TreeSelect
             allowClear
             showSearch
-            treeDefaultExpandAll
             placeholder="انتخاب دسته‌بندی والد (اختیاری)"
             loading={parentLoading}
             treeData={parentOptions}

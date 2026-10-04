@@ -282,6 +282,18 @@ export async function assignServicePlan(
 }
 
 /**
+ * Deactivate a service's currently active plan
+ */
+export async function deactivateServicePlan(serviceId: string) {
+  return request<API.ApiResponse<[]>>(
+    `${API_BASE}/services/${serviceId}/deactivate-plan`,
+    {
+      method: 'POST',
+    },
+  );
+}
+
+/**
  * Get services for export (lightweight endpoint)
  */
 export async function getServicesForExport(params?: {

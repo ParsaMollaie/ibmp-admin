@@ -364,7 +364,6 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <TreeSelect
             allowClear
             showSearch
-            treeDefaultExpandAll
             placeholder="انتخاب دسته‌بندی والد (اختیاری)"
             loading={parentLoading}
             treeData={parentOptions}
