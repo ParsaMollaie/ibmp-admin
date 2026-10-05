@@ -465,26 +465,54 @@ declare namespace API {
   }
 
   // ============================================
-  // PROVINCE & CITY (FOR DROPDOWNS)
+  // PROVINCE & CITY
   // ============================================
 
   /**
-   * Province item for dropdown selection
+   * Province item — used for dropdown selection and the Province management page
    */
   interface ProvinceItem {
     id: string;
     code: number;
     name: string;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
+    created_at?: string;
+    updated_at?: string;
   }
 
   /**
-   * City item for dropdown selection
+   * Payload for creating/updating a province
+   */
+  interface ProvincePayload {
+    name: string;
+  }
+
+  /**
+   * City item — used for dropdown selection and the City management page
    */
   interface CityItem {
     id: string;
     code?: number;
     province_id: string;
+    province?: { id: string; name: string } | null;
     name: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
+    created_at?: string;
+    updated_at?: string;
+  }
+
+  /**
+   * Payload for creating/updating a city
+   */
+  interface CityPayload {
+    name: string;
+    province_id: string;
+    latitude?: number | null;
+    longitude?: number | null;
   }
 
   // ===========================================

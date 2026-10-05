@@ -170,6 +170,22 @@ export default defineConfig({
     },
 
     {
+      name: 'استان‌ها',
+      path: '/provinces',
+      component: './Province',
+      icon: 'EnvironmentOutlined',
+      permission: 'provinces:list',
+    },
+
+    {
+      name: 'شهرها',
+      path: '/cities',
+      component: './City',
+      icon: 'EnvironmentOutlined',
+      permission: 'cities:list',
+    },
+
+    {
       name: 'تنظیمات',
       path: '/settings',
       component: './Settings',
