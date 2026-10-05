@@ -119,6 +119,20 @@
   }
 }
 
+// Always applied (normal and fullscreen mode alike): the toolbar is a non-growing flex
+// item that stays visible above a self-contained, internally-scrolling editable area.
+// Normal mode gets its height from the `editorHeight` inline style on `.quill`;
+// fullscreen mode overrides that with `flex: 1` below to fill the viewport instead.
+.quill {
+  display: flex;
+  flex-direction: column;
+}
+
+.ql-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
 .rich-text-editor-fullscreen {
   position: fixed;
   inset: 0;
@@ -130,13 +144,6 @@
 
   .quill {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .ql-container {
-    flex: 1;
-    overflow-y: auto;
   }
 }
 

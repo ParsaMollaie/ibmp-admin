@@ -172,7 +172,10 @@ const CreateForm: React.FC<CreateFormProps> = ({
         label="محتوا"
         rules={[{ required: true, message: 'محتوا الزامی است' }]}
       >
-        <RichTextEditor placeholder="محتوای کامل خبر را وارد کنید" />
+        <RichTextEditor
+          placeholder="محتوای کامل خبر را وارد کنید"
+          editorHeight={450}
+        />
       </Form.Item>
 
       <Form.Item name="category_ids" label="دسته‌بندی">

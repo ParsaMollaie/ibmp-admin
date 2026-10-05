@@ -24,6 +24,8 @@ interface RichTextEditorProps {
   onChange?: (value: string) => void;
   placeholder?: string;
   style?: React.CSSProperties;
+  /** Fixed height (px) of the editable area in normal (non-fullscreen) mode. */
+  editorHeight?: number;
 }
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -160,6 +162,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   onChange,
   placeholder,
   style,
+  editorHeight = 320,
 }) => {
   const quillRef = useRef<ReactQuill>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -301,7 +304,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           onChange={handleChange}
           placeholder={placeholder}
           modules={modules}
-          style={{ direction: 'rtl', minHeight: 150 }}
+          style={{ direction: 'rtl', height: editorHeight }}
         />
       )}
     </div>
