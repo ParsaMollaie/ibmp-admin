@@ -50,6 +50,11 @@ export async function getService(id: string) {
 
 /**
  * Update a company-type service
+ *
+ * logo/banner/catalog ride along as base64 data URLs in this JSON body — a file near the
+ * catalog's size cap can take longer than the app's default 45s request timeout to upload
+ * on an ordinary connection, aborting client-side before the server sees the full request.
+ * Raised to match the backend/proxy's own 300s budget for this route.
  */
 export async function updateServiceCompany(
   id: string,
@@ -58,11 +63,12 @@ export async function updateServiceCompany(
   return request<API.ApiResponse<[]>>(`${API_BASE}/services/${id}`, {
     method: 'PUT',
     data,
+    timeout: 300000,
   });
 }
 
 /**
- * Update an engineers-type service
+ * Update an engineers-type service — see updateServiceCompany's note on `timeout`.
  */
 export async function updateServiceEngineers(
   id: string,
@@ -71,6 +77,7 @@ export async function updateServiceEngineers(
   return request<API.ApiResponse<[]>>(`${API_BASE}/services/${id}`, {
     method: 'PUT',
     data,
+    timeout: 300000,
   });
 }
 
