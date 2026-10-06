@@ -5,7 +5,7 @@ import {
   FullscreenOutlined,
   SmileOutlined,
 } from '@ant-design/icons';
-import { Button, Popover, message } from 'antd';
+import { Button, Input, message, Modal, Popover } from 'antd';
 import QuillTableBetter from 'quill-table-better';
 import 'quill-table-better/dist/quill-table-better.css';
 import { useLayoutEffect, useRef, useState } from 'react';
@@ -99,6 +99,53 @@ function horizontalRuleHandler(this: { quill: InstanceType<typeof Quill> }) {
   this.quill.setSelection(range.index + 1, 0, 'user');
 }
 
+/** A Quill editor instance carrying the per-mount callback the module-scope `videoHandler`
+ * dispatches to — see the attachment effect below for why this indirection exists instead of
+ * a handler defined inline in the component. */
+type QuillWithVideoModal = InstanceType<typeof Quill> & {
+  __openVideoModal?: (range: { index: number; length: number }) => void;
+};
+
+// Quill's toolbar `handlers` map is part of the module-scope `modules` config below, whose
+// object identity must stay stable across renders (react-quill-new only re-reads/reconciles
+// it on mount — see the `applyHtmlContent` doc comment). A handler that needs component state
+// (opening the video-URL modal) can't close over that state directly without recreating
+// `modules` every render, which would fight that mount logic. Instead it dispatches through a
+// callback the component attaches directly to the live Quill instance on each mount/remount
+// (see the `__openVideoModal` assignment in the generation effect) — `this.quill` here is
+// always the specific editor instance whose toolbar button was clicked.
+function videoHandler(this: { quill: QuillWithVideoModal }) {
+  const range = this.quill.getSelection(true);
+  this.quill.__openVideoModal?.(range);
+}
+
+/**
+ * Converts a video page URL a user would actually paste (a YouTube watch/share link, an Aparat
+ * share link) into the `<iframe>` embed URL each platform requires. Anything else is passed
+ * through unchanged — the product requirement is explicitly "aparat or youtube or anywhere", so
+ * a URL that's already an embed link (or from some other host entirely) is used as-is and is the
+ * uploader's responsibility to get right.
+ */
+function toVideoEmbedUrl(rawUrl: string): string {
+  const url = rawUrl.trim();
+
+  const youtubeMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/,
+  );
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+
+  const aparatMatch = url.match(
+    /aparat\.com\/(?:v|video\/video\/embed\/videohash)\/([a-zA-Z0-9]+)/,
+  );
+  if (aparatMatch) {
+    return `https://www.aparat.com/video/video/embed/videohash/${aparatMatch[1]}/vt/frame`;
+  }
+
+  return url;
+}
+
 const modules = {
   toolbar: {
     container: [
@@ -111,12 +158,13 @@ const modules = {
       [{ align: [] }],
       ['blockquote'],
       [{ direction: 'rtl' }],
-      ['link', 'image', 'hr', 'table-better'],
+      ['link', 'image', 'video', 'hr', 'table-better'],
       ['clean'],
     ],
     handlers: {
       image: imageHandler,
       hr: horizontalRuleHandler,
+      video: videoHandler,
     },
   },
   table: false,
@@ -171,6 +219,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Bumped to force a fresh <ReactQuill> mount (new `key`) after the source-view
   // toggle — see the mount-correction effect below for why a fresh mount matters.
   const [generation, setGeneration] = useState(0);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [videoUrlDraft, setVideoUrlDraft] = useState('');
+  const pendingVideoRangeRef = useRef<{ index: number; length: number } | null>(
+    null,
+  );
 
   // react-quill-new's own content-loading (componentDidMount, and its
   // shouldComponentUpdate-triggered resync whenever the controlled `value` prop
@@ -186,14 +239,35 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // in sync via the normal value/onChange round trip, which react-quill-new's
   // own equality check already no-ops when nothing external changed.
   useLayoutEffect(() => {
-    const editor = quillRef.current?.getEditor();
+    const editor = quillRef.current?.getEditor() as
+      | QuillWithVideoModal
+      | undefined;
     if (!editor) return;
     const incoming = value || '';
     if (incoming) {
       applyHtmlContent(editor, incoming);
     }
+    editor.__openVideoModal = (range) => {
+      pendingVideoRangeRef.current = range;
+      setVideoUrlDraft('');
+      setVideoModalOpen(true);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generation]);
+
+  const handleInsertVideo = () => {
+    const url = videoUrlDraft.trim();
+    const range = pendingVideoRangeRef.current;
+    const editor = quillRef.current?.getEditor();
+    if (!url || !range || !editor) {
+      setVideoModalOpen(false);
+      return;
+    }
+
+    editor.insertEmbed(range.index, 'video', toVideoEmbedUrl(url), 'user');
+    editor.setSelection(range.index + 1, 0, 'user');
+    setVideoModalOpen(false);
+  };
 
   const handleChange = (html: string) => {
     onChange?.(html);
@@ -307,6 +381,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           style={{ direction: 'rtl', height: editorHeight }}
         />
       )}
+
+      <Modal
+        title="افزودن ویدیو"
+        open={videoModalOpen}
+        onOk={handleInsertVideo}
+        onCancel={() => setVideoModalOpen(false)}
+        okText="افزودن"
+        cancelText="انصراف"
+        destroyOnClose
+      >
+        <p>لینک صفحه ویدیو را از آپارات، یوتیوب یا هر منبع دیگری وارد کنید:</p>
+        <Input
+          placeholder="https://www.aparat.com/v/xxxxx یا https://youtu.be/xxxxx"
+          value={videoUrlDraft}
+          onChange={(e) => setVideoUrlDraft(e.target.value)}
+          onPressEnter={handleInsertVideo}
+          dir="ltr"
+          autoFocus
+        />
+      </Modal>
     </div>
   );
 };
