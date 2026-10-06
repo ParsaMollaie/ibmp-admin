@@ -149,7 +149,7 @@ const CreateForm: React.FC<CreateFormProps> = ({
       // Build the API payload
       const payload: API.CategoryPayload = {
         title: values.title,
-        slug: values.slug || undefined,
+        slug: values.slug,
         description: values.description || null,
         guide_title: values.guide_title || null,
         parent_id: values.parent_id || '', // Empty string for root category
@@ -226,12 +226,13 @@ const CreateForm: React.FC<CreateFormProps> = ({
           <Input placeholder="عنوان دسته‌بندی" />
         </Form.Item>
 
-        {/* Slug - Optional, builds the public /listing/{slug} URL */}
+        {/* Slug - Required, builds the public /listing/{slug} URL */}
         <Form.Item
           name="slug"
           label="آدرس صفحه (اسلاگ)"
           tooltip="فقط حروف انگلیسی کوچک، عدد و خط تیره - آدرس عمومی صفحه دسته‌بندی را می‌سازد"
           rules={[
+            { required: true, message: 'لطفاً آدرس صفحه (اسلاگ) را وارد کنید' },
             {
               pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
               message: 'فقط حروف انگلیسی کوچک، عدد و خط تیره مجاز است',

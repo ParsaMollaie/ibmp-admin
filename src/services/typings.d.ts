@@ -106,7 +106,7 @@ declare namespace API {
   // Payload for creating/updating a category
   interface CategoryPayload {
     title: string;
-    slug?: string;
+    slug: string;
     description?: string | null;
     guide_title?: string | null;
     parent_id: string;
