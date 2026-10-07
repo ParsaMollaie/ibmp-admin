@@ -72,18 +72,17 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
     });
   }, []);
 
-  // When record changes, populate the form
+  // Form field values come from `initialValues` on the ModalForm below, not from
+  // `setFieldsValue` here — the modal's `destroyOnClose` fully remounts the inner Form
+  // on every open, so `initialValues` is re-read at that mount and reaches RichTextEditor
+  // as its very first `value` prop. `setFieldsValue` from an effect reaches it only after
+  // RichTextEditor (a child) has already mounted and painted itself once with an empty
+  // value — its one-time-per-mount Quill sync (see RichTextEditor's own comments on why
+  // it can't resync on every value change without corrupting tables) never runs again
+  // after that, leaving the summary/content editors visually blank even though the
+  // correct text is sitting in the Form's internal state.
   useEffect(() => {
     if (record && open) {
-      form.setFieldsValue({
-        title: record.title,
-        summary: record.summary,
-        content: record.content,
-        status: record.status,
-        alt_image: record.alt_image,
-        category_ids: record.categories?.map((category) => category.id) ?? [],
-      });
-
       // Reset image change flags
       setImageChanged(false);
       setPortraitImageChanged(false);
@@ -94,7 +93,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       setPortraitImageList([]);
       setPreviewImageList([]);
     }
-  }, [record, open, form]);
+  }, [record, open]);
 
   const handleOpenChange = (visible: boolean) => {
     if (!visible) {
@@ -217,6 +216,14 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       open={open}
       onOpenChange={handleOpenChange}
       onFinish={handleSubmit}
+      initialValues={{
+        title: record?.title,
+        summary: record?.summary,
+        content: record?.content,
+        status: record?.status,
+        alt_image: record?.alt_image,
+        category_ids: record?.categories?.map((category) => category.id) ?? [],
+      }}
       submitter={{
         submitButtonProps: {
           loading: submitting,
