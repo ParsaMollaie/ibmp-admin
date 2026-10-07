@@ -284,7 +284,13 @@ export default function ServiceActivityReport() {
   const handleSendActivitySms = async (record: API.ServiceActivityItem) => {
     setSendingSmsId(record.id);
     try {
-      const res = await sendServiceActivitySms(record.id);
+      // Must match the date range the table (and thus this row's own numbers) is
+      // currently filtered to — otherwise the SMS reports a different period's stats.
+      const res = await sendServiceActivitySms(
+        record.id,
+        dateRange.start_date,
+        dateRange.end_date,
+      );
       if (res.success) {
         message.success('پیامک با موفقیت ارسال شد');
       } else {

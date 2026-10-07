@@ -101,13 +101,23 @@ export async function rejectService(id: string) {
 
 /**
  * Send the service's owning user an SMS notification that their activity
- * report is ready
+ * report is ready. `startDate`/`endDate` must be the same range the activity
+ * report table is currently showing, so the numbers in the SMS match the
+ * numbers the admin sees in that row.
  */
-export async function sendServiceActivitySms(id: string) {
+export async function sendServiceActivitySms(
+  id: string,
+  startDate: string,
+  endDate: string,
+) {
   return request<API.ApiResponse<[]>>(
     `${API_BASE}/services/${id}/send-activity-sms`,
     {
       method: 'POST',
+      data: {
+        start_date: startDate,
+        end_date: endDate,
+      },
     },
   );
 }
