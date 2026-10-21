@@ -61,6 +61,7 @@ const SocialNetworkTable: React.FC = () => {
       dataIndex: 'social',
       ellipsis: true,
       sorter: true,
+      width: 150,
     },
     {
       title: 'وضعیت',
@@ -75,6 +76,7 @@ const SocialNetworkTable: React.FC = () => {
         { text: 'غیرفعال', value: 'inactive' },
       ],
       sorter: true,
+      width: 100,
     },
     {
       title: 'لینک',
@@ -86,6 +88,7 @@ const SocialNetworkTable: React.FC = () => {
         </a>
       ),
       sorter: true,
+      width: 180,
     },
     {
       title: 'آیکون',
@@ -106,6 +109,7 @@ const SocialNetworkTable: React.FC = () => {
           <Tag>بدون آیکون</Tag>
         ),
       search: false,
+      width: 90,
     },
     {
       title: 'تاریخ ایجاد',
@@ -222,7 +226,7 @@ const SocialNetworkTable: React.FC = () => {
           pageSizeOptions: ['10', '20', '50', '100'],
           onShowSizeChange: (_current, size) => setPageSize(size),
         }}
-        scroll={{ x: 900 }}
+        scroll={{ x: 1200 }}
       />
 
       {selectedRows?.length > 0 && (

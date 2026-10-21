@@ -68,6 +68,7 @@ const AdvertisingPage: React.FC = () => {
       dataIndex: 'title',
       ellipsis: true,
       sorter: true,
+      width: 200,
     },
     {
       title: 'تصویر',
@@ -134,6 +135,7 @@ const AdvertisingPage: React.FC = () => {
       dataIndex: 'link',
       ellipsis: true,
       search: false,
+      width: 180,
       render: (_, record) => {
         return (
           <a href={record.link} target="_blank" rel="noopener noreferrer">
@@ -275,7 +277,7 @@ const AdvertisingPage: React.FC = () => {
           showSizeChanger: true,
           onShowSizeChange: (_current, size) => setPageSize(size),
         }}
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1900 }}
         toolBarRender={() =>
           access.hasPermission('advertising:create')
             ? [

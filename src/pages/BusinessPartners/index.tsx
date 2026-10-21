@@ -70,6 +70,7 @@ const BusinessPartnersPage: React.FC = () => {
       dataIndex: 'title',
       ellipsis: true,
       sorter: true,
+      width: 200,
     },
     {
       title: 'تصویر',
@@ -120,6 +121,7 @@ const BusinessPartnersPage: React.FC = () => {
       dataIndex: 'link',
       ellipsis: true,
       search: false,
+      width: 180,
       render: (_, record) => {
         return (
           <a href={record.link} target="_blank" rel="noopener noreferrer">
@@ -262,7 +264,7 @@ const BusinessPartnersPage: React.FC = () => {
           showSizeChanger: true,
           onShowSizeChange: (_current, size) => setPageSize(size),
         }}
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1700 }}
         toolBarRender={() =>
           access.hasPermission('business-partners:create')
             ? [

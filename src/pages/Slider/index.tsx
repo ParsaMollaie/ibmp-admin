@@ -67,6 +67,7 @@ const SliderTable: React.FC = () => {
       dataIndex: 'title',
       ellipsis: true,
       sorter: true,
+      width: 200,
     },
     {
       title: 'نوع',
@@ -77,6 +78,7 @@ const SliderTable: React.FC = () => {
         { text: 'ثانویه', value: 'secondary' },
       ],
       sorter: true,
+      width: 90,
     },
     {
       title: 'وضعیت',
@@ -91,6 +93,7 @@ const SliderTable: React.FC = () => {
         { text: 'غیرفعال', value: 'inactive' },
       ],
       sorter: true,
+      width: 90,
     },
     {
       title: 'تصویر',
@@ -111,6 +114,7 @@ const SliderTable: React.FC = () => {
           <Tag>بدون تصویر</Tag>
         ),
       search: false,
+      width: 110,
     },
     {
       title: 'تصویر پرتره',
@@ -131,6 +135,7 @@ const SliderTable: React.FC = () => {
           <Tag>بدون تصویر</Tag>
         ),
       search: false,
+      width: 100,
     },
 
     {
@@ -271,7 +276,7 @@ const SliderTable: React.FC = () => {
           pageSizeOptions: ['10', '20', '50', '100'],
           onShowSizeChange: (_current, size) => setPageSize(size),
         }}
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1650 }}
       />
 
       {selectedRows?.length > 0 && (
