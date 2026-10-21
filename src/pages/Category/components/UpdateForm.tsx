@@ -137,26 +137,21 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
   };
 
   /**
-   * Populate form fields with existing record data
-   * Sets form values and configures the image preview
+   * Reset non-form-value state (image preview) for the record being edited.
+   * Form field values themselves come from `initialValues` on the `<Form>` below, not
+   * from `setFieldsValue` here — `Modal`'s `destroyOnClose` fully remounts the inner
+   * `Form` on every open, so `initialValues` is re-read at that mount and reaches
+   * `RichTextEditor` (the `description` field) as its very first `value` prop.
+   * `setFieldsValue` from an effect reaches it only after `RichTextEditor` (a child)
+   * has already mounted and painted itself once with an empty value — its
+   * one-time-per-mount Quill sync never runs again after that, leaving the
+   * "راهنمای بررسی و انتخاب" editor visually blank even though the correct HTML is
+   * sitting in the Form's internal state (and would still be submitted correctly —
+   * this was a display-only bug, but a dangerous one: editing without retyping
+   * everything would silently wipe the existing guide content on save).
    */
   const populateForm = () => {
     if (!record) return;
-
-    form.setFieldsValue({
-      title: record.title,
-      slug: record.slug || '',
-      description: record.description || '',
-      guide_title: record.guide_title || '',
-      meta_title: record.meta_title || '',
-      meta_description: record.meta_description || '',
-      meta_keywords: record.meta_keywords || '',
-      parent_id: record.parent?.id || undefined,
-      priority: record.priority,
-      status: record.status,
-      alt_image: record.alt_image,
-      type: record.type || undefined,
-    });
 
     // If record has an existing image, show it in the upload component
     if (record.image) {
@@ -315,7 +310,24 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         </div>
       )}
 
-      <Form form={form} layout="vertical">
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          title: record?.title,
+          slug: record?.slug || '',
+          description: record?.description || '',
+          guide_title: record?.guide_title || '',
+          meta_title: record?.meta_title || '',
+          meta_description: record?.meta_description || '',
+          meta_keywords: record?.meta_keywords || '',
+          parent_id: record?.parent?.id || undefined,
+          priority: record?.priority,
+          status: record?.status,
+          alt_image: record?.alt_image,
+          type: record?.type || undefined,
+        }}
+      >
         {/* Category Title - Required */}
         <Form.Item
           name="title"
