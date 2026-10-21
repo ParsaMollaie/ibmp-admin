@@ -148,6 +148,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       slug: record.slug || '',
       description: record.description || '',
       guide_title: record.guide_title || '',
+      meta_title: record.meta_title || '',
+      meta_description: record.meta_description || '',
+      meta_keywords: record.meta_keywords || '',
       parent_id: record.parent?.id || undefined,
       priority: record.priority,
       status: record.status,
@@ -228,6 +231,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         slug: values.slug,
         description: values.description || null,
         guide_title: values.guide_title || null,
+        meta_title: values.meta_title || null,
+        meta_description: values.meta_description || null,
+        meta_keywords: values.meta_keywords || null,
         parent_id: values.parent_id || '', // Empty string for root category
         priority: values.priority,
         status: values.status,
@@ -452,6 +458,46 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           tooltip="این متن برای SEO و دسترسی‌پذیری استفاده می‌شود"
         >
           <Input placeholder="توضیح کوتاه تصویر" />
+        </Form.Item>
+
+        {/* SEO meta fields - Optional, used by the client site's <head> tags */}
+        <Form.Item
+          name="meta_title"
+          label="متا عنوان (Meta Title)"
+          tooltip="عنوان صفحه برای موتورهای جستجو - در صورت خالی بودن از عنوان دسته‌بندی استفاده می‌شود"
+          rules={[
+            { max: 60, message: 'متا عنوان نباید بیشتر از ۶۰ کاراکتر باشد' },
+          ]}
+        >
+          <Input placeholder="عنوان سئو این دسته‌بندی" />
+        </Form.Item>
+
+        <Form.Item
+          name="meta_description"
+          label="متا توضیحات (Meta Description)"
+          tooltip="توضیحات نمایش داده شده در نتایج موتورهای جستجو"
+          rules={[
+            {
+              max: 160,
+              message: 'متا توضیحات نباید بیشتر از ۱۶۰ کاراکتر باشد',
+            },
+          ]}
+        >
+          <Input.TextArea placeholder="توضیحات سئو این دسته‌بندی" rows={3} />
+        </Form.Item>
+
+        <Form.Item
+          name="meta_keywords"
+          label="متا کلمات کلیدی (Meta Keywords)"
+          tooltip="کلمات کلیدی مرتبط را با کاما از هم جدا کنید"
+          rules={[
+            {
+              max: 255,
+              message: 'متا کلمات کلیدی نباید بیشتر از ۲۵۵ کاراکتر باشد',
+            },
+          ]}
+        >
+          <Input placeholder="کلمه اول, کلمه دوم, ..." />
         </Form.Item>
       </Form>
     </Modal>

@@ -86,6 +86,9 @@ declare namespace API {
     title: string;
     description?: string | null;
     guide_title?: string | null;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    meta_keywords?: string | null;
     type?: 'company' | 'engineers' | null;
     priority: number;
     status: 'active' | 'inactive';
@@ -109,6 +112,9 @@ declare namespace API {
     slug: string;
     description?: string | null;
     guide_title?: string | null;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    meta_keywords?: string | null;
     parent_id: string;
     priority: number;
     status: 'active' | 'inactive';
@@ -243,6 +249,9 @@ declare namespace API {
     portrait_image: string;
     preview_image: string;
     alt_image: string;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    meta_keywords?: string | null;
     code: number;
     status: 'active' | 'inactive';
     categories: NewsCategory[];
@@ -296,6 +305,9 @@ declare namespace API {
     portrait_image: string; // Required - base64
     preview_image: string; // Required - base64
     alt_image: string;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    meta_keywords?: string | null;
     author_id?: string | null;
     status: 'active' | 'inactive';
     category_ids?: string[];

@@ -6,6 +6,7 @@ import {
   ModalForm,
   ProFormSelect,
   ProFormText,
+  ProFormTextArea,
 } from '@ant-design/pro-components';
 import type { UploadFile } from 'antd';
 import { Form, Image, message, Spin, TreeSelect, Upload } from 'antd';
@@ -121,6 +122,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         content: values.content,
         summary: values.summary,
         alt_image: values.alt_image || '',
+        meta_title: values.meta_title || null,
+        meta_description: values.meta_description || null,
+        meta_keywords: values.meta_keywords || null,
         author_id: null,
         status: values.status,
         category_ids: values.category_ids || [],
@@ -222,6 +226,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         content: record?.content,
         status: record?.status,
         alt_image: record?.alt_image,
+        meta_title: record?.meta_title,
+        meta_description: record?.meta_description,
+        meta_keywords: record?.meta_keywords,
         category_ids: record?.categories?.map((category) => category.id) ?? [],
       }}
       submitter={{
@@ -290,6 +297,41 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           name="alt_image"
           label="متن جایگزین تصویر (Alt)"
           placeholder="توضیح تصویر برای SEO"
+        />
+
+        <ProFormText
+          name="meta_title"
+          label="متا عنوان (Meta Title)"
+          placeholder="عنوان سئو این خبر"
+          tooltip="در صورت خالی بودن از عنوان خبر استفاده می‌شود"
+          rules={[
+            { max: 60, message: 'متا عنوان نباید بیشتر از ۶۰ کاراکتر باشد' },
+          ]}
+        />
+
+        <ProFormTextArea
+          name="meta_description"
+          label="متا توضیحات (Meta Description)"
+          placeholder="توضیحات سئو این خبر"
+          rules={[
+            {
+              max: 160,
+              message: 'متا توضیحات نباید بیشتر از ۱۶۰ کاراکتر باشد',
+            },
+          ]}
+        />
+
+        <ProFormText
+          name="meta_keywords"
+          label="متا کلمات کلیدی (Meta Keywords)"
+          placeholder="کلمه اول, کلمه دوم, ..."
+          tooltip="کلمات کلیدی مرتبط را با کاما از هم جدا کنید"
+          rules={[
+            {
+              max: 255,
+              message: 'متا کلمات کلیدی نباید بیشتر از ۲۵۵ کاراکتر باشد',
+            },
+          ]}
         />
 
         {/* Image Upload */}
