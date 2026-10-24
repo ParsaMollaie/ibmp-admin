@@ -220,6 +220,9 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       open={open}
       onOpenChange={handleOpenChange}
       onFinish={handleSubmit}
+      // Without this, the reused `form` store keeps the previous edit's values and
+      // overrides `initialValues` on remount (stale editor content).
+      preserve={false}
       initialValues={{
         title: record?.title,
         summary: record?.summary,
