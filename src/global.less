@@ -76,3 +76,16 @@ a {
 a:hover {
   color: #40a9ff;
 }
+
+// Keep list column headers (and the search form's "نمایش بیشتر" toggle) on one line —
+// narrow columns with sort/filter icons otherwise break words mid-letter (e.g. "وضعی / ت").
+.ant-table-thead > tr > th,
+.ant-pro-query-filter-collapse-button {
+  white-space: nowrap;
+}
+
+// antd lets the sortable title shrink to 0 inside its flex row; keep its natural width
+// so the column grows instead of the sort/filter icons overlapping the text.
+.ant-table-thead .ant-table-column-title {
+  min-width: auto;
+}

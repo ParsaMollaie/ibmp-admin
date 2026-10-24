@@ -196,8 +196,8 @@ const modules = {
  * The `updateContents` call must use the `'user'` source, not `'silent'` — table-better's own
  * internal normalization (materializing `<tbody>`/cells from the converted delta) only runs for
  * user-sourced updates; a silent source leaves the table stuck as an empty placeholder. The
- * unwanted side effect of a user-sourced update — react-quill-new's `onChange` firing for this
- * programmatic change — is suppressed separately via `suppressChangeRef` at the call site.
+ * user-sourced update makes react-quill-new's `onChange` fire with the same HTML, which is
+ * harmless; the transient empty value from the 'silent' reset is dropped in `handleChange`.
  */
 function applyHtmlContent(editor: InstanceType<typeof Quill>, html: string) {
   const delta = editor.clipboard.convert({ html });
@@ -269,7 +269,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     setVideoModalOpen(false);
   };
 
-  const handleChange = (html: string) => {
+  const handleChange = (html: string, _delta?: unknown, source?: string) => {
+    // applyHtmlContent's 'silent' reset still reaches react-quill's onChange as "<p></p>".
+    // Forwarding it lets antd Form store the empty value, and the follow-up real HTML is then
+    // dropped when it equals the original (Form.Item skips "unchanged" values) — blank editor.
+    if (source === 'silent') return;
     onChange?.(html);
   };
 
