@@ -370,7 +370,10 @@ const NewsPage: React.FC = () => {
         }}
       />
 
+      {/* Keyed per record: ModalForm keeps its <Form> mounted outside the modal, so without a
+          remount `initialValues` (incl. the rich-text editors) keep showing the previous news. */}
       <UpdateForm
+        key={currentRecord?.id}
         open={updateModalOpen}
         onOpenChange={setUpdateModalOpen}
         record={currentRecord}

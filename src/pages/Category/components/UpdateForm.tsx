@@ -315,7 +315,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         layout="vertical"
         // Without this, the reused `form` store keeps the previous edit's values and
         // overrides `initialValues` on remount (stale editor content / stale slug).
-        preserve={false}
+        clearOnDestroy
         initialValues={{
           title: record?.title,
           slug: record?.slug || '',
