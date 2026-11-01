@@ -406,6 +406,44 @@ declare namespace API {
     user: OrderUser;
     service: OrderService | null;
     plan: OrderPlan | null;
+    // Latest online payment attempt (null for free / admin-assigned orders)
+    payment?: OrderPayment | null;
+  }
+
+  interface OrderPayment {
+    status: 'pending' | 'paid' | 'failed';
+    gateway: string | null;
+    driver: string;
+    ref_id: string | null;
+    card_pan: string | null;
+    paid_at: string | null;
+  }
+
+  // Online payment gateway (config secrets come back masked, e.g. "••••99aa")
+  type PaymentGatewayDriver = 'zarinpal';
+
+  interface PaymentGatewayItem {
+    id: string;
+    driver: PaymentGatewayDriver;
+    title: string;
+    is_active: boolean;
+    is_sandbox: boolean;
+    priority: number;
+    config: { merchant_id?: string };
+    created_by?: OrderUser | null;
+    updated_by?: OrderUser | null;
+    created_at: string;
+    updated_at: string;
+  }
+
+  interface PaymentGatewayPayload {
+    driver?: PaymentGatewayDriver; // create only — the driver can't change later
+    title: string;
+    is_active: boolean;
+    is_sandbox: boolean;
+    priority: number;
+    // On update, an empty merchant_id keeps the stored value
+    config: { merchant_id?: string };
   }
 
   // Contact Us status options

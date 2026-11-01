@@ -154,6 +154,13 @@ export default defineConfig({
       permission: 'orders:list',
     },
     {
+      name: 'درگاه‌های پرداخت',
+      path: '/payment-gateways',
+      component: './PaymentGateways',
+      icon: 'BankOutlined',
+      permission: 'payment-gateways:list',
+    },
+    {
       name: 'تماس با ما',
       path: '/contact-us',
       component: './ContactUs',

@@ -125,6 +125,21 @@ const exportColumns: ExportColumn[] = [
     render: (_, record) => (record.source === 'admin' ? 'ادمین' : 'کاربر'),
   },
   {
+    title: 'درگاه پرداخت',
+    dataIndex: 'payment',
+    render: (_, record) => record.payment?.gateway ?? '—',
+  },
+  {
+    title: 'کد پیگیری',
+    dataIndex: 'payment',
+    render: (_, record) => record.payment?.ref_id ?? '—',
+  },
+  {
+    title: 'شماره کارت',
+    dataIndex: 'payment',
+    render: (_, record) => record.payment?.card_pan ?? '—',
+  },
+  {
     title: 'تاریخ انقضا',
     dataIndex: 'expires_at',
     render: (_, record) =>
@@ -471,6 +486,38 @@ const OrderPage: React.FC = () => {
       sorter: true,
     },
     {
+      title: 'درگاه پرداخت',
+      key: 'payment_gateway',
+      width: 120,
+      search: false,
+      render: (_, record) => record.payment?.gateway ?? '—',
+    },
+    {
+      title: 'کد پیگیری',
+      key: 'payment_ref_id',
+      width: 130,
+      search: false,
+      render: (_, record) =>
+        record.payment?.ref_id ? (
+          <Text copyable style={{ direction: 'ltr' }}>
+            {record.payment.ref_id}
+          </Text>
+        ) : (
+          '—'
+        ),
+    },
+    {
+      title: 'شماره کارت',
+      key: 'payment_card_pan',
+      width: 160,
+      search: false,
+      render: (_, record) => (
+        <span style={{ direction: 'ltr', display: 'inline-block' }}>
+          {record.payment?.card_pan ?? '—'}
+        </span>
+      ),
+    },
+    {
       title: 'تاریخ انقضا',
       dataIndex: 'expires_at',
       width: 120,
@@ -655,7 +702,7 @@ const OrderPage: React.FC = () => {
           showTotal: (total, range) =>
             `نمایش ${range[0]}-${range[1]} از ${total} سفارش`,
         }}
-        scroll={{ x: 1600 }}
+        scroll={{ x: 2010 }}
         dateFormatter="string"
         cardBordered
         options={{
