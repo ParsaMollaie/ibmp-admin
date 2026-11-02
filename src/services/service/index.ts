@@ -216,6 +216,21 @@ export async function updateServiceTag(id: string, tag: API.ServiceTag) {
 }
 
 /**
+ * Turn the «ویژه» listing badge on/off (promotion_type). Independent of tag and plans.
+ * @param id - Service ID
+ * @param promotionType - 'promoted' to show «ویژه», 'regular' to remove it
+ */
+export async function updateServicePromotion(
+  id: string,
+  promotionType: API.ServicePromotionType,
+) {
+  return request<API.ApiResponse<[]>>(`${API_BASE}/services/${id}/promotion`, {
+    method: 'PUT',
+    data: { promotion_type: promotionType },
+  });
+}
+
+/**
  * Get service statistics (status + tag counts), optionally filtered by type.
  * Omitting `type` returns combined stats across both service types.
  */

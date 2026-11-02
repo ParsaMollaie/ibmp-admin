@@ -72,13 +72,13 @@ const PaymentGatewaysPage: React.FC = () => {
       sorter: true,
     },
     {
-      title: 'مرچنت کد',
+      title: 'مرچنت / ترمینال',
       key: 'merchant_id',
       width: 130,
       search: false,
       render: (_, record) => (
         <span style={{ direction: 'ltr', display: 'inline-block' }}>
-          {record.config?.merchant_id ?? '—'}
+          {record.config?.merchant_id ?? record.config?.terminal_id ?? '—'}
         </span>
       ),
     },

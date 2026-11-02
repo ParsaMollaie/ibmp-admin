@@ -1,7 +1,11 @@
 import { updatePaymentGateway } from '@/services/payment-gateway';
 import { Form, Input, InputNumber, Modal, Switch, message } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { DRIVER_LABELS } from '../constants';
+import {
+  DRIVER_LABELS,
+  SANDBOX_DRIVERS,
+  TERMINAL_ID_PATTERN,
+} from '../constants';
 
 interface UpdateFormProps {
   visible: boolean;
@@ -21,6 +25,7 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const isSep = record?.driver === 'sep';
 
   useEffect(() => {
     if (record && visible) {
@@ -31,6 +36,8 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
         is_active: record.is_active,
         // Never prefilled: the stored secret is only shown masked as placeholder.
         merchant_id: '',
+        // Not a secret (printed on receipts), so shown as-is.
+        terminal_id: record.config?.terminal_id ?? '',
       });
     }
   }, [record, visible, form]);
@@ -45,10 +52,12 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
       const response = await updatePaymentGateway(record.id, {
         title: values.title,
         is_active: values.is_active,
-        is_sandbox: values.is_sandbox,
+        is_sandbox: isSep ? false : values.is_sandbox,
         priority: values.priority,
-        // Empty = keep the stored merchant id
-        config: { merchant_id: values.merchant_id?.trim() || '' },
+        // Empty = keep the stored value
+        config: isSep
+          ? { terminal_id: values.terminal_id?.trim() || '' }
+          : { merchant_id: values.merchant_id?.trim() || '' },
       });
 
       if (response.success) {
@@ -92,25 +101,41 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <Input />
         </Form.Item>
 
-        <Form.Item
-          name="merchant_id"
-          label="مرچنت کد (Merchant ID)"
-          extra={`مقدار فعلی: ${
-            record?.config?.merchant_id ?? '—'
-          } — برای تغییر ندادن خالی بگذارید`}
-          rules={[
-            {
-              pattern: UUID_PATTERN,
-              message: 'مرچنت کد باید یک UUID معتبر باشد',
-            },
-          ]}
-        >
-          <Input.Password
-            placeholder="بدون تغییر"
-            style={{ direction: 'ltr' }}
-            autoComplete="new-password"
-          />
-        </Form.Item>
+        {isSep ? (
+          <Form.Item
+            name="terminal_id"
+            label="شماره ترمینال"
+            rules={[
+              { required: true, message: 'شماره ترمینال را وارد کنید' },
+              {
+                pattern: TERMINAL_ID_PATTERN,
+                message: 'شماره ترمینال باید فقط عدد باشد',
+              },
+            ]}
+          >
+            <Input style={{ direction: 'ltr' }} />
+          </Form.Item>
+        ) : (
+          <Form.Item
+            name="merchant_id"
+            label="مرچنت کد (Merchant ID)"
+            extra={`مقدار فعلی: ${
+              record?.config?.merchant_id ?? '—'
+            } — برای تغییر ندادن خالی بگذارید`}
+            rules={[
+              {
+                pattern: UUID_PATTERN,
+                message: 'مرچنت کد باید یک UUID معتبر باشد',
+              },
+            ]}
+          >
+            <Input.Password
+              placeholder="بدون تغییر"
+              style={{ direction: 'ltr' }}
+              autoComplete="new-password"
+            />
+          </Form.Item>
+        )}
 
         <Form.Item
           name="priority"
@@ -121,14 +146,16 @@ const UpdateForm: React.FC<UpdateFormProps> = ({
           <InputNumber min={1} max={1000} style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item
-          name="is_sandbox"
-          label="حالت آزمایشی (Sandbox)"
-          valuePropName="checked"
-          tooltip="در حالت آزمایشی پرداخت واقعی انجام نمی‌شود"
-        >
-          <Switch checkedChildren="آزمایشی" unCheckedChildren="واقعی" />
-        </Form.Item>
+        {record && SANDBOX_DRIVERS.includes(record.driver) && (
+          <Form.Item
+            name="is_sandbox"
+            label="حالت آزمایشی (Sandbox)"
+            valuePropName="checked"
+            tooltip="در حالت آزمایشی پرداخت واقعی انجام نمی‌شود"
+          >
+            <Switch checkedChildren="آزمایشی" unCheckedChildren="واقعی" />
+          </Form.Item>
+        )}
 
         <Form.Item name="is_active" label="فعال" valuePropName="checked">
           <Switch checkedChildren="فعال" unCheckedChildren="غیرفعال" />

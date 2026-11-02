@@ -420,7 +420,7 @@ declare namespace API {
   }
 
   // Online payment gateway (config secrets come back masked, e.g. "••••99aa")
-  type PaymentGatewayDriver = 'zarinpal';
+  type PaymentGatewayDriver = 'zarinpal' | 'sep';
 
   interface PaymentGatewayItem {
     id: string;
@@ -429,7 +429,7 @@ declare namespace API {
     is_active: boolean;
     is_sandbox: boolean;
     priority: number;
-    config: { merchant_id?: string };
+    config: { merchant_id?: string; terminal_id?: string };
     created_by?: OrderUser | null;
     updated_by?: OrderUser | null;
     created_at: string;
@@ -442,8 +442,8 @@ declare namespace API {
     is_active: boolean;
     is_sandbox: boolean;
     priority: number;
-    // On update, an empty merchant_id keeps the stored value
-    config: { merchant_id?: string };
+    // On update, an empty config value keeps the stored one
+    config: { merchant_id?: string; terminal_id?: string };
   }
 
   // Contact Us status options

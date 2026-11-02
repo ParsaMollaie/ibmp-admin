@@ -1,7 +1,12 @@
 import { createPaymentGateway } from '@/services/payment-gateway';
 import { Form, Input, InputNumber, Modal, Select, Switch, message } from 'antd';
 import React, { useState } from 'react';
-import { DRIVER_OPTIONS } from '../constants';
+import {
+  DRIVER_LABELS,
+  DRIVER_OPTIONS,
+  SANDBOX_DRIVERS,
+  TERMINAL_ID_PATTERN,
+} from '../constants';
 
 interface CreateFormProps {
   visible: boolean;
@@ -19,6 +24,8 @@ const CreateForm: React.FC<CreateFormProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const driver: API.PaymentGatewayDriver =
+    Form.useWatch('driver', form) ?? 'zarinpal';
 
   const handleSubmit = async () => {
     try {
@@ -29,9 +36,14 @@ const CreateForm: React.FC<CreateFormProps> = ({
         driver: values.driver,
         title: values.title,
         is_active: values.is_active,
-        is_sandbox: values.is_sandbox,
+        is_sandbox: SANDBOX_DRIVERS.includes(values.driver)
+          ? values.is_sandbox
+          : false,
         priority: values.priority,
-        config: { merchant_id: values.merchant_id?.trim() },
+        config:
+          values.driver === 'sep'
+            ? { terminal_id: values.terminal_id?.trim() }
+            : { merchant_id: values.merchant_id?.trim() },
       });
 
       if (response.success) {
@@ -78,7 +90,12 @@ const CreateForm: React.FC<CreateFormProps> = ({
           label="نوع درگاه"
           rules={[{ required: true, message: 'نوع درگاه را انتخاب کنید' }]}
         >
-          <Select options={DRIVER_OPTIONS} />
+          <Select
+            options={DRIVER_OPTIONS}
+            onChange={(value: API.PaymentGatewayDriver) =>
+              form.setFieldsValue({ title: DRIVER_LABELS[value] })
+            }
+          />
         </Form.Item>
 
         <Form.Item
@@ -93,24 +110,41 @@ const CreateForm: React.FC<CreateFormProps> = ({
           <Input placeholder="مثال: زرین‌پال" />
         </Form.Item>
 
-        <Form.Item
-          name="merchant_id"
-          label="مرچنت کد (Merchant ID)"
-          tooltip="از پنل زرین‌پال دریافت کنید؛ به‌صورت رمزنگاری‌شده ذخیره می‌شود"
-          rules={[
-            { required: true, message: 'مرچنت کد را وارد کنید' },
-            {
-              pattern: UUID_PATTERN,
-              message: 'مرچنت کد باید یک UUID معتبر باشد',
-            },
-          ]}
-        >
-          <Input.Password
-            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            style={{ direction: 'ltr' }}
-            autoComplete="new-password"
-          />
-        </Form.Item>
+        {driver === 'sep' ? (
+          <Form.Item
+            name="terminal_id"
+            label="شماره ترمینال"
+            tooltip="از پرداخت الکترونیک سامان (سپ) دریافت کنید. IP سرور باید نزد سپ ثبت شده باشد"
+            rules={[
+              { required: true, message: 'شماره ترمینال را وارد کنید' },
+              {
+                pattern: TERMINAL_ID_PATTERN,
+                message: 'شماره ترمینال باید فقط عدد باشد',
+              },
+            ]}
+          >
+            <Input placeholder="مثال: 13456789" style={{ direction: 'ltr' }} />
+          </Form.Item>
+        ) : (
+          <Form.Item
+            name="merchant_id"
+            label="مرچنت کد (Merchant ID)"
+            tooltip="از پنل زرین‌پال دریافت کنید؛ به‌صورت رمزنگاری‌شده ذخیره می‌شود"
+            rules={[
+              { required: true, message: 'مرچنت کد را وارد کنید' },
+              {
+                pattern: UUID_PATTERN,
+                message: 'مرچنت کد باید یک UUID معتبر باشد',
+              },
+            ]}
+          >
+            <Input.Password
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              style={{ direction: 'ltr' }}
+              autoComplete="new-password"
+            />
+          </Form.Item>
+        )}
 
         <Form.Item
           name="priority"
@@ -121,14 +155,16 @@ const CreateForm: React.FC<CreateFormProps> = ({
           <InputNumber min={1} max={1000} style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item
-          name="is_sandbox"
-          label="حالت آزمایشی (Sandbox)"
-          valuePropName="checked"
-          tooltip="در حالت آزمایشی پرداخت واقعی انجام نمی‌شود"
-        >
-          <Switch checkedChildren="آزمایشی" unCheckedChildren="واقعی" />
-        </Form.Item>
+        {SANDBOX_DRIVERS.includes(driver) && (
+          <Form.Item
+            name="is_sandbox"
+            label="حالت آزمایشی (Sandbox)"
+            valuePropName="checked"
+            tooltip="در حالت آزمایشی پرداخت واقعی انجام نمی‌شود"
+          >
+            <Switch checkedChildren="آزمایشی" unCheckedChildren="واقعی" />
+          </Form.Item>
+        )}
 
         <Form.Item name="is_active" label="فعال" valuePropName="checked">
           <Switch checkedChildren="فعال" unCheckedChildren="غیرفعال" />

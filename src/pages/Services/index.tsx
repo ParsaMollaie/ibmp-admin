@@ -13,6 +13,7 @@ import {
   getServiceStats,
   rejectService,
   rejectServiceRevision,
+  updateServicePromotion,
   updateServiceTag,
 } from '@/services/service';
 import {
@@ -888,12 +889,30 @@ const ServicesPage: React.FC = () => {
     try {
       const response = await updateServiceTag(record.id, 'promoted');
       if (response.success) {
-        message.success('خدمت با موفقیت به حالت ویژه تغییر یافت');
+        message.success('خدمت با موفقیت به حالت برتر (صفحه اصلی) تغییر یافت');
         actionRef.current?.reload();
         fetchStats();
       }
     } catch (error) {
       message.error('خطا در تغییر تگ خدمت');
+    }
+  };
+
+  const handleTogglePromotion = async (record: API.ServiceItem) => {
+    const next: API.ServicePromotionType =
+      record.promotion_type === 'promoted' ? 'regular' : 'promoted';
+    try {
+      const response = await updateServicePromotion(record.id, next);
+      if (response.success) {
+        message.success(
+          next === 'promoted'
+            ? 'خدمت در لیست‌ها به صورت ویژه نمایش داده می‌شود'
+            : 'حالت ویژه خدمت حذف شد',
+        );
+        actionRef.current?.reload();
+      }
+    } catch (error) {
+      message.error('خطا در تغییر حالت ویژه خدمت');
     }
   };
 
@@ -1405,8 +1424,21 @@ const ServicesPage: React.FC = () => {
                 {
                   key: 'tag-promoted',
                   icon: <StarOutlined />,
-                  label: 'تنظیم به ویژه',
+                  label: 'تنظیم به برتر (صفحه اصلی)',
                   onClick: () => handleSetPromoted(record),
+                },
+              ]
+            : []),
+          ...(access.hasPermission('services:set-promotion')
+            ? [
+                {
+                  key: 'promotion-toggle',
+                  icon: <CrownOutlined />,
+                  label:
+                    record.promotion_type === 'promoted'
+                      ? 'حذف حالت ویژه'
+                      : 'نمایش ویژه در لیست‌ها',
+                  onClick: () => handleTogglePromotion(record),
                 },
               ]
             : []),
