@@ -87,6 +87,9 @@ import UpdatePriorityForm from './components/UpdatePriorityForm';
 import UpdateStatusForm from './components/UpdateStatusForm';
 import WorkSamplesManagementModal from './components/WorkSamplesManagementModal';
 
+// «تنظیم به برتر (صفحه اصلی)» is hidden for now; set to true to bring it back.
+const SHOW_SET_PROMOTED_TAG = false;
+
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
@@ -1418,7 +1421,8 @@ const ServicesPage: React.FC = () => {
                 },
               ]
             : []),
-          ...(record.can_set_promoted &&
+          ...(SHOW_SET_PROMOTED_TAG &&
+          record.can_set_promoted &&
           access.hasPermission('services:set-promoted')
             ? [
                 {
