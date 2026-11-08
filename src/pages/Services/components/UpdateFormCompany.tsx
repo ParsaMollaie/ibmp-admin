@@ -8,6 +8,7 @@ import {
   updateServiceCompany,
 } from '@/services/service';
 import { debouncePromise } from '@/utils/debounce';
+import { toVideoEmbedUrl } from '@/utils/videoEmbedUrl';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
 import type { UploadFile, UploadProps } from 'antd';
@@ -530,7 +531,9 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
         description: values.description,
         email: values.email,
         website: values.website || undefined,
-        videos: (values.videos || []).filter((v: string) => !!v),
+        videos: (values.videos || [])
+          .filter((v: string) => !!v?.trim())
+          .map(toVideoEmbedUrl),
         category_id: values.category_id,
         contact_profile_id: values.contact_profile_id || null,
         addresses: (values.addresses || []).map((a: any) => ({
@@ -953,12 +956,12 @@ const UpdateFormCompany: React.FC<UpdateFormProps> = ({
                         name={name}
                         extra={
                           fields[0]?.key === key
-                            ? 'لینک embed ویدئو از یوتیوب یا آپارات (مثلاً: https://www.aparat.com/video/video/embed/videohash/xxxx/vt/frame)'
+                            ? 'لینک ویدئو از آپارات یا یوتیوب (مثلاً: https://www.aparat.com/v/xxxx) — به لینک embed تبدیل می‌شود'
                             : undefined
                         }
                       >
                         <Input
-                          placeholder="لینک embed ویدئو را وارد کنید"
+                          placeholder="لینک ویدئو را وارد کنید"
                           style={{ direction: 'ltr' }}
                         />
                       </Form.Item>
